@@ -4,24 +4,24 @@
 
 **Live Deployment (GitHub Pages):** [`https://autonomatono.github.io/sonobjet/`](https://autonomatono.github.io/sonobjet/)
 
-`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V8 flagship is a **spatial modular marble instrument**: a deterministic 3D physics network of reservoirs, flywheels, helix lifts, aqueducts, diverters, gates, tine banks, resonator bowls, chime orchards, drum rings and satellite pods. Marbles are the visible flow of energy and sound; physical releases, lifts, collisions, routing decisions and strikes generate a sparse new D-Lydian composition instead of a score playing along. V7's 2.5D gate bank, V6 graph kit, V5 automaton, V4 work, and the original pendulum study all remain selectable references. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, Wintergatan, Animusic, Central European clockwork organs, celestial orreries, and the human–robotic ballet of *Sans Objet*.
+`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V9 flagship keeps the **Modal Flow** marble network and places it inside an audiovisual **Cornell-box Rube Goldberg installation**. Transparent tubes now coexist with meshed gear cascades, crossed belts, exact four-bar strikers, camshafts, ladder chains and nested resonator rings. Every mechanism transmits simulated energy, animates from the same deterministic state, and emits tooth/lug/cam events that can become notes; emitted music flashes and articulates the physical instrument in return. Projected shadow play, local practicals, spot rigs, five palettes, clean optical, linocut and neon-GI render languages are live-directable. V8's marble foundation, V7's 2.5D gate bank, V6 graph kit, V5 automaton, V4 work, and the original pendulum study all remain preserved.
 
 ---
 
-## Current Flagship (`01`): `MODAL FLOW // PHYSICS SONG`
+## Current Flagship (`01`): `MODAL FLOW // RESONANT RELAY`
 
-A **physics-generated 48-bar film** for a growing 3D installation. The old twelve-lane gate bank is now one module inside twenty depth-layered units connected by transparent conduits. A fixed-step solver conserves gravitational potential on curved chutes, drives motorized helix lifts, resolves same-path marble collisions, queues marbles behind a rotating escapement, and routes them through many-to-many diverters. Every audible note is a rationed physical event; the transport only supplies sparse governor energy cues and section shape.
+A **physics-generated 48-bar film** for a growing, multi-section 3D installation. The old twelve-lane gate bank remains one module inside twenty depth-layered units connected by transparent conduits, but marbles are no longer the only physical voice. Ten visible mechanical transmission paths circulate energy between sections; their gear teeth, belt lugs, cam lobes, linkage dead-centres and chain links generate rationed D-Lydian events alongside marble strikes.
 
-### V8 Systems
+### V9 Systems
 
-1. **3D Modular Physics Network** — deterministic curved-conduit integration with energy conservation, lift torque, restitution, queueing, gate duty and program-controlled routing. The blueprint grows from 12 to 96 modules with repeatable satellite resonator pods.
-2. **Physics-Generated Composition** — `ModalFlowComposer` turns real solver events into a new D-Lydian melody using phrase rests, global event budgets, per-module cooldowns, elevation-derived registers, impact-derived velocity and module-derived timbre. No `larynx-lead` or `bellows-choir` humming voices are used.
-3. **Parented Mechanical Installation** — one `KinematicRig` owns chassis, conduit frame, marble frame, module joints, port joints, flywheel/auger/escapement transmission, and instrument hammers. All visible meshes are parented to named joints.
-4. **Drone + Cinematic Camera** — `0` is auto multi-scale marble-follow; `1` is a full inertial drone pilot with banked turns, cinematic drift, marble lock (`F`), follow distance (`C`), wheel speed/FOV, and pointer look. `2–8` remain multi-scale focus shots. Director Studio also gains a `DRONE PILOT` mode.
-5. **Strategic Event Rationing** — an 8×32 routing wheel controls flow rather than a dense note grid; a phrase gate limits audible events to roughly 2 notes/second with rests, cooldowns and register/timbre organization.
-6. **Preserved Studio Tools** — Director Studio, free-fly/joint-lock, 384-beat keyframe timeline, looks/effects, configs/presets, behavior maps, patchbay, articulation DOFs, recording and video export. The `MACHINE` and `PHYSICS` tabs expose the new graph, macros, routing pins, part registry and telemetry.
+1. **Marble + Mechanism Causal Network** — deterministic curved-conduit physics remains intact, joined by ten typed transmission paths: `gear-train`, `belt`, `four-bar`, `camshaft`, `chain` and `nested-ring`. Upstream energy physically propagates downstream.
+2. **Objects Are Instruments** — tooth, lug, lobe and dead-centre crossings emit deterministic `mechanism` events. `ModalFlowComposer` rations marble and transmission events together into sparse D-Lydian phrases; audible notes feed back into module flashes, hammers and practical lights.
+3. **AV Cornell Rube Goldberg Room** — four structural decks sit inside an open-front Cornell box with warm/cool walls, three projection scrims, rotating perforated gobos, real shadow-casting spots and energy-reactive local lights. All visible meshes remain under one named `KinematicRig`.
+4. **Five Palettes + Four Light Rigs** — Steel/Xenon, Cornell Red/Cyan, Ultraviolet/Acid, Lino Ink/Stock and Sodium/Ice palettes combine with Gallery, Shadow Theatre, Neon GI and Clockmaker Inspection lighting.
+5. **Render-Style Lab** — Director `LOOKS` includes one-click Raw/Clean, Mechanical Film, Lino Press, Neon Cornell, Shadow Play and Ultraviolet Relay looks. Glitch, lens warp, chromatic split, grain, bleach, stencil, bloom, linocut and neon can each be bypassed independently; exposure, light energy and shadow depth remain continuously controllable and keyframeable.
+6. **Mechanism Cinematography** — `0` is auto marble-follow, `1` is inertial Drone Pilot, and `2–8` now frame upper tubework, the gear cascade, four-bar striker, nested resonator, shadow chain, neon chimes and return spiral. All graph/physics/editor/export tools remain available.
 
-See [`docs/V8_MODAL_FLOW.md`](docs/V8_MODAL_FLOW.md) for the full physics, composition, camera and authoring architecture. The prior [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) remains the reference for the preserved 2.5D gate-bank work.
+See [`docs/V9_RESONANT_RELAY.md`](docs/V9_RESONANT_RELAY.md) for the transmission, Cornell room, visual lab and authoring architecture. [`docs/V8_MODAL_FLOW.md`](docs/V8_MODAL_FLOW.md) remains the reference for the preserved marble solver and event composer foundation.
 
 ---
 
@@ -78,8 +78,8 @@ Also includes **`05: PHASE // LATTICE`**, the original simple pendulum/polyrhyth
 
 | Input | Action |
 | :--- | :--- |
-| **`SPACE`** | Play / Pause the 48-bar physics film (V8) or the preserved 96-bar score on legacy works |
-| **`0` / `1`–`8` on V8** | `[0]` Auto multi-scale marble-follow, `[1]` Drone Pilot, `[2]` Upper Cluster, `[3]` Gate Bank, `[4]` Resonator Field, `[5]` Helix Lift, `[6]` Chime Orchard, `[7]` Conduit Track, `[8]` Return Spiral |
+| **`SPACE`** | Play / Pause the 48-bar resonant-relay film (V9) or the preserved 96-bar score on legacy works |
+| **`0` / `1`–`8` on V9** | `[0]` Auto marble-follow, `[1]` Drone Pilot, then Upper Tubework, Gear Cascade, Four-Bar Striker, Nested Resonator, Shadow Chain, Neon Chime Orchard and Return Spiral |
 | **`0` / `1`–`8` on V4–V7** | Legacy Morph-Follow Auto-Director or eight named rig perspectives |
 | **`Z X C V B N M , . /`** | Live play all 10 pads (`SHOCK ANVIL`, `FAULT SHEAR`, `BREAK CHOP`, `CHIME LATTICE`, `FORMANT REED`, `PLASMA CHOIR`, `MONOLITH SUB`, `ACID SQUELCH`, `GLASS HALO`, `GLITCH CHIRP`) — **Mouse X/Y** controls F-Phrygian pitch & vowel formant |
 | **`A S D F G J K`** | Momentary performance bus FX (`GLITCH STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `HYPER DILATE`, `SHATTER LOCK`) |
@@ -90,7 +90,8 @@ Also includes **`05: PHASE // LATTICE`**, the original simple pendulum/polyrhyth
 | **`MIC: ENV` / MIDI / Gamepad** | Live audio envelope follower + auto-bound WebMIDI CCs/notes & Gamepad |
 | **Backquote (`` ` ``)** | Toggle **Director Studio** (free-flight, keyframes, looks, configurations, maps, physics lab, graph) |
 | **`W A S D` / `E Q` / `Z X` / `0`** | Director free-flight move / rise-fall / Dutch roll / level horizon |
-| **V8 `1` Drone Pilot** | `WASD` fly, `E/Q` altitude, `Z/X` roll, pointer drag look, wheel speed/FOV, `Shift` boost, `Alt` precision, `F` marble lock, `V` cinematic drift, `C` follow distance, `0` level horizon |
+| **V9 `1` Drone Pilot** | `WASD` fly, `E/Q` altitude, `Z/X` roll, pointer drag look, wheel speed/FOV, `Shift` boost, `Alt` precision, `F` marble lock, `V` cinematic drift, `C` follow distance, `0` level horizon |
+| **Director `LOOKS` tab** | Pick render styles, palettes and physical light rigs; independently toggle glitch/lens/chromatic/grain/bleach/stencil/bloom/linocut/neon; keyframe any result |
 | **`K` / `L` / `M`** | In Director Mode: add camera key / look key / machine milestone at playhead |
 | **Director `PHYSICS` tab** | Click programming-wheel pins, edit gravity/restitution/friction/gate/lift macros, inspect the part registry, drop/reset marbles, import/export the program |
 | **Director `MACHINE` tab** | Edit graph macros and many-to-many bindings; pick macro/cluster/module/port/conduit focus; grow or rebuild the installation; export/import machine graph JSON |
@@ -113,11 +114,12 @@ npm run build      # Production bundle into dist/ (with offline MediaPipe WASM)
 
 ## Documentation
 
+- [`docs/V9_RESONANT_RELAY.md`](docs/V9_RESONANT_RELAY.md) — V9 mechanical transmission network, Cornell shadow room, visual-style lab, linocut/neon pipeline and verification.
 - [`docs/V8_MODAL_FLOW.md`](docs/V8_MODAL_FLOW.md) — V8 3D modular physics network, D-Lydian event-composer, drone camera, strategic event rationing, graph/physics authoring, and verification.
 - [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) — V7 Wintergatan research, custom physics engine, programming wheel, machine anatomy, Physics Lab workflow, and verification.
 - [`docs/V6_MACHINE_BUILDING_KIT.md`](docs/V6_MACHINE_BUILDING_KIT.md) — V6 graph schema, module/port/conduit architecture, many-to-many bindings, multi-scale focus, live growth, and Machine tab workflow.
 - [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md) — V5 clockwork automaton, kinematic rig, ecological behavior, 96-bar Director Studio and JSON workflows.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6/V7/V8 module maps, physics-generated composition, drone camera, TSL vertex/post-FX shaders, and the preserved 96-bar score.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6/V7/V8/V9 module maps, physics-generated composition, drone camera, TSL vertex/post-FX shaders, and the preserved 96-bar score.
 - [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Keyboard/mouse rig, MediaPipe optical tracking, overdub take recorder, and `.webm` master export.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI/CD pipeline.
 - [`HANDOFF.md`](HANDOFF.md) — Session state, V4 upgrades, verification status, and next extension vectors.

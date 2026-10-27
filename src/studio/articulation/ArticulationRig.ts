@@ -304,6 +304,13 @@ export function blendPostFx(
     'bleachGrade',
     'starkThreshold',
     'bloomStrength',
+    'linocut',
+    'neonGlow',
+    'palette',
+    'exposure',
+    'lightRig',
+    'lightIntensity',
+    'shadowStrength',
   ];
   const out: Partial<PostFxState> = {};
   for (const key of keys) {

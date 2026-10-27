@@ -23,6 +23,7 @@ export type PhysicsEventKind =
   | 'collision'
   | 'return'
   | 'recycle'
+  | 'mechanism'
   | 'jam'
   | 'energy';
 
@@ -139,6 +140,9 @@ export class ModalFlowPhysics {
   private readonly moduleEnergy = new Map<string, number>();
   private readonly edgeFlow = new Map<string, number>();
   private readonly bindingWeights = new Map<string, number>();
+  /** Unwrapped turns preserve exact tooth/lug crossings across fixed steps. */
+  private readonly transmissionPhase = new Map<string, number>();
+  private readonly transmissionEnergy = new Map<string, number>();
   private program: boolean[][] = [];
   private pendingEvents: PhysicsSongEvent[] = [];
 
@@ -154,6 +158,7 @@ export class ModalFlowPhysics {
   private recycleCount = 0;
   private collisionCount = 0;
   private strikeCount = 0;
+  private mechanismPulseCount = 0;
   private jamCount = 0;
   private lostCount = 0;
   private instrumentEnergy = 0;
@@ -184,6 +189,10 @@ export class ModalFlowPhysics {
     for (const binding of blueprint.bindings) {
       this.bindingWeights.set(binding.id, binding.weight * (binding.enabled ? 1 : 0));
     }
+    for (const transmission of blueprint.transmissions) {
+      this.transmissionPhase.set(transmission.id, transmission.section * 0.071);
+      this.transmissionEnergy.set(transmission.id, 0);
+    }
     this.program = blueprint.defaultProgram.map((row) => [...row]);
     this.reset();
   }
@@ -202,6 +211,7 @@ export class ModalFlowPhysics {
     this.recycleCount = 0;
     this.collisionCount = 0;
     this.strikeCount = 0;
+    this.mechanismPulseCount = 0;
     this.jamCount = 0;
     this.lostCount = 0;
     this.instrumentEnergy = 0;
@@ -209,6 +219,12 @@ export class ModalFlowPhysics {
     this.pendingEvents = [];
     this.moduleEnergy.clear();
     this.edgeFlow.clear();
+    this.transmissionPhase.clear();
+    this.transmissionEnergy.clear();
+    for (const transmission of this.blueprint.transmissions) {
+      this.transmissionPhase.set(transmission.id, transmission.section * 0.071);
+      this.transmissionEnergy.set(transmission.id, 0);
+    }
     const source = this.moduleById.get('source-reservoir');
     this.marbles = Array.from({ length: this.marbleCount }, (_, id) => ({
       id,
@@ -380,6 +396,16 @@ export class ModalFlowPhysics {
     return this.edgeFlow.get(id) ?? 0;
   }
 
+  /** Normalized mechanical turn used by gears, pulleys, cams and chain lugs. */
+  getTransmissionPhase(id: string): number {
+    const turns = this.transmissionPhase.get(id) ?? 0;
+    return ((turns % 1) + 1) % 1;
+  }
+
+  getTransmissionEnergy(id: string): number {
+    return this.transmissionEnergy.get(id) ?? 0;
+  }
+
   getMostEnergeticMarble(): MarbleState | null {
     let best: MarbleState | null = null;
     for (const marble of this.marbles) {
@@ -414,6 +440,8 @@ export class ModalFlowPhysics {
       recycleCount: this.recycleCount,
       collisionCount: this.collisionCount,
       strikeCount: this.strikeCount,
+      mechanismPulseCount: this.mechanismPulseCount,
+      transmissionCount: this.blueprint.transmissions.length,
       instrumentEnergy: this.instrumentEnergy,
       jamCount: this.jamCount,
       lostCount: this.lostCount,
@@ -434,6 +462,10 @@ export class ModalFlowPhysics {
     for (const [id, value] of this.edgeFlow) {
       this.edgeFlow.set(id, value * Math.exp(-h * 1.8));
     }
+    for (const [id, value] of this.transmissionEnergy) {
+      this.transmissionEnergy.set(id, value * Math.exp(-h * 2.4));
+    }
+    this.updateTransmissions(h);
 
     this.releaseTimer += h;
     const interval = 1 / (0.62 + this.params.flowRate * 1.85 + this.params.scoreIntensity * 0.35);
@@ -490,6 +522,69 @@ export class ModalFlowPhysics {
     }
 
     this.resolveCollisions(h);
+  }
+
+  /**
+   * Non-marble mechanisms are first-class energy paths and sound generators.
+   * A tooth, belt lug, cam lobe or linkage dead-centre crossing emits a
+   * deterministic physical event; upstream module energy is also delivered to
+   * the downstream module. This makes movement compose music rather than merely
+   * decorating the marble simulation.
+   */
+  private updateTransmissions(h: number): void {
+    const governor = clamp(this.getGovernorEnergy() * 0.08, 0, 0.55);
+    this.blueprint.transmissions.forEach((transmission, index) => {
+      const from = this.moduleById.get(transmission.from);
+      const to = this.moduleById.get(transmission.to);
+      if (!from || !to) return;
+      const upstream = this.moduleEnergy.get(from.id) ?? 0;
+      const sectionDistance = Math.abs(this.params.sectionIndex - transmission.section);
+      const sectionFocus = sectionDistance === 0 ? 1 : sectionDistance === 1 ? 0.72 : 0.46;
+      const turnsPerSecond =
+        (0.045 + this.params.flowRate * 0.028 + governor * 0.05 + upstream * 0.018) *
+        (0.78 + Math.abs(transmission.ratio) * 0.18) *
+        sectionFocus;
+      const previous = this.transmissionPhase.get(transmission.id) ?? 0;
+      const next = previous + turnsPerSecond * h;
+      this.transmissionPhase.set(transmission.id, next);
+
+      const transfer = clamp(
+        (0.1 + upstream * 0.68 + this.params.scoreIntensity * 0.16) *
+          transmission.efficiency *
+          sectionFocus,
+        0,
+        1.35,
+      );
+      this.transmissionEnergy.set(
+        transmission.id,
+        clamp((this.transmissionEnergy.get(transmission.id) ?? 0) + transfer * h * 0.7, 0, 1.5),
+      );
+      this.moduleEnergy.set(
+        to.id,
+        clamp((this.moduleEnergy.get(to.id) ?? 0) + transfer * h * 0.12, 0, 1.8),
+      );
+
+      const previousPulse = Math.floor(previous * transmission.pulses);
+      const nextPulse = Math.floor(next * transmission.pulses);
+      if (nextPulse <= previousPulse) return;
+      const energy = clamp(0.18 + transfer * 0.72 + governor * 0.12, 0, 1.25);
+      this.emit({
+        kind: 'mechanism',
+        moduleId: to.id,
+        edgeId: transmission.id,
+        marbleId: -100 - index,
+        position: {
+          x: (from.position.x + to.position.x) * 0.5,
+          y: (from.position.y + to.position.y) * 0.5 + 0.14,
+          z: (from.position.z + to.position.z) * 0.5,
+        },
+        energy,
+        speed: turnsPerSecond * transmission.pulses,
+        noteIndex: (from.noteRole + to.noteRole + index) % 9,
+        velocity: clamp(0.28 + transfer * 0.48, 0.2, 0.92),
+      });
+      this.mechanismPulseCount += 1;
+    });
   }
 
   private updateGovernor(h: number): void {

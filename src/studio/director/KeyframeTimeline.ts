@@ -78,16 +78,23 @@ export interface MilestoneEvaluation extends BlendedPresetState {
 export type JointResolver = (id: string) => Vec3Tuple | null;
 
 export const DEFAULT_POST_FX: PostFxState = {
-  glitch: 0.04,
-  lensDistort: 0.07,
-  aberration: 0.2,
-  grain: 0.13,
-  bleachGrade: 0.34,
+  glitch: 0.015,
+  lensDistort: 0.045,
+  aberration: 0.08,
+  grain: 0.07,
+  bleachGrade: 0.2,
   starkThreshold: 0,
-  bloomStrength: 0.9,
+  bloomStrength: 0.88,
+  linocut: 0,
+  neonGlow: 0.08,
+  palette: 0,
+  exposure: 1.18,
+  lightRig: 0,
+  lightIntensity: 1,
+  shadowStrength: 0.62,
 };
 
-const POST_FX_KEYS: Array<keyof PostFxState> = [
+export const POST_FX_KEYS: Array<keyof PostFxState> = [
   'glitch',
   'lensDistort',
   'aberration',
@@ -95,6 +102,13 @@ const POST_FX_KEYS: Array<keyof PostFxState> = [
   'bleachGrade',
   'starkThreshold',
   'bloomStrength',
+  'linocut',
+  'neonGlow',
+  'palette',
+  'exposure',
+  'lightRig',
+  'lightIntensity',
+  'shadowStrength',
 ];
 
 const clamp = (v: number, min: number, max: number): number =>
@@ -185,11 +199,12 @@ const look = (
   bloom: number,
   stark = 0,
 ): PostFxState => ({
+  ...DEFAULT_POST_FX,
   glitch,
-  lensDistort: 0.06 + aberration * 0.09,
+  lensDistort: 0.035 + aberration * 0.075,
   aberration,
   grain,
-  bleachGrade: 0.3 + stark * 0.16,
+  bleachGrade: 0.2 + stark * 0.16,
   starkThreshold: stark,
   bloomStrength: bloom,
 });
@@ -250,14 +265,14 @@ function createDefaultCameraKeys(bars: number): CameraKeyframe[] {
 
 function createDefaultLookKeys(bars: number): LookKeyframe[] {
   const specs: Array<[number, PostFxState, string]> = [
-    [0, look(0.02, 0.14, 0.12, 0.72), 'COLD RELIQUARY'],
-    [12, look(0.08, 0.22, 0.14, 0.88), 'BRASS AWAKENING'],
-    [28, look(0.06, 0.2, 0.1, 1.08), 'ARIA SILVER'],
-    [44, look(0.03, 0.16, 0.09, 1.18), 'SUSPENDED HALO'],
-    [52, look(0.72, 0.62, 0.29, 1.18, 0.32), 'CADENZA TEAR'],
-    [64, look(0.42, 0.48, 0.2, 1.32, 0.1), 'PARADOX CROWN'],
-    [80, look(0.12, 0.26, 0.13, 1.02), 'F MINOR RELEASE'],
-    [Math.max(0, bars - 4), look(0.02, 0.12, 0.11, 0.76), 'FINAL LOCK'],
+    [0, { ...look(0, 0.05, 0.06, 0.72), lightRig: 1, shadowStrength: 0.88 }, 'CORNELL SHADOW WAKE'],
+    [12, { ...look(0.01, 0.07, 0.07, 0.9), palette: 1 }, 'BRASS + CORNELL'],
+    [28, { ...look(0, 0, 0.11, 0.28), linocut: 0.82, palette: 3, lightRig: 1 }, 'LINO RELIEF ARIA'],
+    [44, { ...look(0, 0.05, 0.03, 1.3), neonGlow: 0.72, palette: 2, lightRig: 2 }, 'SUSPENDED NEON HALO'],
+    [52, { ...look(0.11, 0.2, 0.09, 1.12, 0.08), palette: 2 }, 'BRIEF CADENZA TEAR'],
+    [64, { ...look(0.025, 0.1, 0.04, 1.4), neonGlow: 0.92, palette: 1, lightRig: 2 }, 'NEON CORNELL CROWN'],
+    [80, { ...look(0, 0.04, 0.08, 0.82), palette: 4, lightRig: 0 }, 'SODIUM RELEASE'],
+    [Math.max(0, bars - 4), { ...look(0, 0.02, 0.055, 0.68), palette: 0 }, 'FINAL CLEAN LOCK'],
   ];
   return specs.map(([bar, fx, label], i) => ({
     id: `look-${String(i + 1).padStart(2, '0')}`,

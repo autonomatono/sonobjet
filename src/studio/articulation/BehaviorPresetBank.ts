@@ -29,6 +29,13 @@ const look = (
   bleachGrade: 0.28,
   starkThreshold,
   bloomStrength,
+  linocut: 0,
+  neonGlow: 0.06,
+  palette: 0,
+  exposure: 1.18,
+  lightRig: 0,
+  lightIntensity: 1,
+  shadowStrength: 0.62,
 });
 
 /** Eight authored milestones spanning sealed object → temporal paradox → rest. */

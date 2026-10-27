@@ -465,16 +465,16 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET V8 // 3D MODULAR MARBLES + PHYSICS-GENERATED SONG + DRONE CAMERA</div>
+        <div class="ignition-kicker">SONOBJET V9 // MODAL FLOW + MUSICAL TRANSMISSIONS + CORNELL SHADOW LAB</div>
         <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          ${initialWork.subtitle}. A 48-bar D-Lydian composition emerges from real 3D marble flow:
-          gravity, helix lifts, collisions, diverters, gates, resonators and chimes generate sparse
-          phrases. The old twelve-lane gate bank is now one module inside a growing spatial instrument.
+          ${initialWork.subtitle}. A 48-bar D-Lydian composition emerges from marbles and mechanisms:
+          gravity, gears, belts, cams, chains, exact linkages and nested resonators all generate sparse
+          phrases. Open Director LOOKS for clean, linocut, neon-GI, palette, light and shadow control.
         </p>
         <div class="ignition-shortcuts">
           <b>SPACE</b> Play / Pause Physics Film &nbsp;|&nbsp;
-          <b>[\`]</b> Director Studio / Physics / Graph / Drone / Keyframes &nbsp;|&nbsp;
+          <b>[\`]</b> Director / Looks / Physics / Graph / Drone / Keyframes &nbsp;|&nbsp;
           <b>K / L / M</b> Add Camera / Look / Milestone<br/>
           <b>0</b> Auto marble-follow &nbsp;|&nbsp; <b>1</b> Drone pilot &nbsp;|&nbsp;
           <b>F</b> lock marble &nbsp;|&nbsp; <b>V</b> drift &nbsp;|&nbsp; <b>C</b> follow distance<br/>

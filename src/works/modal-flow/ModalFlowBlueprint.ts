@@ -28,6 +28,7 @@ export type ModuleKind =
   | 'satellite';
 
 export type ConduitCurve = 'straight' | 'arc' | 'sag' | 'helix';
+export type TransmissionKind = 'gear-train' | 'belt' | 'four-bar' | 'camshaft' | 'chain' | 'nested-ring';
 
 export interface ModuleSpec {
   id: string;
@@ -61,6 +62,25 @@ export interface ConduitSpec {
   weight: number;
 }
 
+export interface TransmissionSpec {
+  id: string;
+  label: string;
+  from: string;
+  to: string;
+  kind: TransmissionKind;
+  /** Signed angular ratio from the upstream prime mover. */
+  ratio: number;
+  /** Teeth, lugs or cam lobes that can emit one mechanical pulse per crossing. */
+  pulses: number;
+  /** Mechanical energy delivered to the downstream module [0..1]. */
+  efficiency: number;
+  /** Visual scale of the local transmission assembly. */
+  scale: number;
+  /** Musical/lighting section in which this path is foregrounded. */
+  section: number;
+  color: number;
+}
+
 export interface EnergySourceSpec {
   id: string;
   moduleId: string;
@@ -91,6 +111,8 @@ export interface ModalFlowBlueprint {
   moduleCount: number;
   modules: ModuleSpec[];
   conduits: ConduitSpec[];
+  /** Non-marble energy paths: meshed gears, belts, chains, cams and linkages. */
+  transmissions: TransmissionSpec[];
   sources: EnergySourceSpec[];
   bindings: BindingSpec[];
   focusTargets: FocusDescriptor[];
@@ -448,6 +470,139 @@ const CORE_CONDUITS: ConduitSpec[] = [
   conduit('return-source', 'return-conduit', 'source-reservoir', 'return', 'helix', { arc: 0.2, radius: 0.42, turns: 2, speed: 0.85 }),
 ];
 
+const TRANSMISSIONS: TransmissionSpec[] = [
+  {
+    id: 'transmission-crank-lift-gears',
+    label: 'CRANK → LIFT REDUCTION CASCADE',
+    from: 'crank-flywheel',
+    to: 'helix-lift',
+    kind: 'gear-train',
+    ratio: -2.35,
+    pulses: 12,
+    efficiency: 0.92,
+    scale: 1.05,
+    section: 1,
+    color: 0xe0a85a,
+  },
+  {
+    id: 'transmission-lift-aqueduct-belt',
+    label: 'LIFT → AQUEDUCT CROSSED BELT',
+    from: 'helix-lift',
+    to: 'upper-aqueduct',
+    kind: 'belt',
+    ratio: -0.72,
+    pulses: 5,
+    efficiency: 0.78,
+    scale: 0.82,
+    section: 1,
+    color: 0xff704f,
+  },
+  {
+    id: 'transmission-aqueduct-diverter-gears',
+    label: 'AQUEDUCT → DIVERTER BEVEL TRAIN',
+    from: 'upper-aqueduct',
+    to: 'tri-diverter',
+    kind: 'gear-train',
+    ratio: -1.4,
+    pulses: 9,
+    efficiency: 0.84,
+    scale: 0.74,
+    section: 2,
+    color: 0x72d9ff,
+  },
+  {
+    id: 'transmission-diverter-gate-cam',
+    label: 'DIVERTER → GATE PIN CAMSHAFT',
+    from: 'tri-diverter',
+    to: 'gate-bank',
+    kind: 'camshaft',
+    ratio: 1.25,
+    pulses: 5,
+    efficiency: 0.81,
+    scale: 0.84,
+    section: 3,
+    color: 0xf6c761,
+  },
+  {
+    id: 'transmission-gate-tines-linkage',
+    label: 'GATE → TINE FOUR-BAR STRIKER',
+    from: 'gate-bank',
+    to: 'vibraphone-tines',
+    kind: 'four-bar',
+    ratio: 0.78,
+    pulses: 4,
+    efficiency: 0.76,
+    scale: 0.86,
+    section: 3,
+    color: 0x9ef5d5,
+  },
+  {
+    id: 'transmission-tines-bowl-nested',
+    label: 'TINES → BOWL NESTED RESONATOR',
+    from: 'vibraphone-tines',
+    to: 'resonator-bowl',
+    kind: 'nested-ring',
+    ratio: -0.56,
+    pulses: 3,
+    efficiency: 0.72,
+    scale: 0.9,
+    section: 4,
+    color: 0xb99cff,
+  },
+  {
+    id: 'transmission-diverter-chime-belt',
+    label: 'DIVERTER → CHIME PITCH BELT',
+    from: 'tri-diverter',
+    to: 'chime-orchard',
+    kind: 'belt',
+    ratio: 1.6,
+    pulses: 7,
+    efficiency: 0.7,
+    scale: 0.78,
+    section: 2,
+    color: 0x77f4ff,
+  },
+  {
+    id: 'transmission-diverter-drum-linkage',
+    label: 'DIVERTER → DRUM ROCKER LINKAGE',
+    from: 'tri-diverter',
+    to: 'drum-ring',
+    kind: 'four-bar',
+    ratio: 0.82,
+    pulses: 4,
+    efficiency: 0.74,
+    scale: 0.9,
+    section: 4,
+    color: 0xff8c6b,
+  },
+  {
+    id: 'transmission-collector-return-chain',
+    label: 'COLLECTOR → RETURN LADDER CHAIN',
+    from: 'collector-funnel',
+    to: 'return-conduit',
+    kind: 'chain',
+    ratio: -1,
+    pulses: 8,
+    efficiency: 0.88,
+    scale: 0.74,
+    section: 5,
+    color: 0xa8d5a4,
+  },
+  {
+    id: 'transmission-return-crank-gears',
+    label: 'RETURN → CRANK REGENERATOR',
+    from: 'return-conduit',
+    to: 'crank-flywheel',
+    kind: 'gear-train',
+    ratio: 0.5,
+    pulses: 10,
+    efficiency: 0.66,
+    scale: 0.68,
+    section: 0,
+    color: 0xffbd70,
+  },
+];
+
 const SOURCES: EnergySourceSpec[] = [
   { id: 'source-crank', moduleId: 'crank-flywheel', label: 'HAND CRANK TORQUE', kind: 'mechanical', rate: 0.8, energy: 1 },
   { id: 'source-gravity', moduleId: 'upper-aqueduct', label: 'GRAVITY HEAD', kind: 'potential', rate: 1.2, energy: 1 },
@@ -607,6 +762,42 @@ function createFocusTargets(satelliteIds: string[]): FocusDescriptor[] {
       priority: 0.76,
       tags: ['conduit', 'return'],
     },
+    {
+      id: 'focus-gear-cascade',
+      label: 'CRANK / LIFT GEAR CASCADE',
+      scale: 'CONDUIT',
+      jointId: 'transmission:transmission-crank-lift-gears',
+      edgeId: 'transmission-crank-lift-gears',
+      priority: 0.93,
+      tags: ['transmission', 'gear', 'interlock'],
+    },
+    {
+      id: 'focus-four-bar',
+      label: 'GATE / TINE FOUR-BAR',
+      scale: 'CONDUIT',
+      jointId: 'transmission:transmission-gate-tines-linkage',
+      edgeId: 'transmission-gate-tines-linkage',
+      priority: 0.9,
+      tags: ['transmission', 'linkage', 'striker'],
+    },
+    {
+      id: 'focus-nested-resonator',
+      label: 'NESTED RESONATOR RELAY',
+      scale: 'MODULE',
+      jointId: 'transmission:transmission-tines-bowl-nested',
+      moduleId: 'resonator-bowl',
+      priority: 0.88,
+      tags: ['transmission', 'nested-ring', 'resonator'],
+    },
+    {
+      id: 'focus-shadow-chain',
+      label: 'RETURN LADDER / SHADOW CHAIN',
+      scale: 'CONDUIT',
+      jointId: 'transmission:transmission-collector-return-chain',
+      edgeId: 'transmission-collector-return-chain',
+      priority: 0.82,
+      tags: ['transmission', 'chain', 'shadow'],
+    },
   ];
   for (let i = 0; i < Math.min(4, satelliteIds.length); i++) {
     const id = satelliteIds[i];
@@ -762,6 +953,7 @@ export function createModalFlowBlueprint(
     moduleCount: total,
     modules,
     conduits,
+    transmissions: TRANSMISSIONS.map((transmission) => ({ ...transmission })),
     sources: SOURCES.map((s) => ({ ...s })),
     bindings: BINDINGS.map((b) => ({ ...b })),
     focusTargets: createFocusTargets(satelliteIds),

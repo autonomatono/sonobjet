@@ -7,6 +7,7 @@ import type {
   MachineGraphSnapshot,
   PatchRoute,
   PhysicsMacroSnapshot,
+  PostFxState,
   PhysicsStudioSnapshot,
   RigJointDescriptor,
   ScoreBindingPatch,
@@ -103,14 +104,24 @@ const ALL_PATCHES = [...ChronoAutomatonWork.defaultPatches, ...FLOW_PATCHES];
 const CAMERA_LABELS = [
   '[0] AUTO // MARBLE FOLLOW',
   '1 // DRONE PILOT',
-  '2 // UPPER CLUSTER',
-  '3 // GATE BANK',
-  '4 // RESONATOR FIELD',
-  '5 // HELIX LIFT',
-  '6 // CHIME ORCHARD',
-  '7 // CONDUIT TRACK',
+  '2 // UPPER TUBEWORK',
+  '3 // GEAR CASCADE',
+  '4 // FOUR-BAR STRIKER',
+  '5 // NESTED RESONATOR',
+  '6 // SHADOW CHAIN',
+  '7 // NEON CHIME ORCHARD',
   '8 // RETURN SPIRAL',
 ];
+
+const CAMERA_FOCUS_BY_MODE: Record<number, string> = {
+  2: 'focus-upper-cluster',
+  3: 'focus-gear-cascade',
+  4: 'focus-four-bar',
+  5: 'focus-nested-resonator',
+  6: 'focus-shadow-chain',
+  7: 'focus-chime-orchard',
+  8: 'focus-return-conduit',
+};
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
@@ -312,14 +323,28 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const stutter = ctx.matrix.getSource('punch.stutter');
     const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
     const eventFlash = Math.min(0.28, audioEvents * 0.09);
+    const sectionLook = transport.sectionIndex === 4
+      ? { neon: 0.34, lightRig: 2, palette: 1 }
+      : transport.sectionIndex === 0 || transport.sectionIndex === 5
+        ? { neon: 0.04, lightRig: 1, palette: transport.sectionIndex === 5 ? 4 : 0 }
+        : { neon: 0.08, lightRig: 0, palette: 0 };
     ctx.setPostFx?.({
-      glitch: Math.min(1.2, (base.glitch ?? 0.03) * (0.6 + optical * 1.1) + stutter * 0.5 + eventFlash),
-      lensDistort: (base.lensDistort ?? 0.05) + optical * 0.08 + Math.abs(this.gaze.x) * 0.015,
-      aberration: (base.aberration ?? 0.14) + optical * 0.2 + eventFlash * 0.3,
-      grain: (base.grain ?? 0.09) + optical * 0.14,
-      bleachGrade: (base.bleachGrade ?? 0.22) + optical * 0.16,
-      starkThreshold: hardLock ? 0.58 : (base.starkThreshold ?? 0),
-      bloomStrength: (base.bloomStrength ?? 0.85) + optical * 0.12 + eventFlash * 0.4,
+      // A glitch now occurs only as an intentional stutter/event accent. The
+      // baseline remains clean enough to study the mechanism for long periods.
+      glitch: Math.min(1.2, base.glitch + stutter * 0.42 + eventFlash * 0.08),
+      lensDistort: base.lensDistort + optical * 0.025 + Math.abs(this.gaze.x) * 0.01,
+      aberration: base.aberration + optical * 0.055 + eventFlash * 0.14,
+      grain: base.grain + optical * 0.045,
+      bleachGrade: base.bleachGrade + optical * 0.06,
+      starkThreshold: hardLock ? 0.48 : base.starkThreshold,
+      bloomStrength: base.bloomStrength + optical * 0.08 + eventFlash * 0.36,
+      linocut: 0,
+      neonGlow: sectionLook.neon,
+      palette: sectionLook.palette,
+      exposure: 1.18,
+      lightRig: sectionLook.lightRig,
+      lightIntensity: 1,
+      shadowStrength: transport.sectionIndex === 0 || transport.sectionIndex === 5 ? 0.86 : 0.62,
     });
 
     // Preserve the Section IV anti-mewing fix: strain is only from intentional
@@ -359,8 +384,14 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
       this.freeFly.setMode('DRONE');
     } else {
       this.freeFly?.setMode('TIMELINE');
-      this.cameraDirector.setMode(next);
-      this.cameraDirector.invalidate();
+      const focusId = CAMERA_FOCUS_BY_MODE[next];
+      if (focusId) {
+        this.activeFocusId = focusId;
+        this.cameraDirector.focusOn(focusId);
+      } else {
+        this.cameraDirector.setMode(0);
+        this.cameraDirector.invalidate();
+      }
     }
   }
 
@@ -392,6 +423,10 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     if (!this.freeFly) return;
     if (active) this.freeFly.setMode('TIMELINE');
     else if (this.cameraMode === 1) this.freeFly.setMode('DRONE');
+  }
+
+  setVisualStyle(style: Partial<PostFxState>): void {
+    this.machine.setVisualStyle(style);
   }
 
   getCameraFollowTarget(): [number, number, number] | null {
@@ -428,7 +463,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const graph = this.physics.getGraphState();
     return {
       moduleCount: this.blueprint.moduleCount,
-      edgeCount: this.blueprint.conduits.length,
+      edgeCount: this.blueprint.conduits.length + this.blueprint.transmissions.length,
       behaviorMapCount: this.behaviorMaps.length,
       phraseIndex: state.phraseIndex,
       emittedNotes: state.emitted,
@@ -448,7 +483,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const graph = this.physics.getGraphState();
     return {
       moduleCount: this.blueprint.moduleCount,
-      edgeCount: this.blueprint.conduits.length,
+      edgeCount: this.blueprint.conduits.length + this.blueprint.transmissions.length,
       sourceCount: this.blueprint.sources.length,
       bindingCount: this.bindings.length,
       arousal: graph.arousal,
@@ -472,15 +507,26 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
           tags: module.tags,
         };
       }),
-      edges: this.blueprint.conduits.map((edge) => ({
-        id: edge.id,
-        from: edge.from,
-        to: edge.to,
-        kind: edge.kind,
-        weight: edge.weight,
-        flow: this.physics.getEdgeFlow(edge.id),
-        enabled: true,
-      })),
+      edges: [
+        ...this.blueprint.conduits.map((edge) => ({
+          id: edge.id,
+          from: edge.from,
+          to: edge.to,
+          kind: edge.kind,
+          weight: edge.weight,
+          flow: this.physics.getEdgeFlow(edge.id),
+          enabled: true,
+        })),
+        ...this.blueprint.transmissions.map((transmission) => ({
+          id: transmission.id,
+          from: transmission.from,
+          to: transmission.to,
+          kind: transmission.kind,
+          weight: transmission.efficiency,
+          flow: this.physics.getTransmissionEnergy(transmission.id),
+          enabled: true,
+        })),
+      ],
       sources: this.blueprint.sources.map((source) => ({
         ...source,
         energy: clamp(this.physics.getModuleEnergy(source.moduleId) + source.energy * 0.2, 0, 1.4),
@@ -533,15 +579,17 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     this.composer.reset();
     this.machine = new ModalFlowMachine(this.blueprint, this.physics);
     if (ctx) this.machine.attach(ctx.scene);
-    this.activeFocusId = 'focus-macro';
+    const focusId = CAMERA_FOCUS_BY_MODE[this.cameraMode];
+    this.activeFocusId = focusId ?? 'focus-macro';
     this.cameraDirector.invalidate();
-    this.cameraDirector.setMode(this.cameraMode === 1 ? 0 : this.cameraMode);
+    if (focusId) this.cameraDirector.focusOn(focusId);
+    else this.cameraDirector.setMode(0);
   }
 
   exportGraphConfig(): string {
     return JSON.stringify({
-      version: 8,
-      name: 'MODAL FLOW CONFIG',
+      version: 9,
+      name: 'MODAL FLOW CONFIG // RESONANT RELAY',
       moduleCount: this.blueprint.moduleCount,
       focusId: this.activeFocusId,
       program: this.physics.getProgram(),
@@ -584,8 +632,8 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const telemetry = this.physics.getTelemetry();
     const composer = this.composer.getState(this.physics.getTime());
     return {
-      name: 'MODAL FLOW // ROUTING WHEEL + PHYSICAL PART REGISTRY',
-      version: 8,
+      name: 'MODAL FLOW // MARBLES + MUSICAL TRANSMISSION REGISTRY',
+      version: 9,
       laneCount: ROUTING_LANE_COUNT,
       stepCount: MODAL_FLOW_PROGRAM_STEPS,
       laneLabels: this.blueprint.routingLanes.map((lane) => lane.label),
@@ -604,6 +652,16 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
           state: this.physics.getModuleEnergy(module.id) > 0.25 ? 'EXCITED' : 'IDLE',
           energy: this.physics.getModuleEnergy(module.id),
           tags: module.tags,
+        })),
+        ...this.blueprint.transmissions.map((transmission) => ({
+          id: transmission.id,
+          label: transmission.label,
+          kind: transmission.kind,
+          jointId: `transmission:${transmission.id}`,
+          parentId: 'mechanismFrame',
+          state: this.physics.getTransmissionEnergy(transmission.id) > 0.2 ? 'GENERATING' : 'TRANSMITTING',
+          energy: this.physics.getTransmissionEnergy(transmission.id),
+          tags: ['transmission', transmission.kind, `section-${transmission.section + 1}`],
         })),
         {
           id: 'transmission-flywheel',
@@ -683,7 +741,8 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const telemetry = this.physics.getTelemetry();
     const composer = this.composer.getState(this.physics.getTime());
     return {
-      activeInstances: telemetry.activeMarbles + this.blueprint.moduleCount,
+      activeInstances:
+        telemetry.activeMarbles + this.blueprint.moduleCount + this.blueprint.transmissions.length,
       structuralStress: clamp(telemetry.instrumentEnergy / 36 + composer.emitted * 0.0015, 0, 1),
       kineticEnergy: clamp(telemetry.activeMarbles / Math.max(1, this.physics.marbles.length), 0, 1),
       behavioralState: `PHRASE ${composer.phraseIndex + 1} // ${composer.lastSubsystem.toUpperCase()} // ${composer.emitted} PHYSICS NOTES`,
@@ -745,7 +804,9 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
   }
 
   private getEdgeEndpoints(edgeId: string): [Vec3Tuple, Vec3Tuple] | null {
-    const edge = this.blueprint.conduits.find((candidate) => candidate.id === edgeId);
+    const edge =
+      this.blueprint.conduits.find((candidate) => candidate.id === edgeId) ??
+      this.blueprint.transmissions.find((candidate) => candidate.id === edgeId);
     if (!edge) return null;
     const from = this.blueprint.modules.find((module) => module.id === edge.from);
     const to = this.blueprint.modules.find((module) => module.id === edge.to);
@@ -842,10 +903,10 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
 
 export const ModalFlowWork: WorkDefinition = {
   id: 'modal-flow',
-  title: 'MODAL FLOW // PHYSICS SONG',
+  title: 'MODAL FLOW // RESONANT RELAY',
   subtitle:
-    '3D Modular Marble Instrument // D-Lydian Physics-Generated Composition // Drone + Cinematic Camera',
-  author: 'SONOBJET ENGINE // V8',
+    'Cornell-Box Rube Goldberg Instrument // Marbles + Gears + Belts + Linkages Generate the Song',
+  author: 'SONOBJET ENGINE // V9',
   bpm: MODAL_FLOW_BPM,
   bars: MODAL_FLOW_TOTAL_BARS,
   sections: MODAL_FLOW_SECTIONS,

@@ -52,6 +52,7 @@ const EVENT_WEIGHT: Record<PhysicsSongEvent['kind'], number> = {
   release: 0.32,
   return: 0.22,
   recycle: 0.18,
+  mechanism: 0.74,
   jam: 0.12,
 };
 
@@ -214,6 +215,14 @@ export class ModalFlowComposer {
         return 'glitch-chirp';
       case 'collision':
         return 'piston-snap';
+      case 'mechanism': {
+        const id = event.edgeId ?? '';
+        if (id.includes('belt') || id.includes('chain')) return 'fin-cascade';
+        if (id.includes('cam')) return 'arc-discharge';
+        if (id.includes('linkage')) return 'piston-snap';
+        if (id.includes('nested')) return 'glass-armonica';
+        return 'modal-clang';
+      }
       case 'flow':
       case 'return':
         return event.energy > 0.5 ? 'fin-cascade' : 'core-implode';

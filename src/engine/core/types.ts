@@ -32,8 +32,22 @@ export interface PostFxState {
   bleachGrade: number;
   /** Stark Gantz-Graf high-contrast graphic threshold flash [0..1] */
   starkThreshold: number;
-  /** Dynamic bloom boost [0.2..1.4] */
+  /** Dynamic bloom boost [0..1.8]; zero is a true bypass. */
   bloomStrength: number;
+  /** Carved ink / paper posterization with directional hatch [0..1]. */
+  linocut: number;
+  /** Edge-fed emissive neon treatment [0..1.5]. */
+  neonGlow: number;
+  /** Palette family index: 0 steel, 1 Cornell, 2 ultraviolet, 3 ink, 4 sodium. */
+  palette: number;
+  /** Film exposure applied at the renderer [0.45..2.2]. */
+  exposure: number;
+  /** Lighting-rig index: 0 gallery, 1 shadow theatre, 2 neon GI, 3 inspection. */
+  lightRig: number;
+  /** Master intensity for tagged practical and projected lights [0..2]. */
+  lightIntensity: number;
+  /** Projector-to-fill balance used by physical shadow rigs [0..1]. */
+  shadowStrength: number;
 }
 
 export type PunchFxId =
@@ -322,6 +336,8 @@ export interface DirectorWorkHooks {
   exportGraphConfig?(): string;
   importGraphConfig?(raw: string): void;
   getPhysicsSnapshot?(): PhysicsStudioSnapshot;
+  /** Apply the authored render palette/light rig to physical materials and lamps. */
+  setVisualStyle?(style: Partial<PostFxState>): void;
   /** World-space target a drone camera can lock onto (usually a moving marble). */
   getCameraFollowTarget?(): [number, number, number] | null;
   setPhysicsMacro?(id: string, value: number): void;

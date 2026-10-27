@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import type { TransportState } from '../../engine/core/types';
+import type { PostFxState, TransportState } from '../../engine/core/types';
 import {
   GearRatioDriver,
   KinematicRig,
@@ -13,6 +13,7 @@ import {
   type Vec3,
 } from './ModalFlowBlueprint';
 import type { ModalFlowPhysics } from './ModalFlowPhysics';
+import { ModalFlowMechanismLayer } from './ModalFlowMechanismLayer';
 
 export interface ModalFlowMachineUpdate {
   dt: number;
@@ -42,13 +43,25 @@ export class ModalFlowMachine {
   private readonly portJoints = new Map<string, RigJoint>();
   private readonly hammerJoints = new Map<string, RigJoint>();
   private readonly moduleMaterials = new Map<string, THREE.MeshStandardMaterial>();
+  private readonly moduleLights = new Map<string, THREE.PointLight>();
   private readonly moduleFlash = new Map<string, number>();
+  private readonly fillLights: Array<{ light: THREE.Light; base: number }> = [];
   private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly materials: THREE.Material[] = [];
   private readonly dummy = new THREE.Object3D();
   private readonly scratchColor = new THREE.Color();
   private marbleMesh: THREE.InstancedMesh | null = null;
+  private mechanismLayer: ModalFlowMechanismLayer | null = null;
   private attachedScene: THREE.Scene | null = null;
+  private modulePaletteIndex = -1;
+  private visualStyle = {
+    palette: 0,
+    lightRig: 0,
+    lightIntensity: 1,
+    shadowStrength: 0.62,
+    neonGlow: 0.08,
+    linocut: 0,
+  };
 
   constructor(
     private readonly blueprint: ModalFlowBlueprint,
@@ -68,6 +81,17 @@ export class ModalFlowMachine {
 
   flashModule(moduleId: string, energy: number): void {
     this.moduleFlash.set(moduleId, clamp((this.moduleFlash.get(moduleId) ?? 0) + energy, 0, 2));
+  }
+
+  setVisualStyle(style: Partial<PostFxState>): void {
+    if (style.palette !== undefined) this.visualStyle.palette = style.palette;
+    if (style.lightRig !== undefined) this.visualStyle.lightRig = style.lightRig;
+    if (style.lightIntensity !== undefined) this.visualStyle.lightIntensity = style.lightIntensity;
+    if (style.shadowStrength !== undefined) this.visualStyle.shadowStrength = style.shadowStrength;
+    if (style.neonGlow !== undefined) this.visualStyle.neonGlow = style.neonGlow;
+    if (style.linocut !== undefined) this.visualStyle.linocut = style.linocut;
+    this.mechanismLayer?.setVisualStyle(style);
+    this.applyModulePalette();
   }
 
   getJointDescriptors() {
@@ -92,17 +116,25 @@ export class ModalFlowMachine {
     }
   }
 
-  getPostFxState(): Record<string, number> {
+  getPostFxState(): PostFxState {
     const telemetry = this.physics.getTelemetry();
     const energy = clamp(telemetry.instrumentEnergy / 24, 0, 1);
     return {
-      glitch: 0.025 + energy * 0.09,
-      lensDistort: 0.05 + energy * 0.05,
-      aberration: 0.12 + energy * 0.16,
-      grain: 0.08 + energy * 0.12,
-      bleachGrade: 0.2 + energy * 0.12,
+      // Glitch is now an occasional accent, not the default visual identity.
+      glitch: energy * 0.018,
+      lensDistort: 0.032 + energy * 0.018,
+      aberration: 0.055 + energy * 0.045,
+      grain: 0.05 + energy * 0.035,
+      bleachGrade: 0.16 + energy * 0.06,
       starkThreshold: 0,
-      bloomStrength: 0.82 + energy * 0.3,
+      bloomStrength: 0.84 + energy * 0.22,
+      linocut: this.visualStyle.linocut,
+      neonGlow: this.visualStyle.neonGlow,
+      palette: this.visualStyle.palette,
+      exposure: 1.18,
+      lightRig: this.visualStyle.lightRig,
+      lightIntensity: this.visualStyle.lightIntensity,
+      shadowStrength: this.visualStyle.shadowStrength,
     };
   }
 
@@ -132,6 +164,13 @@ export class ModalFlowMachine {
       joint.setTarget(Math.sin(elapsed * 0.83 + moduleId.length * 0.7) * energy * 0.14);
     }
 
+    this.mechanismLayer?.update({
+      elapsed,
+      transport,
+      physics,
+      recentEvents: params.recentEvents,
+    });
+
     this.rig.update({
       dt: h,
       elapsed,
@@ -143,11 +182,31 @@ export class ModalFlowMachine {
       overclock: 0,
     });
 
+    const localLightGain = [0.52, 0.22, 1.55, 0.72][
+      clamp(Math.round(this.visualStyle.lightRig), 0, 3)
+    ];
     for (const [moduleId, material] of this.moduleMaterials) {
       const energy = physics.getModuleEnergy(moduleId);
       const flash = this.moduleFlash.get(moduleId) ?? 0;
-      material.emissiveIntensity = 0.18 + energy * 1.05 + flash * 0.9;
+      material.emissiveIntensity =
+        0.14 +
+        energy * 1.05 +
+        flash * 0.9 +
+        this.visualStyle.neonGlow * 1.15 +
+        this.visualStyle.linocut * 0.08;
+      const light = this.moduleLights.get(moduleId);
+      if (light) {
+        light.intensity =
+          (0.18 + energy * 8.5 + flash * 5.5) *
+          localLightGain *
+          this.visualStyle.lightIntensity;
+      }
       this.moduleFlash.set(moduleId, flash * Math.exp(-h * 3.4));
+    }
+    const fillRig = clamp(Math.round(this.visualStyle.lightRig), 0, 3);
+    const fillGain = fillRig === 1 ? 0.34 : fillRig === 2 ? 0.24 : fillRig === 3 ? 1.08 : 0.78;
+    for (const { light, base } of this.fillLights) {
+      light.intensity = base * this.visualStyle.lightIntensity * fillGain;
     }
 
     this.updateMarbles();
@@ -156,6 +215,8 @@ export class ModalFlowMachine {
   dispose(): void {
     this.attachedScene?.remove(this.root);
     this.attachedScene = null;
+    this.mechanismLayer?.dispose();
+    this.mechanismLayer = null;
     this.rig.dispose();
     for (const geometry of this.geometries) geometry.dispose();
     for (const material of this.materials) material.dispose();
@@ -165,8 +226,37 @@ export class ModalFlowMachine {
     this.portJoints.clear();
     this.hammerJoints.clear();
     this.moduleMaterials.clear();
+    this.moduleLights.clear();
+    this.fillLights.length = 0;
     this.moduleFlash.clear();
     this.marbleMesh = null;
+  }
+
+  private applyModulePalette(): void {
+    const palette = clamp(Math.round(this.visualStyle.palette), 0, 4);
+    if (palette === this.modulePaletteIndex) return;
+    this.modulePaletteIndex = palette;
+    const families = [
+      [0x83dfff, 0xe1a85f, 0xa8d9b1],
+      [0x61e8ff, 0xff604d, 0xffbf66],
+      [0x6fffd2, 0xe864ce, 0x8e83ff],
+      [0xb57a3d, 0x4d3421, 0xd0ae72],
+      [0x9fdcff, 0xf0a12f, 0xffd080],
+    ];
+    const family = families[palette] ?? families[0];
+    for (const module of this.blueprint.modules) {
+      const material = this.moduleMaterials.get(module.id);
+      const light = this.moduleLights.get(module.id);
+      const target = new THREE.Color(
+        palette === 0 ? module.color : family[Math.abs(module.noteRole) % family.length],
+      );
+      if (palette !== 0) {
+        target.lerp(new THREE.Color(module.color), palette === 3 ? 0.08 : 0.22);
+      }
+      material?.color.copy(target);
+      material?.emissive.copy(target).multiplyScalar(palette === 3 ? 0.32 : 0.58);
+      light?.color.copy(target);
+    }
   }
 
   private geometry<T extends THREE.BufferGeometry>(geometry: T): T {
@@ -212,6 +302,8 @@ export class ModalFlowMachine {
     mesh.position.set(position.x, position.y, position.z);
     mesh.rotation.set(rotation.x, rotation.y, rotation.z);
     mesh.scale.set(scale.x, scale.y, scale.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     parent.add(mesh);
     return mesh;
   }
@@ -248,23 +340,30 @@ export class ModalFlowMachine {
     }
     this.buildConduits(conduitFrame.group);
     this.buildMarbles(marbleFrame.group);
+    this.applyModulePalette();
+    this.mechanismLayer = new ModalFlowMechanismLayer(this.rig, this.blueprint);
+    this.mechanismLayer.setVisualStyle(this.visualStyle);
 
     this.rig.addDriver(new GearRatioDriver('joint:flywheel', 'joint:liftAuger', -2.35));
     this.rig.addDriver(new GearRatioDriver('joint:flywheel', 'joint:gateEscapement', 1.45, 0.2));
   }
 
   private buildLights(parent: THREE.Group): void {
-    const hemisphere = new THREE.HemisphereLight(0xcfe7ff, 0x1a120c, 1.25);
+    const hemisphere = new THREE.HemisphereLight(0xcfe7ff, 0x1a120c, 0.52);
     parent.add(hemisphere);
-    const key = new THREE.PointLight(0xffd7a0, 62, 34, 2);
+    this.fillLights.push({ light: hemisphere, base: 0.52 });
+    const key = new THREE.PointLight(0xffd7a0, 22, 34, 2);
     key.position.set(-4.5, 6.5, 5.5);
     parent.add(key);
-    const rim = new THREE.PointLight(0x7dc4ff, 42, 30, 2);
+    this.fillLights.push({ light: key, base: 22 });
+    const rim = new THREE.PointLight(0x7dc4ff, 18, 30, 2);
     rim.position.set(5.5, 3.5, -5.5);
     parent.add(rim);
-    const warm = new THREE.PointLight(0xff9d5c, 28, 22, 2);
+    this.fillLights.push({ light: rim, base: 18 });
+    const warm = new THREE.PointLight(0xff9d5c, 12, 22, 2);
     warm.position.set(0, -1.8, 5.5);
     parent.add(warm);
+    this.fillLights.push({ light: warm, base: 12 });
   }
 
   private buildModule(module: ModuleSpec): void {
@@ -299,6 +398,10 @@ export class ModalFlowMachine {
       roughness: 0.24,
     });
     this.moduleMaterials.set(module.id, glow);
+    const localLight = new THREE.PointLight(module.color, 0, 4.2 * scale, 2);
+    localLight.position.set(0, 0.48 * scale, 0);
+    joint.group.add(localLight);
+    this.moduleLights.set(module.id, localLight);
     const brass = this.material(0xb98b4e, { metalness: 0.9, roughness: 0.22 });
     const glass = this.material(0x8fd4e8, {
       emissive: 0x1b4c60,
@@ -581,6 +684,8 @@ export class ModalFlowMachine {
     const mesh = new THREE.InstancedMesh(geometry, material, this.physics.marbles.length);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mesh.frustumCulled = false;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     parent.add(mesh);
     this.marbleMesh = mesh;
     this.updateMarbles();

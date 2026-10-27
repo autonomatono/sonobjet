@@ -1,10 +1,65 @@
 # Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5/V6/V7 reference works, and the current V8 3D modular physics-generated composition.
+> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with the preserved Section IV anti-humming fix, V5–V8 reference systems, and the current V9 marble-plus-mechanism Cornell-box audiovisual instrument.
 
 ---
 
-## 0. Latest Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
+## 0. Latest Update — V9 MODAL FLOW // RESONANT RELAY Implemented (2026-10-27)
+
+**Current default flagship:** `MODAL FLOW // RESONANT RELAY` (`src/works/modal-flow/`). V9 deliberately iterates the V8 flow instead of replacing it: the deterministic marble song remains, but tubes now share the machine with real animated musical transmissions inside a controllable Cornell-box light and shadow installation.
+
+### User brief answered
+
+- Animated physical objects must also be musical generators, and music must visibly actuate the objects.
+- Keep transparent tubes, then add interlocking/nested/transmitting gears, belts, chains, cams and linkages in multiple sections.
+- Add local/practical lights, spots, receiving surfaces and projected shadow play.
+- Make glitch optional rather than an exhausting default.
+- Add selectable palettes, light rigs and render styles, including linocut and neon-GI installation looks.
+- Aim for an audiovisual complex-Cornell-box Rube Goldberg machine.
+
+### What changed
+
+- `ModalFlowBlueprint.ts` now includes ten `TransmissionSpec` paths across all six requested families: `gear-train`, `belt`, `four-bar`, `camshaft`, `chain` and `nested-ring`.
+- `ModalFlowPhysics.ts` advances those paths deterministically at the existing `1/90s` fixed step, transfers lossy energy between modules and emits a new `mechanism` event at tooth/lug/lobe/cycle crossings.
+- `ModalFlowComposer.ts` rations mechanism events alongside marble events and assigns gear, belt/chain, cam, linkage and nested-ring timbres without reintroducing humming voices.
+- New `ModalFlowMechanismLayer.ts` builds phase-locked gears, crossed belts, moving lugs, ladder chains, exact four-bars, cam/follower banks and nested rings, plus a four-deck structural chassis. Every mesh remains under the shared named `KinematicRig`.
+- The same layer builds an open-front Cornell room, three projection scrims, three rotating perforated gobos, three real shadow-casting spots, wall practicals and energy-reactive local lights.
+- `PostFxState`, `WebGPUStage`, the Director timeline and preset blending now support `linocut`, `neonGlow`, five palettes, renderer exposure, four physical light rigs, light intensity and shadow depth.
+- Director `LOOKS` is now a visual lab with six one-click render styles and independent on/off + amount controls for glitch, lens, chromatic split, grain, bleach, stencil, bloom, linocut and neon. Default glitch was reduced to an occasional accent (`<= 0.11` in shipped looks).
+- The Machine Graph includes conduits and transmissions; Physics Registry v9 exposes every mechanism and pulse count. Main camera modes now include dedicated gear-cascade, four-bar, nested-resonator and shadow-chain shots.
+- Updated title/metadata, README, added `docs/V9_RESONANT_RELAY.md`, and added four V9 architecture tests.
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **39 / 39 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9)
+- `npm run build`: **clean production bundle**
+- `git diff --check`: **clean**
+- Local Vite preview available on `0.0.0.0:5173`.
+
+### Primary files
+
+| File | Role |
+| :--- | :--- |
+| `src/works/modal-flow/ModalFlowMechanismLayer.ts` | Cornell room, shadow projectors, multi-deck chassis, gears/belts/four-bars/cams/chains/nested rings, palette and light response. |
+| `src/works/modal-flow/ModalFlowBlueprint.ts` | Ten typed mechanical transmission paths and new mechanism focus targets. |
+| `src/works/modal-flow/ModalFlowPhysics.ts` | Deterministic transmission energy, phase, pulse events and telemetry. |
+| `src/engine/render/WebGPUStage.ts` | Five-palette grade, linocut, neon edge/GI, exposure and independently bypassable optical stack. |
+| `src/studio/director/DirectorStudioUI.ts` | Render-style presets, palette/light selectors and individual effect toggles. |
+| `tests/v9.test.ts` | Transmission, mechanism-song, parenting/Cornell and visual-language invariants. |
+
+### Next extension vectors
+
+- Raycast direct selection and dragging of belts, linkages and module ports.
+- User-authored transmission templates and graph rewiring between arbitrary modules.
+- Physical belt slip, backlash, worn teeth and chain tension as controlled failure modes.
+- Proper screen-space ambient occlusion / light probes when the WebGPU stack exposes a stable portable path.
+- Timeline lanes for palette/light-rig cuts independent from other look parameters.
+- Portable V9 machine export including both conduit and transmission graphs.
+
+---
+
+## 0.1 Prior Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
 
 **Current default flagship:** `MODAL FLOW // PHYSICS SONG` (`src/works/modal-flow/`). V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE` remain registered and selectable.
 
@@ -55,7 +110,7 @@ The user found V7 underwhelming: too 2D, too many events, and essentially a twel
 
 ---
 
-## 0.1 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
+## 0.2 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
 
 **Then-current default flagship (now a preserved reference):** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
 
@@ -110,7 +165,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.2 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+## 0.3 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
 
 **V6 reference work:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
 
@@ -153,7 +208,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.3 Prior Update — V5 Blueprint Implemented (2026-10-27)
+## 0.4 Prior Update — V5 Blueprint Implemented (2026-10-27)
 
 The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
 
@@ -174,15 +229,16 @@ Implemented:
 ## 1. Repository, Branch & Deployment Status
 
 - **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
-- **Historical Session Branch:** `arena/86769aaf-sonobjet` *(original V4 handoff; its history has been merged into the active `arena/23eed999-sonobjet` branch)*
+- **Active Session Branch:** `arena/ebe788b1-sonobjet` *(fast-forwarded from the latest V8 branch tip `2b5e3e0` before V9 work began)*
+- **Historical Branches:** `arena/23eed999-sonobjet` (V5–V8) and `arena/86769aaf-sonobjet` (V4 handoff)
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Current Verification Status (V8):**
+- **Current Verification Status (V9):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **35 / 35 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8)
+  - `npm test` (`vitest run`): **39 / 39 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9)
   - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
-  - V8 implementation commit: `31e2cef`; V8 green Pages run: `40570090738`. V7 reference commit: `090cbf2`; V7 green Pages run: `40555766238`.
+  - V8 reference implementation: `31e2cef`; V7 reference: `090cbf2`.
 
 ---
 
@@ -356,7 +412,7 @@ Turn `sonobjet` into a true **Interactive Music-Video Director's Tool**:
 | `src/kit/camera/CinemaDirector.ts` | **UPGRADE IN V5** into `DirectorSystem` combining `FreeFlyController` + `KeyframeTimeline` spline/cut evaluator + joint-attached cameras. |
 | `src/studio/ui/StudioShell.ts` | **EXTEND IN V5** with **Director Mode Toggle**, **96-Bar Scrubber + Keyframe/Milestone Track**, and **Mechanism Articulation & Preset Drawer**. |
 
-### V8 current files
+### V8 foundation files (preserved under V9)
 
 | File | Role |
 | :--- | :--- |

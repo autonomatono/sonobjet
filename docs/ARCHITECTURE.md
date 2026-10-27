@@ -1,4 +1,4 @@
-# Architecture — `sonobjet` Engine, V4–V8 Works
+# Architecture — `sonobjet` Engine, V4–V9 Works
 
 ## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
@@ -11,7 +11,15 @@
 
 ---
 
-## 1.5 V8 Additions — Physics-Generated Song & Drone Camera
+## 1.6 V9 Additions — Resonant Relay, Cornell Room & Visual Lab
+
+The current default, `MODAL FLOW // RESONANT RELAY`, preserves V8's marble solver and adds a parallel mechanical transmission graph. Ten `TransmissionSpec` links (`gear-train`, `belt`, `four-bar`, `camshaft`, `chain`, `nested-ring`) propagate module energy, advance deterministic phase, emit physical `mechanism` events at tooth/lug/lobe/cycle crossings, and animate from that same state. `ModalFlowComposer` rations these events with marble impacts, so mechanisms are instruments rather than decorative visualizers.
+
+`ModalFlowMechanismLayer.ts` adds a shared-rig multi-deck chassis, an open-front Cornell room, receiving scrims, rotating gobos, shadow-casting spot projectors, practical fixtures and local energy lights. `PostFxState` and `WebGPUStage` add linocut, neon edge/GI, five palettes, four physical light rigs, exposure, light energy and shadow depth. Director `LOOKS` exposes authored style presets and true independent effect bypass controls. See `docs/V9_RESONANT_RELAY.md` for the full system.
+
+---
+
+## 1.5 V8 Foundation — Physics-Generated Song & Drone Camera
 
 The current default work, `MODAL FLOW // PHYSICS SONG`, adds a second composition paradigm to the engine. V4–V7 schedule score events and let mechanisms respond; V8 schedules only sparse **physical energy cues**. A deterministic 3D marble solver emits releases, lifts, flow, diverter, gate, strike, collision, return and recycle events. `ModalFlowComposer` rations those events through phrase rests, a global event budget and per-module cooldowns, then maps allowed impacts into a new D-Lydian melody. Elevation chooses register, energy chooses velocity/decay, module identity chooses timbre, and a 6-phrase theme advances one step per audible impact.
 
@@ -81,7 +89,7 @@ src/
 │       ├── StudioShell.ts      # Collapsible HUD, act launcher, camera rig selector, oscilloscope, patchbay
 │       └── styles.css          # Stark architectural studio styling
 └── works/                      # Self-contained audiovisual works
-    ├── modal-flow/             # 01: MODAL FLOW // PHYSICS SONG (V8 default, physics-generated D-Lydian film)
+    ├── modal-flow/             # 01: MODAL FLOW // RESONANT RELAY (V9 default; V8 marbles + musical transmissions)
     │   ├── ModalFlowScore.ts
     │   ├── ModalFlowBlueprint.ts
     │   ├── ModalFlowPhysics.ts

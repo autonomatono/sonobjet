@@ -27,7 +27,7 @@ import type {
   MachineMilestone,
   MilestoneEase,
 } from './KeyframeTimeline';
-import { DEFAULT_POST_FX } from './KeyframeTimeline';
+import { DEFAULT_POST_FX, POST_FX_KEYS } from './KeyframeTimeline';
 
 export type SelectionKind = 'camera' | 'look' | 'milestone';
 export interface DirectorSelection {
@@ -120,19 +120,145 @@ const number = (value: number, step = 0.01): HTMLInputElement => {
   return input;
 };
 
-const num = (input: HTMLInputElement | undefined, fallback = 0): number => {
+type NumericControl = HTMLInputElement | HTMLSelectElement;
+
+const num = (input: NumericControl | undefined, fallback = 0): number => {
   const value = Number(input?.value);
   return Number.isFinite(value) ? value : fallback;
 };
 
-const POST_FX_KEYS: Array<keyof PostFxState> = [
-  'glitch',
-  'lensDistort',
-  'aberration',
-  'grain',
-  'bleachGrade',
-  'starkThreshold',
-  'bloomStrength',
+interface FxControlSpec {
+  key: keyof PostFxState;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  toggle: boolean;
+}
+
+const FX_CONTROL_SPECS: FxControlSpec[] = [
+  { key: 'glitch', label: 'SCAN GLITCH', min: 0, max: 1.5, step: 0.01, toggle: true },
+  { key: 'lensDistort', label: 'LENS WARP', min: -0.6, max: 0.9, step: 0.01, toggle: true },
+  { key: 'aberration', label: 'CHROMATIC', min: 0, max: 1.5, step: 0.01, toggle: true },
+  { key: 'grain', label: 'FILM GRAIN', min: 0, max: 1, step: 0.01, toggle: true },
+  { key: 'bleachGrade', label: 'BLEACH GRADE', min: 0, max: 1, step: 0.01, toggle: true },
+  { key: 'starkThreshold', label: 'STARK STENCIL', min: 0, max: 1, step: 0.01, toggle: true },
+  { key: 'bloomStrength', label: 'HDR BLOOM', min: 0, max: 1.8, step: 0.01, toggle: true },
+  { key: 'linocut', label: 'LINO RELIEF', min: 0, max: 1, step: 0.01, toggle: true },
+  { key: 'neonGlow', label: 'NEON EDGE / GI', min: 0, max: 1.5, step: 0.01, toggle: true },
+  { key: 'exposure', label: 'EXPOSURE', min: 0.45, max: 2.2, step: 0.01, toggle: false },
+  { key: 'lightIntensity', label: 'LIGHT ENERGY', min: 0, max: 2, step: 0.01, toggle: false },
+  { key: 'shadowStrength', label: 'SHADOW DEPTH', min: 0, max: 1, step: 0.01, toggle: false },
+];
+
+const PALETTE_OPTIONS = [
+  ['0', 'STEEL + XENON'],
+  ['1', 'CORNELL RED + CYAN'],
+  ['2', 'ULTRAVIOLET + ACID'],
+  ['3', 'LINO INK + STOCK'],
+  ['4', 'SODIUM + ICE'],
+] as const;
+
+const LIGHT_RIG_OPTIONS = [
+  ['0', 'GALLERY SCULPTURE'],
+  ['1', 'SHADOW THEATRE'],
+  ['2', 'NEON GI INSTALLATION'],
+  ['3', 'CLOCKMAKER INSPECTION'],
+] as const;
+
+const LOOK_PRESETS: Array<{ label: string; fx: PostFxState }> = [
+  {
+    label: 'RAW / CLEAN',
+    fx: {
+      ...DEFAULT_POST_FX,
+      glitch: 0,
+      lensDistort: 0,
+      aberration: 0,
+      grain: 0,
+      bleachGrade: 0,
+      starkThreshold: 0,
+      bloomStrength: 0,
+      linocut: 0,
+      neonGlow: 0,
+      exposure: 1.08,
+      lightRig: 3,
+      lightIntensity: 1.15,
+      shadowStrength: 0.45,
+    },
+  },
+  {
+    label: 'MECHANICAL FILM',
+    fx: { ...DEFAULT_POST_FX, glitch: 0, palette: 0, lightRig: 0 },
+  },
+  {
+    label: 'LINO PRESS',
+    fx: {
+      ...DEFAULT_POST_FX,
+      glitch: 0,
+      lensDistort: 0.018,
+      aberration: 0,
+      grain: 0.12,
+      bleachGrade: 0,
+      bloomStrength: 0.2,
+      linocut: 0.94,
+      neonGlow: 0,
+      palette: 3,
+      exposure: 1.24,
+      lightRig: 1,
+      lightIntensity: 1.15,
+      shadowStrength: 0.94,
+    },
+  },
+  {
+    label: 'NEON CORNELL',
+    fx: {
+      ...DEFAULT_POST_FX,
+      glitch: 0,
+      lensDistort: 0.025,
+      aberration: 0.07,
+      grain: 0.025,
+      bleachGrade: 0.04,
+      bloomStrength: 1.42,
+      linocut: 0,
+      neonGlow: 0.92,
+      palette: 1,
+      exposure: 1.3,
+      lightRig: 2,
+      lightIntensity: 1.38,
+      shadowStrength: 0.76,
+    },
+  },
+  {
+    label: 'SHADOW PLAY',
+    fx: {
+      ...DEFAULT_POST_FX,
+      glitch: 0,
+      aberration: 0.02,
+      grain: 0.09,
+      bloomStrength: 0.48,
+      palette: 4,
+      exposure: 1.08,
+      lightRig: 1,
+      lightIntensity: 1.5,
+      shadowStrength: 1,
+    },
+  },
+  {
+    label: 'ULTRAVIOLET RELAY',
+    fx: {
+      ...DEFAULT_POST_FX,
+      glitch: 0.025,
+      aberration: 0.13,
+      grain: 0.035,
+      bloomStrength: 1.28,
+      neonGlow: 0.68,
+      palette: 2,
+      exposure: 1.22,
+      lightRig: 2,
+      lightIntensity: 1.24,
+      shadowStrength: 0.68,
+    },
+  },
 ];
 
 const INTERPOLATIONS: CameraInterpolation[] = [
@@ -166,7 +292,9 @@ export class DirectorStudioUI {
   private readonly presetB: HTMLSelectElement;
   private readonly crossfade: HTMLInputElement;
   private readonly articulationInputs = new Map<string, HTMLInputElement>();
-  private readonly postFxInputs = new Map<keyof PostFxState, HTMLInputElement>();
+  private readonly postFxInputs = new Map<keyof PostFxState, NumericControl>();
+  private readonly postFxToggles = new Map<keyof PostFxState, HTMLInputElement>();
+  private readonly postFxValueLabels = new Map<keyof PostFxState, HTMLSpanElement>();
   private readonly modeButtons = new Map<DirectorCameraMode, HTMLButtonElement>();
   private readonly tabButtons = new Map<TabId, HTMLButtonElement>();
 
@@ -406,7 +534,14 @@ export class DirectorStudioUI {
     this.currentLook = { ...fx };
     for (const [key, input] of this.postFxInputs) {
       const value = fx[key];
-      if (typeof value === 'number') input.value = value.toFixed(3);
+      if (typeof value !== 'number') continue;
+      input.value = input instanceof HTMLSelectElement
+        ? String(Math.round(value))
+        : value.toFixed(3);
+      const toggle = this.postFxToggles.get(key);
+      if (toggle && !toggle.disabled) toggle.checked = Math.abs(value) > 0.0001;
+      const label = this.postFxValueLabels.get(key);
+      if (label) label.textContent = value.toFixed(2);
     }
   }
 
@@ -470,6 +605,8 @@ export class DirectorStudioUI {
     this.tabContent.innerHTML = '';
     this.articulationInputs.clear();
     this.postFxInputs.clear();
+    this.postFxToggles.clear();
+    this.postFxValueLabels.clear();
     switch (this.activeTab) {
       case 'SHOTS':
         this.renderShotsTab();
@@ -618,16 +755,19 @@ export class DirectorStudioUI {
     }
     this.tabContent.appendChild(list);
 
-    const editor = el('div', 'director-editor');
-    editor.appendChild(el('div', 'director-section-title', 'LOOK / POST-FX KEYFRAME'));
-    const key = this.getSelectedLookKey();
-    const beatInput = number(key?.beat ?? this.currentBeat, 0.25);
-    const labelInput = el('input', 'director-input');
-    labelInput.type = 'text';
-    labelInput.value = key?.label ?? 'NEW LOOK';
-    editor.append(this.field('BEAT', beatInput), this.field('LABEL', labelInput));
+    const editor = el('div', 'director-editor director-look-editor');
+    editor.appendChild(el('div', 'director-section-title', 'VISUAL LAB // INDEPENDENT FX + LIGHTING'));
+    editor.appendChild(
+      el(
+        'div',
+        'director-help',
+        'Start from a render style, then bypass any trick independently. Palette and light rig drive both the TSL image treatment and the physical Cornell installation.',
+      ),
+    );
 
-    const sliders = el('div', 'director-slider-grid');
+    const key = this.getSelectedLookKey();
+    const values = key?.fx ?? this.currentLook;
+
     const readFx = (): PostFxState => {
       const fx = { ...DEFAULT_POST_FX };
       for (const postKey of POST_FX_KEYS) {
@@ -635,14 +775,110 @@ export class DirectorStudioUI {
       }
       return fx;
     };
-    const values = key?.fx ?? this.currentLook;
-    for (const postKey of POST_FX_KEYS) {
-      const input = number(values[postKey], 0.01);
-      input.oninput = () => this.callbacks.onLookLiveChange(readFx());
-      this.postFxInputs.set(postKey, input);
-      sliders.appendChild(this.field(postKey.toUpperCase(), input));
+    const emitLive = (): void => this.callbacks.onLookLiveChange(readFx());
+    const applyFx = (fx: PostFxState): void => {
+      for (const postKey of POST_FX_KEYS) {
+        const control = this.postFxInputs.get(postKey);
+        if (control) control.value = String(fx[postKey]);
+        const toggle = this.postFxToggles.get(postKey);
+        if (toggle) toggle.checked = Math.abs(fx[postKey]) > 0.0001;
+        const valueLabel = this.postFxValueLabels.get(postKey);
+        if (valueLabel) valueLabel.textContent = fx[postKey].toFixed(2);
+      }
+      this.currentLook = { ...fx };
+      this.callbacks.onLookLiveChange(fx);
+    };
+
+    const presetBlock = el('div', 'director-look-presets');
+    for (const preset of LOOK_PRESETS) {
+      const presetButton = button(preset.label, 'btn director-look-preset');
+      presetButton.onclick = () => applyFx({ ...preset.fx });
+      presetBlock.appendChild(presetButton);
     }
-    editor.appendChild(sliders);
+    editor.appendChild(presetBlock);
+
+    const selectors = el('div', 'director-look-selectors');
+    const paletteSelect = el('select', 'director-select');
+    for (const [value, label] of PALETTE_OPTIONS) {
+      const option = el('option', '', label);
+      option.value = value;
+      paletteSelect.appendChild(option);
+    }
+    paletteSelect.value = String(Math.max(0, Math.min(4, Math.round(values.palette))));
+    paletteSelect.onchange = emitLive;
+    this.postFxInputs.set('palette', paletteSelect);
+
+    const lightRigSelect = el('select', 'director-select');
+    for (const [value, label] of LIGHT_RIG_OPTIONS) {
+      const option = el('option', '', label);
+      option.value = value;
+      lightRigSelect.appendChild(option);
+    }
+    lightRigSelect.value = String(Math.max(0, Math.min(3, Math.round(values.lightRig))));
+    lightRigSelect.onchange = emitLive;
+    this.postFxInputs.set('lightRig', lightRigSelect);
+    selectors.append(
+      this.field('PALETTE', paletteSelect),
+      this.field('PHYSICAL LIGHT RIG', lightRigSelect),
+    );
+    editor.appendChild(selectors);
+
+    const controls = el('div', 'director-fx-controls');
+    for (const spec of FX_CONTROL_SPECS) {
+      const row = el('div', 'director-fx-row');
+      const toggle = el('input', 'director-fx-toggle');
+      toggle.type = 'checkbox';
+      toggle.checked = !spec.toggle || Math.abs(values[spec.key]) > 0.0001;
+      toggle.disabled = !spec.toggle;
+      toggle.title = spec.toggle ? `Toggle ${spec.label}` : `${spec.label} is continuously variable`;
+
+      const label = el('span', 'director-fx-label', spec.label);
+      const input = el('input', 'director-range');
+      input.type = 'range';
+      input.min = String(spec.min);
+      input.max = String(spec.max);
+      input.step = String(spec.step);
+      input.value = String(values[spec.key]);
+      input.dataset.lastValue = String(
+        Math.abs(values[spec.key]) > 0.0001
+          ? values[spec.key]
+          : Math.max(DEFAULT_POST_FX[spec.key], spec.step),
+      );
+      const value = el('span', 'director-fx-value', Number(input.value).toFixed(2));
+      input.oninput = () => {
+        const current = Number(input.value);
+        if (Math.abs(current) > 0.0001) input.dataset.lastValue = input.value;
+        if (spec.toggle) toggle.checked = Math.abs(current) > 0.0001;
+        value.textContent = current.toFixed(2);
+        emitLive();
+      };
+      toggle.onchange = () => {
+        if (!toggle.checked) {
+          if (Math.abs(Number(input.value)) > 0.0001) input.dataset.lastValue = input.value;
+          input.value = '0';
+        } else {
+          input.value = input.dataset.lastValue ?? String(Math.max(DEFAULT_POST_FX[spec.key], spec.step));
+        }
+        value.textContent = Number(input.value).toFixed(2);
+        emitLive();
+      };
+      this.postFxInputs.set(spec.key, input);
+      this.postFxToggles.set(spec.key, toggle);
+      this.postFxValueLabels.set(spec.key, value);
+      row.append(toggle, label, input, value);
+      controls.appendChild(row);
+    }
+    editor.appendChild(controls);
+
+    const keyBlock = el('div', 'director-look-keyframe');
+    keyBlock.appendChild(el('div', 'director-section-title', 'LOOK KEYFRAME'));
+    const beatInput = number(key?.beat ?? this.currentBeat, 0.25);
+    const labelInput = el('input', 'director-input');
+    labelInput.type = 'text';
+    labelInput.value = key?.label ?? 'NEW LOOK';
+    const keyFields = el('div', 'director-look-selectors');
+    keyFields.append(this.field('BEAT', beatInput), this.field('LABEL', labelInput));
+    keyBlock.appendChild(keyFields);
 
     const read = (): Omit<LookKeyframe, 'id'> => ({
       beat: num(beatInput),
@@ -662,7 +898,8 @@ export class DirectorStudioUI {
     const release = button('RELEASE LIVE LOOK', 'btn director-action');
     release.onclick = () => this.callbacks.onLookLiveChange(null);
     actions.append(capture, add, update, release);
-    editor.appendChild(actions);
+    keyBlock.appendChild(actions);
+    editor.appendChild(keyBlock);
     this.tabContent.appendChild(editor);
   }
 
@@ -882,7 +1119,7 @@ export class DirectorStudioUI {
         el(
           'div',
           'director-help',
-          'This work does not expose a machine graph. Load MODAL FLOW // PHYSICS SONG or ASTRARIUM // MODULAR ENGINE to author modules, ports, energy sources, conduits, bindings and focus scales.',
+          'This work does not expose a machine graph. Load MODAL FLOW // RESONANT RELAY or ASTRARIUM // MODULAR ENGINE to author modules, ports, conduits, mechanical transmissions, bindings and focus scales.',
         ),
       );
       this.tabContent.appendChild(header);
@@ -1142,7 +1379,7 @@ export class DirectorStudioUI {
         el(
           'div',
           'director-help',
-          'This work does not expose a custom physics machine. Load MODAL FLOW // PHYSICS SONG or PENDULUM // MARBLE ENGINE to edit flow, gravity, gate timing, routing pins and the part registry.',
+          'This work does not expose a custom physics machine. Load MODAL FLOW // RESONANT RELAY or PENDULUM // MARBLE ENGINE to edit flow, gravity, gate timing, routing pins and the marble/mechanism registry.',
         ),
       );
       this.tabContent.appendChild(header);

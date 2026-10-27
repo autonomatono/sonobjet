@@ -62,6 +62,11 @@ async function bootstrap(): Promise<void> {
   let impulseCount = 0;
   let ignited = false;
 
+  const applyVisualStyle = (fx: Parameters<WebGPUStage['setPostFx']>[0]): void => {
+    stage.setPostFx(fx);
+    activeInstance?.setVisualStyle?.(fx);
+  };
+
   const getRuntimeCtx = (): WorkRuntimeContext => ({
     scene: stage.scene,
     camera: stage.camera,
@@ -69,7 +74,7 @@ async function bootstrap(): Promise<void> {
     audio,
     clock,
     matrix,
-    setPostFx: (fx) => stage.setPostFx(fx),
+    setPostFx: applyVisualStyle,
   });
 
   const dispatchLiveImpulse = (event: ImpulseEvent): void => {
@@ -90,16 +95,24 @@ async function bootstrap(): Promise<void> {
     const wasPlaying = clock.isPlaying();
     clock.pause();
     activeInstance?.dispose();
+    activeInstance = null;
 
     activeWorkDef = work;
-    stage.setPostFx({
+    applyVisualStyle({
       glitch: 0,
-      lensDistort: 0.06,
-      aberration: 0.16,
-      grain: 0.12,
-      bleachGrade: 0.22,
+      lensDistort: 0.035,
+      aberration: 0.06,
+      grain: 0.055,
+      bleachGrade: 0.18,
       starkThreshold: 0,
-      bloomStrength: 0.9,
+      bloomStrength: 0.86,
+      linocut: 0,
+      neonGlow: 0.06,
+      palette: 0,
+      exposure: 1.18,
+      lightRig: 0,
+      lightIntensity: 1,
+      shadowStrength: 0.62,
     });
     clock.configure(work.bpm, work.bars, work.sections);
     audio.setBpm(work.bpm);
@@ -333,7 +346,7 @@ async function bootstrap(): Promise<void> {
     clock,
     audio,
     matrix,
-    setPostFx: (fx) => stage.setPostFx(fx),
+    setPostFx: applyVisualStyle,
     onEnabledChange: (enabled) => {
       inputRig?.setDirectorMode(enabled);
       activeInstance?.setDirectorEnabled?.(enabled);
