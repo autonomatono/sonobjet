@@ -1,43 +1,44 @@
 # SONOBJET
 
-**Living Biomechanical Audiovisual Objects, Custom WebGPU + WebAudio Synth/Composition Engine, and Live Performance Studio**
+**Living Architectural Sound-Machines, Custom WebGPU + WebAudio Synth/Composition Engine, Music-Synced Cinema Director, and Live Performance Studio**
 
 - **Live Deployment (GitHub Pages):** [https://autonomatono.github.io/sonobjet/](https://autonomatono.github.io/sonobjet/)
 - **Direct Scene Deep-Links:**
-  - Proof-of-Concept 01 (`GANTZ // AUTOMATON`): [`?work=gantz-tecton`](https://autonomatono.github.io/sonobjet/?work=gantz-tecton)
+  - Proof-of-Concept 01 (`BABBAGE // CLAVILUX`): [`?work=gantz-tecton`](https://autonomatono.github.io/sonobjet/?work=gantz-tecton)
   - Etude 02 (`PHASE // LATTICE`): [`?work=phase-lattice`](https://autonomatono.github.io/sonobjet/?work=phase-lattice)
 
 ---
 
-## Vision: Living Sound-Machines & True Musical Composition
+## Vision: Architectural Sound-Machines, True Composition & Epic Montage
 
-Rather than modulating uniform symmetric geometry with an FFT analyzer, **SONOBJET** constructs **asymmetric, hierarchical biomechanical sound-creatures and automatons** whose specialized organs *are* their instruments—paired with **through-composed experimental scores** featuring recurring motifs, modal harmony, call-and-response, anticipation wind-ups, stark silences, and climaxes.
+Rather than modulating uniform symmetric geometry with an FFT analyzer—or relying on anthropomorphic faces/limbs—**SONOBJET** constructs **non-anthropomorphic, emergently alive architectural sound-factories** (inspired by *Howl's Moving Castle*, Charles Babbage's *Difference Engine*, Thomas Wilfred's *Clavilux Light Organ*, and Piranesi's *Carceri*) paired with **through-composed experimental scores** and **music-synced multi-perspective cinematography**.
 
-1. **Biomechanical Anatomy & Anticipation (`Clock` + `GantzAutomaton`):** Heavy limbs do not teleport on a transient—`Clock.ts` dispatches pre-strike `AnticipationCue`s (`250–450 ms` ahead of downbeats) alongside audible pneumatic inhales so the creature physically **coils its S-curve spine, glances down at its anvil, and cocks its Siege-Hammer overhead** *before* slamming down in a spray of floor-bouncing sparks.
-2. **Emergent Autonomous Life:** Even at rest or in `PURE LIVE` mode, the automaton breathes with exertion-coupled respiration, executes curious saccadic head/eye darts toward its own limbs or the user's cursor/hands, conserves Newtonian angular momentum with its 10-segment counter-tail, and vents heat through porcelain ribs when fatigued.
-3. **5-Material Chiaroscuro & WebGPU HDR Bloom (`TSLMaterials` + `WebGPUStage`):** Contrasts weathered **Bone-Porcelain Carapace**, oiled **Forged Cast-Iron**, mirror **Surgical Chrome**, oxidized **Aged Brass**, and HDR-blooming **Tungsten Visceral Filaments** inside volumetric overhead gantry light shafts.
+1. **Causal Mechanical Architecture & Anticipation (`Clock` + `BabbageLightOrgan`):** Heavy mechanisms wind up before striking—`Clock.ts` dispatches pre-strike `AnticipationCue`s (`250–450 ms` ahead of downbeats) alongside audible pneumatic bellows intakes so the machine physically **cranks its 3 Drop-Forge Trip-Hammers upward and inflates its lateral accordion bellows** *before* slamming onto brass-capped anvils in a shower of 220 floor-bouncing sparks.
+2. **Spectacular Multi-Scale Cinematography (`CinemaDirector` + `PiranesiFoundry`):** Inside a monumental `46m x 32m x 56m` Piranesian industrial cathedral with 9 receding portal arches, two-tier mezzanine catwalks, and 8 sweeping chromatic light-organ projection cones, the **Epic Auto-Edit Director** executes razor-sharp smash-cuts, flies straight through the 3.2m central nave between the Babbage towers, zooms in with 85mm telephoto macros on clicking brass cipher wheels, bolts a **SnorriCam POV** directly onto the reciprocating Jacquard shuttle carriage, and warps space with a **4-bar Hitchcock Vertigo Dolly-Zoom**.
+3. **Chromatic Quartz & Engraved Metal TSL Shaders (`TSLMaterials` + `WebGPUStage`):** Contrasts **Per-Instance HDR Spectral Quartz Light-Organ Pipes**, **Engraved Decagonal Brass Cipher Wheels**, **Punched Jacquard Ivory Plates**, **Oiled Cast-Iron**, and **Mirror Surgical Chrome** with TSL HDR Bloom.
 
 ---
 
-## Proof of Concept 01: `GANTZ // AUTOMATON`
+## Proof of Concept 01: `BABBAGE // CLAVILUX`
 
-### 7 Specialized Biomechanical Organs
-1. **14-Vertebra S-Curve Spine & 8-Pair Porcelain Rib Bellows:** Peristaltic coiling, metabolic breathing, and harmonic polychord expansion (`bellows-choir`).
-2. **Asymmetric Cranial Sensorium, Saccadic Iris & 5-Reed Vocal Mandibles:** Tracks cursor/hands, glances at active limbs, and articulates vowel shapes (`AH/EH/EE/OH/OO`) as its glottal formant synth (`larynx-lead`) sings.
-3. **Heavy Right 3-DOF Siege-Hammer & Spring-Mounted Floor Anvil:** Winds up ahead of downbeats and slams onto the brass-inlaid cast-iron anvil (`sub-rupture`, `spine-shear`), spraying 160 ballistic sparks that bounce off the wet slate plinth.
-4. **Dual Left 3-Jointed Mantis Raker Limbs & 16-Rod Harp-Comb:** Darts across 16 graduated tensioned steel rods to pluck melodic **Seed Motifs** (`modal-clang`) and 16-slice breakcore chops (`break-shred`).
-5. **Ventral Eccentric Brass Flywheel Governor & Brake Caliper:** Spins with musical momentum; mechanically clamps shut with friction sparks on `stutter` freezes and dead-stops.
-6. **10-Segment Whipping Counter-Tail & Arc Stinger:** Balances Siege-Hammer torque and fires `arc-discharge` bursts.
-7. **6 Catenary Steel Suspension Tendons:** Anchor the creature to overhead gantry I-beams and floor tensioners, vibrating with transverse waves under load.
+### 6 Interlocking Non-Anthropomorphic Acoustic Districts (`510` Dynamic Elements)
+1. **Locomotive Rail Undercarriage, Brass Cam-Barrel & 3 Drop-Forge Trip-Hammers:** Rolls and heaves along polished steel foundry rails on 4 flanged chrome wheels while 3 staggered trip-hammers wind up and slam brass-capped anvils (`sub-rupture`, `spine-shear`), spraying 220 ballistic sparks across the wet slate mirror channel.
+2. **Twin Babbage Analytical Cipher Towers (`48` Brass Digit Wheels + `48` Chrome Carry-Levers):** Framing the open 3.2m central flythrough atrium; rhythmic impulses (`modal-clang`, `fin-cascade`, `piston-snap`) step engraved decagonal brass wheels by exact `36°` decimal increments and trigger cascading carry-lever waves.
+3. **Overhead Jacquard Punched-Card Loom Bridge & Shuttle Carriage (`SnorriCam Mount`):** A reciprocating cast-iron/brass carriage slams across twin chrome guide-rails on every chopped breakcore slice (`break-shred`), flipping a hexagonal ivory card-prism by `60°` as 16 chrome sensing needles plunge through.
+4. **Asymmetric 24-Pipe Chromatic Clavilux Light-Organ Crown:** Towering left-battlement bass pipes (`y = +6.9m`) and stepped right-terrace reed pipes ignite internally with Scriabin pitch-mapped HDR plasma (`F` = molten ember, `Db` = glacial arc blue, `C` = xenon ivory, `Gb` = electric cyan) and flip open hinged brass louvers on every `larynx-lead` solo note and `bellows-choir` polychord.
+5. **Central 3-Ring Counter-Rotating Dichroic Astrolabe & Hydraulic Brake Shoes:** Suspended inside the interior nave; clamped dead still in a burst of friction sparks during `stutter` freezes and Act IV dead-stops.
+6. **Lateral Ribbed Bellows Lung-Vats, Boiler Stack & 8 Catenary Gantry Cables:** Asymmetric accordion vats pump air into the windchests while `112` instanced steel cable links anchor the moving chassis to `9.2m` overhead foundry trusses.
 
-### Through-Composed 6-Act Score (80 Bars, 164 BPM, F Phrygian)
-Built around the recurring 5-note **Seed Motif (`C5 – Db5 – Ab4 – G4 – F4`)**, an asymmetric `3+3+4+3+3` rhythmic spine, and an 8-bar modal progression (`Fm(add9) -> Db Lydian #11 -> Bbm9 -> C7b9`):
-- **Act I (`Bars 1–12`) — `LATENT BREATH & SEED MOTIF`:** Chamber silence, subterranean breath, naked plucked harp Seed Motif, pneumatic wind-up into a single devastating Anvil Slam + decelerating steel pawl, and quiet Larynx awakening.
-- **Act II (`Bars 13–28`) — `ASYMMETRIC LOOM (CALL / RESPONSE)`:** Strict 2-bar dialogue between Right Siege-Hammer Calls and Left Mantis-Harp/Break Responses; folded F-Phrygian bassline enters at Bar 21.
-- **Act III (`Bars 29–48`) — `LARYNX ARIA OVER BREAKCORE`:** Soaring vocal-formant melody & bellows polychords over structured breakcore, featuring a 2-bar drumless vocal suspension at Bars 45–46.
-- **Act IV (`Bars 49–60`) — `FLYWHEEL CADENZA & RISER`:** Stop-start Autechre *Gantz Graf* mechanical cadenza (3 beats hyper-ratchet vs 1 beat dead-locked silence), 4-bar 2-octave pitch/density riser, and **2 full beats of breathless silence** before the drop.
-- **Act V (`Bars 61–72`) — `APEX CONVERGENCE`:** Full climax uniting octave-doubled Seed Motif, polychords, monolith bass, and relentless breakcore/anvil fury.
-- **Act VI (`Bars 73–80`) — `EXHAUSTION & STILLNESS`:** Coasting flywheel, panting rib-vents, and a solitary farewell Seed Motif fading into a final latch click.
+### 8 Camera Perspectives + Music-Synced Epic Montage (`Keys 0, 1–8`)
+- **`[0] EPIC AUTO-EDIT DIRECTOR` (Default):** Music-synced hard smash-cuts, whip-pans, Act IV **4-bar Hitchcock Vertigo Dolly-Zoom (`[ZOLLY]`)**, and Act VI **6-bar `1.15m -> 22m` Cathedral Pull-Back**.
+- **`[1] CATHEDRAL WIDE [24mm]`** — Monumental crane sweep across the 9 Piranesian portal arches & 8 sweeping light-organ beams.
+- **`[2] INTERIOR NAVE FLYTHROUGH [28mm]`** — Continuous tracking rail diving straight through the 3.2m canyon between the Babbage towers and spinning Astrolabe.
+- **`[3] MACRO: BABBAGE CIPHER WHEELS [85mm Tele]`** — Tight telephoto inspection of clicking brass decimal wheels & carry-levers.
+- **`[4] MACRO: JACQUARD PUNCH-LOOM [50mm]`** — Oblique close-up on the flipping ivory card-prism & 16 plunging chrome needles.
+- **`[5] LIGHT-ORGAN QUARTZ CROWN [24mm Low]`** — Upward cathedral angle inside the 24 blazing chromatic quartz pipes & opening brass louvers.
+- **`[6] LOW FORGE: DROP-HAMMERS [18mm Dutch]`** — Floor-skimming wide-angle inches from the cam-barrel & sparking anvils.
+- **`[7] SHUTTLE POV [SNORRICAM]`** — Mechanically bolted onto the reciprocating Jacquard shuttle carriage as it whips across the bridge.
+- **`[8] OVERHEAD ASTROLABE PLAN [70mm]`** — High vertical Kubrickian plan view down through the concentric counter-rotating rings.
 
 ---
 
@@ -45,17 +46,15 @@ Built around the recurring 5-note **Seed Motif (`C5 – Db5 – Ab4 – G4 – F
 
 | Input | Action |
 | :--- | :--- |
-| **`Space`** | Play / Pause 6-Act Composition |
+| **`Space`** | Play / Pause 6-Act Film & Score (80 Bars, 164 BPM, F Phrygian) |
+| **`0` / `1–8`** | **`0` = Epic Auto-Edit Director**; **`1–8` = Direct Camera Rigs** (Cathedral, Nave Flythrough, Babbage Macro, Jacquard Macro, Quartz Crown, Low Forge, Shuttle SnorriCam, Astrolabe Plan) |
 | **`Tab` / `H`** | Toggle borderless **Cinema Mode** vs **Performance Studio HUD** |
-| **Mouse Hover (`X / Y`)** | Guides creature's **Saccadic Gaze**; sets **Vowel Formant (`X`)** & **F-Phrygian Pitch (`Y`)** for live pads |
-| **Mouse Left-Click / Drag** | Left half plucks tuned Harp rod; Drag coils spine & flares ribs; **Release fires C5 Larynx cry / Anvil slam** |
-| **Mouse Right-Drag / `Shift`+Drag** | Orbit camera (`Wheel` zooms) |
-| **`Z X C V B N M ,`** | Play Biomechanical Organs live (`ANVIL KICK`, `SPINE SNARE`, `BREAK CHOP`, `MANTIS HARP`, `LARYNX VOICE`, `BELLOWS CHORD`, `MONOLITH BASS`, `TAIL STINGER`) |
-| **`A S D F G J K`** | Momentary FX (`BRAKE STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `RIB FLARE`, `HARD LOCK`) |
-| **`1 2 3 4 5`** | Camera Cuts (`1` 3/4 Anvil, `2` Larynx/Harp Portrait, `3` Low Forge, `4` Wide Gantry, `5` Auto Cinema Director) |
+| **Mouse Left-Click / Drag** | Plucks tuned Babbage Chimes / Pistons; Drag drives Shuttle Carriage & strains chassis |
+| **Mouse Right-Drag / `Shift`+Drag** | Free orbital camera offset (`Wheel` zooms in/out on any active rig) |
+| **`Z X C V B N M ,`** | Play Acoustic Districts live (`DROP FORGE`, `TRIPLE HAMMER`, `JACQUARD BREAK`, `BABBAGE CHIME`, `CLAVILUX REED`, `ORGAN PLENUM`, `FURNACE BASS`, `BRAKE ARC`) |
+| **`A S D F G J K`** | Momentary FX (`BRAKE STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `TOWER SPREAD`, `BRAKE LOCK`) |
 | **`Q W E R T Y`** | Cue / jump directly to **Acts I–VI** |
-| **`Shift + R`** | Toggle Multi-Pass Overdub Gesture Recording |
-| **MediaPipe Hands / Mic** | 2-Hand span flares ribs; pinches control Raker Density & Larynx Tension + snap strikes; Mic claps excite organs |
+| **`Shift + R`** | Toggle Multi-Pass Overdub Gesture & Camera-Cut Recording |
 
 ---
 
@@ -65,13 +64,13 @@ Built around the recurring 5-note **Seed Motif (`C5 – Db5 – Ab4 – G4 – F
 npm install
 npm run dev        # Launch live studio on http://0.0.0.0:5173
 npm run typecheck  # Strict TypeScript check
-npm test           # Run Vitest suite (Clock, Anticipation, 6-Act Score, 7-Organ Automaton, Recorder)
+npm test           # Run Vitest suite (Clock, 6-Act Score & Montage, CinemaDirector Zolly/SnorriCam, BabbageLightOrgan)
 npm run build      # Production build into ./dist (with self-hosted MediaPipe WASM)
 ```
 
 ## Documentation & Continuity
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Biomechanical ontology, Anticipation Queue, Formant/Polychord DSP, TSL materials & HDR Bloom.
-- [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Playing the Automaton live, F-Phrygian modal keyboard/mouse mapping, sensors & recording.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Architectural sound-machine ontology, CinemaDirector & Vertigo Zolly math, PiranesiFoundry, TSL shaders & DSP.
+- [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Camera directing (`0, 1–8`), playing the 6 districts live, MediaPipe/Mic sensors & recording.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI pipeline & turn-end workflow.
 - [`HANDOFF.md`](HANDOFF.md) — Session state, commit history, architectural log, and next milestones.

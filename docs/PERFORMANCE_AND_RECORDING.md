@@ -1,53 +1,57 @@
-# Live Performance, Sensing & Recording Guide
+# Live Performance, Camera Directing, Sensing & Recording Guide
 
-`SONOBJET` functions simultaneously as a **through-composed 6-Act experimental music video** and an **expressive F-Phrygian biomechanical instrument** playable with mouse/keyboard, MediaPipe 2-hand vision, microphone acoustics, MIDI, or gamepads.
+`SONOBJET` functions simultaneously as a **through-composed 6-Act experimental music video** and an **expressive F-Phrygian architectural sound-machine & live camera suite** playable with mouse/keyboard, MediaPipe 2-hand vision, microphone acoustics, MIDI, or gamepads.
 
 ---
 
-## 1. Playing the Biomechanical Automaton (Mouse + Keyboard)
+## 1. Directing the Cinema Montage Rig (`Keys 0, 1–8` + Mouse Orbit/Zoom)
+
+- **`[0]` — `EPIC AUTO-EDIT DIRECTOR` (Default):**
+  - During `SCORE + LIVE` playback, executes tightly music-synced hard smash-cuts, whip-pans, interior flythroughs, the **Act IV 4-Bar Hitchcock Vertigo Dolly-Zoom (`[ZOLLY]`)**, and the **Act VI 6-Bar `1.15m -> 22m` Cathedral Pull-Back**.
+  - During `PURE LIVE` play, dynamically smash-cuts to each district as you play pads (`Z` -> Low Drop-Forge, `V` -> Babbage Cipher Macro, `C` -> Shuttle SnorriCam, `B`/`N` -> Quartz Crown, `M` -> Cathedral Wide).
+- **`[1]` — `CATHEDRAL WIDE [24mm]`:** Sweeping monumental crane shot across the 9 Piranesian portal arches and 8 sweeping chromatic light-organ projection cones.
+- **`[2]` — `INTERIOR NAVE FLYTHROUGH [28mm]`:** Continuous rail tracking shot flying directly through the 3.2m canyon between the twin Babbage Cipher Towers and central Dichroic Astrolabe.
+- **`[3]` — `MACRO: BABBAGE CIPHER WHEELS [85mm Tele]`:** Telephoto macro inches from the engraved decagonal brass wheels clicking in `36°` decimal increments.
+- **`[4]` — `MACRO: JACQUARD PUNCH-LOOM [50mm]`:** Oblique close-up on the rotating hexagonal ivory card-prism and 16 plunging surgical-chrome needles.
+- **`[5]` — `LIGHT-ORGAN QUARTZ CROWN [24mm Low]`:** Dramatic upward angle inside the 24 blazing chromatic quartz pipes and opening brass louvers.
+- **`[6]` — `LOW FORGE: DROP-HAMMERS [18mm Dutch]`:** Floor-level wide-angle inches from the rotating brass cam-barrel and 3 sparking trip-hammers.
+- **`[7]` — `SHUTTLE POV [SNORRICAM]`:** Rigidly bolted onto the reciprocating Jacquard shuttle carriage—watch the Piranesian cathedral whip sideways on every chopped breakbeat slice!
+- **`[8]` — `OVERHEAD ASTROLABE PLAN [70mm]`:** Vertical Kubrickian plan view straight down through the counter-rotating astrolabe rings.
+- **Right-Drag / `Shift`+Drag & Scroll Wheel:** Freely orbit and zoom (`0.38x..2.4x`) on top of *any* active camera rig.
+
+---
+
+## 2. Playing the Architectural Sound-Factory (Mouse + Keyboard)
 
 ### Continuous Cursor Expression (`Mouse X / Y`)
-- **Saccadic Gaze Tracking:** Moving your cursor across the viewport attracts the automaton's cyclops optic turret.
-- **Tonal & Formant Mapping:**
-  - **`Mouse Y` (Vertical):** Selects scale degrees across two octaves of **F Phrygian (`F, Gb, Ab, Bb, C, Db, Eb`)** when triggering tonal organs (`V`, `B`, `M`), or plays the signature 5-note **Seed Motif** (`C5–Db5–Ab4–G4–F4`) when centered.
-  - **`Mouse X` (Horizontal):** Morphs the creature's **Vocal Formant Vowel (`AH -> EH -> EE -> OH -> OO`)** and mandible aperture width.
-- **Left-Click & Drag (`Coil & Release`):**
-  - Clicking the **left half** of the frame plucks a tuned rod on the 16-Rod Harp; clicking the **right half** actuates a hydraulic latch.
-  - **Dragging** coils the creature's 14-vertebra spine backward and flares its porcelain ribs while ramping continuous servo tension; **releasing** after a deep pull unleashes a high `C5` Larynx cry or devastating Anvil slam.
+- **`Mouse Y` (Vertical):** Selects scale degrees across two octaves of **F Phrygian (`F, Gb, Ab, Bb, C, Db, Eb`)** when triggering tonal districts (`V`, `B`, `M`), or plays the signature 5-note **Seed Motif** (`C5–Db5–Ab4–G4–F4`) when centered.
+- **`Mouse X` (Horizontal):** Morphs the Clavilux Reed formant filter (`AH -> EH -> EE -> OH -> OO`) and drives the Jacquard shuttle carriage position during left-drag.
+- **Left-Click & Drag (`Drive & Release`):**
+  - Clicking the **left half** plucks a tuned Babbage chime & steps decimal wheels; clicking the **right half** fires an escapement piston.
+  - **Dragging** slides the overhead Jacquard shuttle carriage and builds structural tension; **releasing** after a deep pull triggers a `C5` Clavilux reed cry or heavy Drop-Forge slam.
 
-### 8 Biomechanical Organ Pads (`Z X C V B N M ,`)
-- `Z` — **ANVIL KICK (`sub-rupture`)**: Slams the Right Siege-Hammer onto the Floor Anvil, detonating floor-bouncing sparks
-- `X` — **SPINE SNARE (`spine-shear`)**: Forged snare crack + torso/tail counter-torsion
-- `C` — **BREAK CHOP (`break-shred`)**: Cycles 16 procedural breakbeat slices + Mantis claw raking
-- `V` — **MANTIS HARP (`modal-clang`)**: Plucks F-Phrygian melodic notes on the 16-rod steel harp
-- `B` — **LARYNX VOICE (`larynx-lead`)**: Sings F-Phrygian modal phrases through the 5-reed mandible-larynx
-- `N` — **BELLOWS CHORD (`bellows-choir`)**: Cycles the 4-chord progression (`Fm(add9) -> Dbmaj7#11 -> Bbm9 -> C7b9`)
-- `M` — **MONOLITH BASS (`core-implode`)**: Plays wavefolded F-Phrygian bass notes
-- `,` — **TAIL STINGER (`arc-discharge`)**: Whips the 10-segment tail stinger with FM spark bursts
+### 8 Acoustic District Pads (`Z X C V B N M ,`)
+- `Z` — **DROP FORGE (`sub-rupture`)**: Slams a staggered Trip-Hammer onto a brass-capped anvil, spraying floor-bouncing sparks
+- `X` — **TRIPLE HAMMER (`spine-shear`)**: Unison 3-hammer forge shear + chassis suspension heave
+- `C` — **JACQUARD BREAK (`break-shred`)**: Cycles 16 procedural breakbeat slices, flips the ivory card-prism & slams the Shuttle Carriage
+- `V` — **BABBAGE CHIME (`modal-clang`)**: Plays F-Phrygian melodic notes while stepping brass decimal wheels & carry-levers
+- `B` — **CLAVILUX REED (`larynx-lead`)**: Sings F-Phrygian modal leads while igniting pitch-matched chromatic quartz pipes
+- `N` — **ORGAN PLENUM (`bellows-choir`)**: Cycles the 4-chord progression (`Fm(add9) -> Dbmaj7#11 -> Bbm9 -> C7b9`) across harmonic pipe banks & cathedral beams
+- `M` — **FURNACE BASS (`core-implode`)**: Plays wavefolded F-Phrygian sub-bass + whole-crown discharge
+- `,` — **BRAKE ARC (`arc-discharge`)**: Clamps hydraulic brake shoes onto the spinning Astrolabe with friction sparks
 
 ### Momentary Fracture & Mechanical FX (`A S D F G J K`)
-- `A` — **BRAKE STUTTER**: Clamps the hydraulic brake caliper onto the brass flywheel (spraying friction sparks) while locking the `AudioWorklet` stutter ring buffer
-- `S` — **64TH DRILL**: Fires rapid 64th-note snare/raker bursts
+- `A` — **BRAKE STUTTER**: Clamps the Astrolabe brake shoes while freezing the `AudioWorklet` stutter ring buffer
+- `S` — **64TH DRILL**: Multiplies snare/cipher bursts into rapid 64th-note drills
 - `D` — **HALFTIME**: Stretches transport clock to `0.5x` half-speed
 - `F` — **COMB SCREAM**: Drives F-tuned stereo waveguide comb feedback
-- `G` — **REV SLICE**: Reverses breakbeat slices
-- `J` — **RIB FLARE**: Opens porcelain rib-cage valves & abducts limbs
-- `K` — **HARD LOCK**: Quantizes all joints to rigid CAD detents
-
-### Navigation & Camera Cuts
-- **`Q W E R T Y`**: Cue directly to **Acts I–VI** on the 80-bar timeline
-- **`1 2 3 4 5`**: Cut cameras (`1` Full Automaton & Anvil, `2` Larynx & Harp Portrait, `3` Low Forge Anvil, `4` Wide Containment Gantry, `5` Autonomous Cinema Director)
-- **`Tab` / `H`**: Toggle pure borderless **Cinema Mode**
+- `G` — **REV SLICE**: Reverses Jacquard breakbeat slices
+- `J` — **TOWER SPREAD**: Abducts the twin Babbage Cipher Towers & inflates lateral accordion bellows
+- `K` — **BRAKE LOCK**: Locks locomotive cruise & clamps the Astrolabe dead still
 
 ---
 
-## 2. Live Sensing (`MediaPipe`, `Mic`, `MIDI`, `Gamepad`)
-- **MediaPipe 2-Hand 3D Vision (`MEDIAPIPE HANDS`):** Spreading palms flares the porcelain rib-bellows; left/right thumb-index pinches modulate Raker Density & Larynx/Harp Tension, and rapid pinch-snaps strike `SPINE SNARE` / `TAIL STINGER`. Includes a zero-model `48x36` optical motion fallback.
-- **Mic Acoustic Exciter (`MIC EXCITER`):** Desk thumps fire `ANVIL KICK`, claps fire `SPINE SNARE`, finger snaps fire `RAKER COMB`.
-- **WebMIDI & Gamepad:** Auto-detected for external hardware performance.
-
----
-
-## 3. Multi-Pass Overdub Composition & `.WEBM` Video Capture
-- **`OVERDUB REC` (`Shift + R`):** Layer multiple improvised passes (organ melodies, anvil rhythms, vowel drags, camera cuts) into a deterministic timeline and export/import `.sonobjet-take.json` files.
-- **`CAPTURE .WEBM MUSIC VIDEO`:** Records 60fps HDR-bloomed WebGPU video + direct digital Opus audio from the Master WebAudio Bus.
+## 3. Live Sensing & Multi-Pass Recording
+- **MediaPipe 2-Hand 3D Vision (`MEDIAPIPE HANDS`):** Hand span controls `TOWER & BELLOWS SPREAD`; left/right pinches modulate `CIPHER RATCHET` & `PIPE / CHIME Q` plus snap-strikes (with zero-model `48x36` optical fallback).
+- **Mic Acoustic Exciter (`MIC EXCITER`):** Desk thumps fire `DROP FORGE`, claps fire `TRIPLE HAMMER`, snaps step `BABBAGE WHEELS`.
+- **`OVERDUB REC` (`Shift + R`) & `CAPTURE .WEBM MUSIC VIDEO`:** Record multi-pass gestures + live camera cuts (`0, 1–8`) to `.sonobjet-take.json`, or export 60fps HDR-bloomed `.webm` video + digital Opus audio directly from the browser.

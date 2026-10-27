@@ -10,28 +10,36 @@ import {
   createSonobjetMaterials,
   type SonobjetMaterialRig,
 } from '../../engine/render/TSLMaterials';
-import { KineticCameraRig } from '../../kit/camera/KineticCameraRig';
-import { BrutalistChamber } from '../../kit/environment/BrutalistChamber';
-import { GantzAutomaton } from './GantzAutomaton';
-import { evaluateGantzStepBundle, GANTZ_SECTIONS } from './GantzScore';
+import { CinemaDirector } from '../../kit/camera/CinemaDirector';
+import { PiranesiFoundry } from '../../kit/environment/PiranesiFoundry';
+import { BabbageLightOrgan } from './BabbageLightOrgan';
+import {
+  evaluateGantzMontageCut,
+  evaluateGantzStepBundle,
+  GANTZ_SECTIONS,
+} from './GantzScore';
 
 class GantzSceneInstance implements WorkSceneInstance {
   private materials: SonobjetMaterialRig | null = null;
-  private chamber: BrutalistChamber | null = null;
-  private automaton: GantzAutomaton | null = null;
-  private readonly cameraRig = new KineticCameraRig();
-  private lastSectionIdx = -1;
+  private foundry: PiranesiFoundry | null = null;
+  private machine: BabbageLightOrgan | null = null;
+  private readonly cinemaDirector = new CinemaDirector();
+  private lastMontageKey = -1;
 
   init(ctx: WorkRuntimeContext): void {
     this.materials = createSonobjetMaterials();
-    this.chamber = new BrutalistChamber(this.materials.chamberConcrete);
-    this.automaton = new GantzAutomaton(this.materials);
+    this.foundry = new PiranesiFoundry(this.materials.chamberConcrete);
+    this.machine = new BabbageLightOrgan(this.materials);
 
-    ctx.scene.add(this.chamber.group);
-    ctx.scene.add(this.automaton.worldGroup);
+    ctx.scene.add(this.foundry.group);
+    ctx.scene.add(this.machine.worldGroup);
 
-    // Start in Autonomous Cut Director so camera framing responds cinematically to the 6 Acts
-    this.cameraRig.setMode(5);
+    // Start in Mode 0: EPIC AUTO-EDIT DIRECTOR (music-synced multi-scale montage!)
+    this.cinemaDirector.setMode(0);
+    this.cinemaDirector.applyEditorialDirective({
+      shot: 'macro-babbage',
+      transition: 'hard',
+    });
   }
 
   scheduleStep(
@@ -62,7 +70,7 @@ class GantzSceneInstance implements WorkSceneInstance {
       metallicTension,
       brutalDrive,
       decayScale,
-      strain: this.automaton?.core.getStructuralStress() ?? 0,
+      strain: this.machine?.getStructuralStress() ?? 0,
     };
 
     for (const cue of bundle.anticipations) {
@@ -76,32 +84,53 @@ class GantzSceneInstance implements WorkSceneInstance {
   }
 
   triggerAnticipation(cue: AnticipationCue): void {
-    this.automaton?.applyAnticipation(cue);
+    this.machine?.applyAnticipation(cue);
   }
 
   triggerImpulse(event: ImpulseEvent, ctx: WorkRuntimeContext): void {
-    if (!this.automaton) return;
-    this.automaton.applyImpulse(event);
+    if (!this.machine) return;
+    this.machine.applyImpulse(event);
 
-    // Transfer heavy Siege-Anvil shock to camera mount
+    // Transfer heavy Drop-Forge & Furnace shock to camera mount
     if (
       event.subsystem === 'sub-rupture' ||
       event.subsystem === 'spine-shear' ||
       event.subsystem === 'core-implode'
     ) {
-      const traumaMacro = ctx.matrix.getTarget('cameraTrauma', 0.75);
-      this.cameraRig.addShock(event.velocity * traumaMacro, event.locus);
+      const traumaMacro = ctx.matrix.getTarget('cameraTrauma', 0.76);
+      this.cinemaDirector.addShock(event.velocity * traumaMacro, event.locus);
     }
 
-    // Intentional Cinema Director Cuts on dramatic musical events
-    if (event.origin === 'score') {
-      if (event.subsystem === 'larynx-lead' && event.velocity > 0.9) {
-        // Intimate portrait framing when the Larynx sings primary phrases
-        this.cameraRig.triggerDirectorCut(1);
-      } else if (event.subsystem === 'arc-discharge' && event.velocity > 0.9) {
-        this.cameraRig.triggerDirectorCut(2);
-      } else if (event.subsystem === 'sub-rupture' && event.velocity > 1.2) {
-        this.cameraRig.triggerDirectorCut(0);
+    // In Pure Live mode (or paused transport), live pad hits trigger responsive smash-cuts!
+    if (event.origin !== 'score' && !ctx.clock.isPlaying()) {
+      if (event.subsystem === 'sub-rupture') {
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'forge-hammers-low',
+          transition: 'hard',
+        });
+      } else if (event.subsystem === 'modal-clang') {
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'macro-babbage',
+          transition: 'hard',
+        });
+      } else if (event.subsystem === 'break-shred') {
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'carriage-snorricam',
+          transition: 'hard',
+        });
+      } else if (
+        event.subsystem === 'larynx-lead' ||
+        event.subsystem === 'bellows-choir'
+      ) {
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'light-organ-crown',
+          transition: 'whip',
+        });
+      } else if (event.subsystem === 'core-implode') {
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'cathedral-wide',
+          transition: 'hard',
+        });
       }
     }
 
@@ -110,7 +139,7 @@ class GantzSceneInstance implements WorkSceneInstance {
         metallicTension: ctx.matrix.getTarget('metallicTension', 0.48),
         brutalDrive: ctx.matrix.getTarget('brutalDrive', 0.34),
         decayScale: ctx.matrix.getTarget('decayScale', 1.0),
-        strain: this.automaton.core.getStructuralStress(),
+        strain: this.machine.getStructuralStress(),
       });
     }
   }
@@ -121,47 +150,77 @@ class GantzSceneInstance implements WorkSceneInstance {
     transport: TransportState,
     ctx: WorkRuntimeContext,
   ): void {
-    if (!this.automaton || !this.chamber || !this.materials) return;
+    if (!this.machine || !this.foundry || !this.materials) return;
 
     const section = GANTZ_SECTIONS[transport.sectionIndex] ?? GANTZ_SECTIONS[0];
     ctx.matrix.setSource('score.intensity', section.intensity);
-    if (transport.sectionIndex !== this.lastSectionIdx) {
-      this.lastSectionIdx = transport.sectionIndex;
-      this.cameraRig.triggerDirectorCut(transport.sectionIndex % 4);
-    }
 
-    // Track user cursor or MediaPipe hands with the creature's saccadic gaze!
-    const mx = ctx.matrix.getSource('mouse.x');
-    const my = ctx.matrix.getSource('mouse.y');
-    this.automaton.setGazeTarget(mx, my);
+    // Music-Synced Epic Montage & Continuous Zolly/Pullback Evaluation
+    if (transport.playing) {
+      const barMod = ((transport.bar % 80) + 80) % 80;
+      const barFraction = ((transport.beat % 4) + 4) % 4 / 4;
+      const stepKey = barMod * 16 + transport.step16;
+
+      // Continuous per-frame evaluation during Hitchcock Vertigo Zolly (56..59) & Epic Pull-Back (74..79)
+      if ((barMod >= 56 && barMod < 60) || barMod >= 74) {
+        const contDirective = evaluateGantzMontageCut(
+          barMod,
+          transport.step16,
+          barFraction,
+        );
+        if (contDirective) {
+          this.cinemaDirector.applyEditorialDirective(contDirective);
+        }
+      }
+
+      if (stepKey !== this.lastMontageKey) {
+        this.lastMontageKey = stepKey;
+        const cut = evaluateGantzMontageCut(
+          barMod,
+          transport.step16,
+          barFraction,
+        );
+        if (cut) {
+          this.cinemaDirector.applyEditorialDirective(cut);
+        }
+      }
+    }
 
     const punchExplode = ctx.matrix.getSource('punch.tectonic-explode');
     const macroExplode = ctx.matrix.getTarget('tectonicSpread', 0.06);
     const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
     const stutter = ctx.matrix.getSource('punch.stutter');
 
-    const spontaneous = this.automaton.update(dt, elapsed, {
+    const spontaneous = this.machine.update(dt, elapsed, {
       explodeAmount: Math.min(1.5, macroExplode + punchExplode * 0.95),
       hardLock,
       stutterFreeze: stutter > 0.5,
       sectionId: section.id,
-      materials: this.materials,
     });
 
     if (spontaneous) {
       this.triggerImpulse(spontaneous, ctx);
     }
 
-    const stress = this.automaton.core.getStructuralStress();
-    this.chamber.updateLighting(
+    const stress = this.machine.getStructuralStress();
+    this.foundry.updateLighting(
+      elapsed,
       stress,
-      this.automaton.getArcFlash(),
-      this.automaton.getStrobePulse(),
-      this.automaton.getHarmonyGlow(),
+      this.machine.getArcFlash(),
+      this.machine.getStrobePulse(),
+      this.machine.getOrganGlow(),
+      this.machine.getSpectralHueNorm(),
     );
 
-    const traumaScale = ctx.matrix.getTarget('cameraTrauma', 0.75);
-    this.cameraRig.update(ctx.camera, dt, elapsed, traumaScale);
+    const traumaScale = ctx.matrix.getTarget('cameraTrauma', 0.76);
+    this.cinemaDirector.update(
+      ctx.camera,
+      dt,
+      elapsed,
+      transport.beat,
+      this.machine.getCameraAnchors(),
+      traumaScale,
+    );
 
     const combScream = ctx.matrix.getSource('punch.comb-scream');
     const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.34);
@@ -186,19 +245,19 @@ class GantzSceneInstance implements WorkSceneInstance {
   }
 
   setCameraMode(mode: number): void {
-    this.cameraRig.setMode(mode);
+    this.cinemaDirector.setMode(mode);
   }
 
   getCameraMode(): number {
-    return this.cameraRig.getMode();
+    return this.cinemaDirector.getMode();
   }
 
   orbitCamera(dx: number, dy: number): void {
-    this.cameraRig.orbit(dx, dy);
+    this.cinemaDirector.orbit(dx, dy);
   }
 
   zoomCamera(delta: number): void {
-    this.cameraRig.zoom(delta);
+    this.cinemaDirector.zoom(delta);
   }
 
   setPointerStrain(
@@ -207,26 +266,27 @@ class GantzSceneInstance implements WorkSceneInstance {
     tension: number,
     active: boolean,
   ): void {
-    this.automaton?.setPointerStrain(x, y, tension, active);
+    this.machine?.setPointerStrain(x, y, tension, active);
   }
 
   getMetrics() {
     return {
-      activeInstances: this.automaton?.getActiveInstanceCount() ?? 0,
-      structuralStress: this.automaton?.core.getStructuralStress() ?? 0,
-      kineticEnergy: this.automaton?.core.getKineticEnergy() ?? 0,
-      behavioralState: this.automaton?.getBehavioralState(),
+      activeInstances: this.machine?.getActiveInstanceCount() ?? 0,
+      structuralStress: this.machine?.getStructuralStress() ?? 0,
+      kineticEnergy: this.machine?.getKineticEnergy() ?? 0,
+      behavioralState: this.machine?.getBehavioralState(),
+      activeShotBadge: this.cinemaDirector.getActiveShotBadge(),
     };
   }
 
   dispose(): void {
-    if (this.chamber) {
-      this.chamber.group.removeFromParent();
-      this.chamber.dispose();
+    if (this.foundry) {
+      this.foundry.group.removeFromParent();
+      this.foundry.dispose();
     }
-    if (this.automaton) {
-      this.automaton.worldGroup.removeFromParent();
-      this.automaton.dispose();
+    if (this.machine) {
+      this.machine.worldGroup.removeFromParent();
+      this.machine.dispose();
     }
     this.materials?.dispose();
   }
@@ -234,8 +294,9 @@ class GantzSceneInstance implements WorkSceneInstance {
 
 export const GantzWork: WorkDefinition = {
   id: 'gantz-tecton',
-  title: 'GANTZ // AUTOMATON',
-  subtitle: '7-Organ Biomechanical Sound-Creature // 6-Act F-Phrygian Score',
+  title: 'BABBAGE // CLAVILUX',
+  subtitle:
+    'Moving-Castle Acoustic Factory & 24-Pipe Light Organ // 6-Act Score',
   author: 'SONOBJET ENGINE // POC 01',
   bpm: 164,
   bars: 80,
@@ -243,51 +304,51 @@ export const GantzWork: WorkDefinition = {
   macros: [
     {
       id: 'fractureChaos',
-      label: 'BREAK MUTATION',
+      label: 'LOOM MUTATION',
       min: 0,
       max: 1,
       defaultValue: 0.36,
-      description: 'Breakcore turnaround variation & micro-slice probability',
+      description: 'Jacquard breakcore turnaround variation & slice probability',
     },
     {
       id: 'drillDensity',
-      label: 'RAKER DENSITY',
+      label: 'CIPHER RATCHET',
       min: 0,
       max: 1,
       defaultValue: 0.56,
-      description: 'Mantis-claw ratchet multiplier & stutter grain speed',
+      description: 'Babbage carry-lever ratchet multiplier & stutter grain speed',
     },
     {
       id: 'metallicTension',
-      label: 'LARYNX / HARP TENSION',
+      label: 'PIPE / CHIME Q',
       min: 0,
       max: 1,
       defaultValue: 0.48,
-      description: 'Formant Q, steel harp upper partials & F-series comb resonance',
+      description: 'Clavilux reed formant Q, Babbage chime partials & comb resonance',
     },
     {
       id: 'tectonicSpread',
-      label: 'RIB-BELLOWS FLARE',
+      label: 'TOWER & BELLOWS SPREAD',
       min: 0,
       max: 1.2,
       defaultValue: 0.06,
-      description: 'Porcelain rib-cage valve expansion & limb abduction',
+      description: 'Babbage cipher-tower gallery spread & lateral bellows inflation',
     },
     {
       id: 'brutalDrive',
-      label: 'WAVEFOLD GRIT',
+      label: 'FURNACE GRIT',
       min: 0,
       max: 1,
       defaultValue: 0.3,
-      description: 'AudioWorklet West-Coast wavefolder & bass saturation',
+      description: 'AudioWorklet West-Coast wavefolder & sub-anvil saturation',
     },
     {
       id: 'cameraTrauma',
-      label: 'ANVIL RECOIL',
+      label: 'FORGE RECOIL',
       min: 0,
       max: 1.4,
       defaultValue: 0.76,
-      description: 'Seismic camera mount shock when Siege-Hammer strikes Anvil',
+      description: 'Seismic camera shock when Drop-Forge Trip-Hammers strike anvils',
     },
   ],
   defaultPatches: [

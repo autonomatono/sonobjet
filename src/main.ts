@@ -87,6 +87,7 @@ async function bootstrap(): Promise<void> {
     activeInstance = work.createInstance();
     activeInstance.init(getRuntimeCtx());
     shell.bindWorkSchema(work, matrix);
+    shell.setCameraActive(activeInstance.getCameraMode?.() ?? 0);
 
     const url = new URL(window.location.href);
     url.searchParams.set('work', work.id);
@@ -404,6 +405,7 @@ async function bootstrap(): Promise<void> {
         structuralStress: metrics.structuralStress,
         kineticEnergy: metrics.kineticEnergy,
         behavioralState: metrics.behavioralState,
+        activeShotBadge: metrics.activeShotBadge,
         lastImpulse,
         impulseCount,
       },

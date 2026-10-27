@@ -7,6 +7,7 @@ import { SonobjetCore } from '../src/engine/core/Sonobjet';
 import type { SubsystemId } from '../src/engine/core/types';
 import { WorkRegistry } from '../src/engine/core/WorkRegistry';
 import { createSonobjetMaterials } from '../src/engine/render/TSLMaterials';
+import { CinemaDirector } from '../src/kit/camera/CinemaDirector';
 import {
   computeRatchetBurstOffsets,
   euclideanPattern,
@@ -14,13 +15,14 @@ import {
 } from '../src/kit/sequencer/IDMSequencer';
 import { TakeRecorder } from '../src/studio/recorder/TakeRecorder';
 import {
+  evaluateGantzMontageCut,
   evaluateGantzStepBundle,
   GANTZ_SECTIONS,
 } from '../src/works/gantz-tecton/GantzScore';
 import { GantzWork } from '../src/works/gantz-tecton/GantzWork';
 import { LatticeWork } from '../src/works/lattice-pendulum/LatticeWork';
 
-describe('Clock dual-domain lookahead & biomechanical anticipation scheduler', () => {
+describe('Clock dual-domain lookahead & mechanical anticipation scheduler', () => {
   it('schedules 1/64th steps, anticipation pre-cues, and releases visual events at DAC time', () => {
     const clock = new Clock();
     clock.configure(164, 80, GANTZ_SECTIONS);
@@ -60,9 +62,9 @@ describe('Clock dual-domain lookahead & biomechanical anticipation scheduler', (
     const clock = new Clock();
     clock.configure(164, 80, GANTZ_SECTIONS);
     clock.seekBar(30, 0);
-    expect(clock.getState().sectionName).toContain('III. LARYNX ARIA');
+    expect(clock.getState().sectionName).toContain('III. CLAVILUX LIGHT-ORGAN ARIA');
     clock.seekBar(62, 0);
-    expect(clock.getState().sectionName).toContain('V. APEX CONVERGENCE');
+    expect(clock.getState().sectionName).toContain('V. FULL FOUNDRY OVERDRIVE');
   });
 });
 
@@ -113,7 +115,7 @@ describe('ModulationMatrix patchbay & chaotic modulators', () => {
   });
 });
 
-describe('6-Act F-Phrygian Compositional Score Architecture', () => {
+describe('6-Act F-Phrygian Compositional Score & Epic Montage Director', () => {
   const defaultParams = {
     chaos: 0.35,
     drillDensity: 0.55,
@@ -122,7 +124,7 @@ describe('6-Act F-Phrygian Compositional Score Architecture', () => {
     step64DurSec: 60 / 164 / 16,
   };
 
-  it('states the exact C5-Db5-Ab4-G4-F4 Seed Motif in Act I and winds up before Bar 6 Anvil Slam', () => {
+  it('states the exact C5-Db5-Ab4-G4-F4 Seed Motif in Act I and winds up before Bar 6 Drop-Forge Slam', () => {
     const c5 = evaluateGantzStepBundle(0, 2, 1.0, defaultParams);
     expect(c5.events.some((e) => e.subsystem === 'modal-clang' && e.midiNote === 72)).toBe(true);
 
@@ -134,22 +136,43 @@ describe('6-Act F-Phrygian Compositional Score Architecture', () => {
     expect(windup.events.some((e) => e.subsystem === 'windup-inhale')).toBe(true);
   });
 
-  it('enforces drumless vocal/choir suspension in Act III Bars 44-45 and breathless silence in Bar 59', () => {
-    // Bar 44 downbeat has Bellows Choir + Larynx Lead + Pedal Bass, NO break-shred or spine-shear!
+  it('enforces drumless Light-Organ Plenum suspension in Bars 44-45 and breathless silence in Bar 59', () => {
     const breakdown = evaluateGantzStepBundle(0, 44, 10.0, defaultParams);
     expect(breakdown.events.some((e) => e.subsystem === 'bellows-choir')).toBe(true);
     expect(breakdown.events.some((e) => e.subsystem === 'larynx-lead')).toBe(true);
     expect(breakdown.events.some((e) => e.subsystem === 'break-shred')).toBe(false);
 
-    // Bar 59 step16=12 (step64=48): total breathless silence right before Act V climax!
     const preClimaxSilence = evaluateGantzStepBundle(48, 59, 20.0, defaultParams);
     expect(preClimaxSilence.events).toHaveLength(0);
 
-    // Bar 60 step 0: Massive Act V Climax Convergence!
     const climax = evaluateGantzStepBundle(0, 60, 21.0, defaultParams);
     expect(climax.events.some((e) => e.subsystem === 'bellows-choir')).toBe(true);
     expect(climax.events.some((e) => e.subsystem === 'larynx-lead')).toBe(true);
     expect(climax.events.some((e) => e.subsystem === 'sub-rupture')).toBe(true);
+  });
+
+  it('emits music-synced multi-scale montage cuts, Vertigo Zolly, and Epic Pull-Back across 80 bars', () => {
+    // Bar 0 opens on 85mm Macro Babbage Cipher Wheels; Bar 6 smash-cuts wide on first Drop-Forge hit!
+    expect(evaluateGantzMontageCut(0, 0, 0)?.shot).toBe('macro-babbage');
+    expect(evaluateGantzMontageCut(6, 0, 0)).toEqual({
+      shot: 'cathedral-wide',
+      transition: 'hard',
+    });
+
+    // Act II Call vs Response cross-cutting
+    expect(evaluateGantzMontageCut(12, 10, 0.625)?.shot).toBe('carriage-snorricam');
+    expect(evaluateGantzMontageCut(13, 6, 0.375)?.shot).toBe('macro-jacquard');
+
+    // Act IV Hitchcock Vertigo Dolly-Zoom & Bar 59 Pre-Drop Silence
+    const zolly = evaluateGantzMontageCut(57, 0, 0.5);
+    expect(zolly?.transition).toBe('vertigo');
+    expect(zolly?.rampProgress).toBeGreaterThan(0.3);
+    expect(evaluateGantzMontageCut(59, 10, 0.75)?.shot).toBe('forge-hammers-low');
+
+    // Act VI Epic Cathedral Pull-Back
+    const pullback = evaluateGantzMontageCut(78, 0, 0.5);
+    expect(pullback?.transition).toBe('epic-pullback');
+    expect(pullback?.rampProgress).toBeGreaterThan(0.6);
   });
 
   it('computes Euclidean patterns and exponential/decelerating ratchet bursts', () => {
@@ -159,6 +182,51 @@ describe('6-Act F-Phrygian Compositional Score Architecture', () => {
     const decel = computeRatchetBurstOffsets(6, 0.25, 1.25);
     expect(decel[5] - decel[4]).toBeGreaterThan(decel[1] - decel[0]);
     expect(evaluateBreakChop(12, 14, 0.8).sliceIndex).toBeLessThan(16);
+  });
+});
+
+describe('CinemaDirector multi-perspective rigs, SnorriCam POV & Vertigo Dolly-Zoom', () => {
+  it('maintains constant subject width during Vertigo Zolly and rides SnorriCam carriage', () => {
+    const cam = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, 160);
+    const director = new CinemaDirector();
+    const chassisRoot = new THREE.Group();
+    const shuttleCarriage = new THREE.Group();
+    shuttleCarriage.position.set(1.4, 2.95, 0.37);
+    chassisRoot.add(shuttleCarriage);
+    const anchors = { shuttleCarriage, chassisRoot };
+
+    // 1. Vertigo Zolly optical invariant: zDist * tan(fov/2) === 1.85m
+    director.setMode(0);
+    director.applyEditorialDirective({
+      shot: 'interior-flythrough',
+      transition: 'vertigo',
+      rampProgress: 0.0,
+    });
+    director.update(cam, 0.016, 1.0, 0, anchors, 0);
+    const widthStart =
+      cam.position.z * Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
+
+    director.applyEditorialDirective({
+      shot: 'interior-flythrough',
+      transition: 'vertigo',
+      rampProgress: 1.0,
+    });
+    director.update(cam, 0.016, 2.0, 4, anchors, 0);
+    const widthEnd =
+      cam.position.z * Math.tan(THREE.MathUtils.degToRad(cam.fov * 0.5));
+
+    expect(widthStart).toBeCloseTo(1.85, 2);
+    expect(widthEnd).toBeCloseTo(1.85, 2);
+    expect(cam.fov).toBeCloseTo(17, 1);
+
+    // 2. Shuttle SnorriCam POV physically follows carriage X translation!
+    director.setMode(7); // carriage-snorricam
+    director.update(cam, 0.016, 3.0, 8, anchors, 0);
+    const camX1 = cam.position.x;
+
+    shuttleCarriage.position.x = -1.6;
+    director.update(cam, 0.016, 3.1, 8.2, anchors, 0);
+    expect(cam.position.x).toBeLessThan(camX1 - 2.5);
   });
 });
 
@@ -181,23 +249,24 @@ describe('TakeRecorder multi-pass overdub & JSON serialization', () => {
   });
 });
 
-describe('7-Organ GantzAutomaton & TSL Multi-Material Lifecycle', () => {
-  it('constructs 5-material TSL palette and executes full 7-organ biomechanical + musical lifecycles', () => {
+describe('BabbageLightOrgan, PiranesiFoundry & TSL Material Lifecycle', () => {
+  it('constructs full TSL palette (including quartz light-organ & engraved brass) and executes 6-district lifecycles', () => {
     const mats = createSonobjetMaterials();
     expect(mats.boneCarapace).toBeDefined();
     expect(mats.forgedIron).toBeDefined();
     expect(mats.surgicalChrome).toBeDefined();
     expect(mats.agedBrass).toBeDefined();
-    expect(mats.visceralFilament).toBeDefined();
+    expect(mats.lightOrganPipeInstanced).toBeDefined();
+    expect(mats.brassInstanced).toBeDefined();
     mats.dispose();
 
     const reg = new WorkRegistry();
     reg.register(GantzWork, true);
     reg.register(LatticeWork);
-    expect(reg.getDefault().title).toBe('GANTZ // AUTOMATON');
+    expect(reg.getDefault().title).toBe('BABBAGE // CLAVILUX');
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(43, 16 / 9, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(44, 16 / 9, 0.08, 160);
     const clock = new Clock();
     const matrix = new ModulationMatrix();
     const audio = new AudioEngine();
@@ -207,11 +276,11 @@ describe('7-Organ GantzAutomaton & TSL Multi-Material Lifecycle', () => {
     matrix.setRoutes(GantzWork.defaultPatches);
 
     const ctx = { scene, camera, audio, clock, matrix };
-    const automatonWork = GantzWork.createInstance();
-    automatonWork.init(ctx);
-    expect(automatonWork.getMetrics().activeInstances).toBe(330);
+    const babbageWork = GantzWork.createInstance();
+    babbageWork.init(ctx);
+    expect(babbageWork.getMetrics().activeInstances).toBe(510);
 
-    automatonWork.triggerAnticipation?.(
+    babbageWork.triggerAnticipation?.(
       {
         targetSubsystem: 'sub-rupture',
         intensity: 1.2,
@@ -220,7 +289,7 @@ describe('7-Organ GantzAutomaton & TSL Multi-Material Lifecycle', () => {
       },
       ctx,
     );
-    expect(automatonWork.getMetrics().behavioralState).toBe('COILING_ANTICIPATION');
+    expect(babbageWork.getMetrics().behavioralState).toBe('FORGE_WINDUP');
 
     const allSubsystems: SubsystemId[] = [
       'windup-inhale',
@@ -237,7 +306,7 @@ describe('7-Organ GantzAutomaton & TSL Multi-Material Lifecycle', () => {
     ];
 
     for (const sub of allSubsystems) {
-      automatonWork.triggerImpulse(
+      babbageWork.triggerImpulse(
         {
           subsystem: sub,
           velocity: 1.0,
@@ -258,12 +327,23 @@ describe('7-Organ GantzAutomaton & TSL Multi-Material Lifecycle', () => {
       );
     }
 
-    clock.seekBar(32, 0); // Act III: Larynx Aria
-    automatonWork.setPointerStrain?.(0.3, 0.2, 0.65, true);
-    automatonWork.update(0.016, 1.5, clock.getState(), ctx);
-    expect(automatonWork.getMetrics().behavioralState).toBe('VOCALIZING_ARIA');
+    expect(babbageWork.getMetrics().behavioralState).toBe('LIGHT_ORGAN_PLENUM');
 
-    automatonWork.dispose();
+    clock.play(0);
+    clock.seekBar(32, 0); // Act III: Clavilux Light-Organ Aria
+    babbageWork.setPointerStrain?.(0.3, 0.2, 0.65, true);
+    babbageWork.update(0.016, 1.5, clock.getState(), ctx);
+    expect(babbageWork.getMetrics().activeShotBadge).toContain('AUTO-EDIT');
+
+    babbageWork.dispose();
+    expect(scene.children).toHaveLength(0);
+
+    // Verify secondary work LatticeWork also initializes and disposes cleanly
+    const lattice = LatticeWork.createInstance();
+    lattice.init(ctx);
+    lattice.setCameraMode?.(0);
+    lattice.update(0.016, 1.0, clock.getState(), ctx);
+    lattice.dispose();
     expect(scene.children).toHaveLength(0);
   });
 });

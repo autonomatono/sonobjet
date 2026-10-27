@@ -15,14 +15,14 @@ export interface PunchBinding {
 }
 
 export const KEY_IMPULSE_PADS: KeyPadBinding[] = [
-  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'ANVIL KICK' },
-  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'SPINE SNARE' },
-  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'BREAK CHOP' },
-  { key: 'v', label: 'V', subsystem: 'modal-clang', shortName: 'MANTIS HARP' },
-  { key: 'b', label: 'B', subsystem: 'larynx-lead', shortName: 'LARYNX VOICE' },
-  { key: 'n', label: 'N', subsystem: 'bellows-choir', shortName: 'BELLOWS CHORD' },
-  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'MONOLITH BASS' },
-  { key: ',', label: ',', subsystem: 'arc-discharge', shortName: 'TAIL STINGER' },
+  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'DROP FORGE' },
+  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'TRIPLE HAMMER' },
+  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'JACQUARD BREAK' },
+  { key: 'v', label: 'V', subsystem: 'modal-clang', shortName: 'BABBAGE CHIME' },
+  { key: 'b', label: 'B', subsystem: 'larynx-lead', shortName: 'CLAVILUX REED' },
+  { key: 'n', label: 'N', subsystem: 'bellows-choir', shortName: 'ORGAN PLENUM' },
+  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'FURNACE BASS' },
+  { key: ',', label: ',', subsystem: 'arc-discharge', shortName: 'BRAKE ARC' },
 ];
 
 export const KEY_PUNCH_FX: PunchBinding[] = [
@@ -31,8 +31,8 @@ export const KEY_PUNCH_FX: PunchBinding[] = [
   { key: 'd', id: 'halftime', label: 'HALFTIME' },
   { key: 'f', id: 'comb-scream', label: 'COMB SCREAM' },
   { key: 'g', id: 'reverse-slice', label: 'REV SLICE' },
-  { key: 'j', id: 'tectonic-explode', label: 'RIB FLARE' },
-  { key: 'k', id: 'hard-lock', label: 'HARD LOCK' },
+  { key: 'j', id: 'tectonic-explode', label: 'TOWER SPREAD' },
+  { key: 'k', id: 'hard-lock', label: 'BRAKE LOCK' },
 ];
 
 // F-Phrygian scale notes across 2 octaves so live keyboard/mouse play is always deeply musical!
@@ -196,7 +196,7 @@ export class KeyboardMouseRig {
     if (this.heldKeys.has(key)) return;
     this.heldKeys.add(key);
 
-    if (['1', '2', '3', '4', '5'].includes(key)) {
+    if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(key)) {
       this.cb.onCameraSelect(Number(key));
       return;
     }

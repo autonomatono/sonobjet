@@ -19,13 +19,13 @@ export class WebGPUStage {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x05070a);
-    this.scene.fog = new THREE.FogExp2(0x05070a, 0.052);
+    this.scene.fog = new THREE.FogExp2(0x05070a, 0.021);
 
     const width = Math.max(1, container.clientWidth || window.innerWidth);
     const height = Math.max(1, container.clientHeight || window.innerHeight);
 
-    this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 120);
-    this.camera.position.set(0, 0.55, 6.2);
+    this.camera = new THREE.PerspectiveCamera(44, width / height, 0.08, 160);
+    this.camera.position.set(0, 1.8, 9.5);
   }
 
   async init(): Promise<void> {

@@ -89,7 +89,8 @@ export class KineticCameraRig {
   private kickVelocity = new THREE.Vector3();
 
   setMode(mode: number): void {
-    this.mode = Math.max(1, Math.min(5, Math.floor(mode)));
+    const mapped = mode === 0 ? 5 : mode;
+    this.mode = Math.max(1, Math.min(5, Math.floor(mapped)));
     if (this.mode <= 4) {
       this.applyPreset(this.mode - 1, false);
     }

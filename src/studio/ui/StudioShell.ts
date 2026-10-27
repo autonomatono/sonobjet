@@ -68,7 +68,8 @@ export class StudioShell {
   private readonly pipWrap: HTMLDivElement;
   private readonly micBtn: HTMLButtonElement;
 
-  private readonly camButtons: HTMLButtonElement[] = [];
+  private readonly camButtonMap = new Map<number, HTMLButtonElement>();
+  private readonly shotBadgeEl: HTMLDivElement;
   private readonly takeRecBtn: HTMLButtonElement;
   private readonly takePlayBtn: HTMLButtonElement;
   private readonly takeCountLabel: HTMLSpanElement;
@@ -290,25 +291,54 @@ export class StudioShell {
     rightPanel.className = 'side-panel';
 
     const camBlock = document.createElement('div');
-    camBlock.innerHTML = `<div class="panel-section-title"><span>CAMERA CUT RIG</span><span>KEYS 1-5</span></div>`;
+    camBlock.innerHTML = `<div class="panel-section-title"><span>CINEMA MONTAGE RIG</span><span>KEYS 0, 1–8</span></div>`;
+
+    this.shotBadgeEl = document.createElement('div');
+    this.shotBadgeEl.style.fontSize = '9.5px';
+    this.shotBadgeEl.style.color = 'var(--accent-xenon)';
+    this.shotBadgeEl.style.padding = '5px 7px';
+    this.shotBadgeEl.style.marginBottom = '6px';
+    this.shotBadgeEl.style.background = 'rgba(120, 190, 255, 0.08)';
+    this.shotBadgeEl.style.border = '1px solid rgba(120, 190, 255, 0.24)';
+    this.shotBadgeEl.style.letterSpacing = '0.04em';
+    this.shotBadgeEl.textContent = 'AUTO-EDIT // MACRO: BABBAGE CIPHER WHEELS [85mm]';
+    camBlock.appendChild(this.shotBadgeEl);
+
     const camGrid = document.createElement('div');
-    camGrid.className = 'cam-grid';
-    const camNames = [
-      '1 // AUTOMATON & ANVIL [3/4]',
-      '2 // PORTRAIT: LARYNX & HARP',
-      '3 // LOW FORGE: SIEGE ANVIL',
-      '4 // WIDE CONTAINMENT GANTRY',
-      '5 // AUTO CINEMA DIRECTOR',
+    camGrid.style.display = 'grid';
+    camGrid.style.gridTemplateColumns = '1fr 1fr';
+    camGrid.style.gap = '4px';
+
+    const autoBtn = document.createElement('button');
+    autoBtn.className = 'btn active';
+    autoBtn.style.gridColumn = 'span 2';
+    autoBtn.style.textAlign = 'center';
+    autoBtn.textContent = '[0] EPIC AUTO-EDIT DIRECTOR';
+    autoBtn.onclick = () => actions.onSelectCamera(0);
+    this.camButtonMap.set(0, autoBtn);
+    camGrid.appendChild(autoBtn);
+
+    const camSpecs: Array<[number, string]> = [
+      [1, '1 // CATHEDRAL [24mm]'],
+      [2, '2 // NAVE FLY [28mm]'],
+      [3, '3 // BABBAGE [85mm]'],
+      [4, '4 // JACQUARD [50mm]'],
+      [5, '5 // QUARTZ [24mm]'],
+      [6, '6 // FORGE LOW [18mm]'],
+      [7, '7 // SHUTTLE POV'],
+      [8, '8 // ASTROLABE PLAN'],
     ];
-    camNames.forEach((label, idx) => {
+    for (const [modeNum, label] of camSpecs) {
       const b = document.createElement('button');
-      b.className = `btn ${idx === 4 ? 'active' : ''}`;
+      b.className = 'btn';
       b.style.textAlign = 'left';
+      b.style.fontSize = '9.5px';
+      b.style.padding = '5px 6px';
       b.textContent = label;
-      b.onclick = () => actions.onSelectCamera(idx + 1);
-      this.camButtons.push(b);
+      b.onclick = () => actions.onSelectCamera(modeNum);
+      this.camButtonMap.set(modeNum, b);
       camGrid.appendChild(b);
-    });
+    }
     camBlock.appendChild(camGrid);
 
     const recBlock = document.createElement('div');
@@ -380,10 +410,10 @@ export class StudioShell {
     helpBlock.style.color = 'var(--text-dim)';
     helpBlock.innerHTML = `
       <div class="panel-section-title"><span>DIRECT MANIPULATION</span></div>
-      <div><b>L-DRAG</b> PULL &amp; STRAIN PLATES (RELEASE = SLAM)</div>
-      <div><b>R-DRAG / SHIFT</b> ORBIT CAMERA // <b>WHEEL</b> ZOOM</div>
-      <div><b>Z..M ,</b> FIRE SUBSYSTEMS // <b>A..K</b> BREAK FX</div>
-      <div><b>Q W E R T</b> JUMP SECTION // <b>TAB</b> CINEMA</div>
+      <div><b>L-DRAG</b> DRIVE SHUTTLE &amp; STRAIN (RELEASE = SLAM)</div>
+      <div><b>R-DRAG / SHIFT</b> ORBIT // <b>WHEEL</b> ZOOM // <b>0, 1–8</b> CAMS</div>
+      <div><b>Z..M ,</b> FIRE DISTRICTS // <b>A..K</b> BREAK FX</div>
+      <div><b>Q W E R T Y</b> CUE ACTS I–VI // <b>TAB</b> CINEMA</div>
       <div class="footer-meta">
         <span>BRANCH: ${__BUILD_BRANCH__}</span>
         <span>SHA: ${__BUILD_SHA__.slice(0, 7)}</span>
@@ -430,21 +460,21 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU + WEBAUDIO BIOMECHANICAL SYNTHESIS</div>
-        <h1 class="ignition-title">GANTZ // AUTOMATON</h1>
+        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU + WEBAUDIO ARCHITECTURAL SYNTHESIS</div>
+        <h1 class="ignition-title">BABBAGE // CLAVILUX</h1>
         <p class="ignition-desc">
-          A 7-organ living biomechanical sound-automaton suspended by catenary steel tendons.
-          Through-composed in 6 Acts (F Phrygian, 164 BPM): its Siege-Hammer winds up before striking the spark-anvil, Mantis Claws pluck a 16-rod steel harp, and its 5-reed Mandible-Larynx sings haunting modal melodies over structured breakcore.
+          A monumental Moving-Castle Acoustic Factory, Babbage Cipher-Tower &amp; 24-Pipe Chromatic Light Organ inside a 56-meter Piranesian Foundry.
+          Through-composed in 6 Acts (F Phrygian, 164 BPM) with music-synced epic montage editing: flying through the interior nave, 85mm cipher-wheel macros, Shuttle SnorriCam POV, and Hitchcock Vertigo dolly-zoom.
         </p>
         <div class="ignition-shortcuts">
-          <b>SPACE</b> Play / Pause 6-Act Composition &nbsp;|&nbsp;
-          <b>L-DRAG</b> Coil Spine &amp; Release Cry &nbsp;|&nbsp;
-          <b>Z–M ,</b> Play Organs (Harp / Larynx / Anvil)<br/>
-          <b>A S D F G J K</b> Flywheel Brake / 64th Drill / Rib Flare &nbsp;|&nbsp;
+          <b>SPACE</b> Play / Pause 6-Act Film &amp; Score &nbsp;|&nbsp;
+          <b>0, 1–8</b> Auto-Edit / 8 Camera Perspectives &nbsp;|&nbsp;
+          <b>Z–M ,</b> Play Districts (Forge / Babbage / Light Organ)<br/>
+          <b>A S D F G J K</b> Brake Lock / 64th Drill / Tower Spread &nbsp;|&nbsp;
           <b>Q W E R T Y</b> Cue Acts I–VI
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 6-ACT COMPOSITION [SPACE]</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 6-ACT FILM &amp; SCORE [SPACE]</button>
           <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>
@@ -569,9 +599,10 @@ export class StudioShell {
   }
 
   setCameraActive(mode: number): void {
-    this.camButtons.forEach((b, idx) => {
-      b.classList.toggle('active', idx + 1 === mode);
-    });
+    const normalized = mode === 9 ? 0 : mode;
+    for (const [m, b] of this.camButtonMap.entries()) {
+      b.classList.toggle('active', m === normalized);
+    }
   }
 
   setAudioMuted(muted: boolean): void {
@@ -605,7 +636,10 @@ export class StudioShell {
     this.clockReadout.textContent = `BAR ${barStr}.${beatInBar}.${sub16}`;
 
     this.gpuBadge.textContent = `${telemetry.gpuBackend} // ${Math.round(telemetry.fps)} FPS`;
-    this.bodyBadge.textContent = `${telemetry.activeInstances} ORGANS/LINKS`;
+    this.bodyBadge.textContent = `${telemetry.activeInstances} ELEMENTS`;
+    if (telemetry.activeShotBadge) {
+      this.shotBadgeEl.textContent = telemetry.activeShotBadge;
+    }
 
     const behEl = document.getElementById('behavior-state-lbl');
     if (behEl && telemetry.behavioralState) {

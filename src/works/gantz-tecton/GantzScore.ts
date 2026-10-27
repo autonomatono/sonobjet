@@ -4,6 +4,7 @@ import type {
   ImpulseEvent,
   SectionDefinition,
 } from '../../engine/core/types';
+import type { ShotCutDirective } from '../../kit/camera/CinemaDirector';
 import {
   computeRatchetBurstOffsets,
   evaluateBreakChop,
@@ -12,57 +13,57 @@ import {
 export const GANTZ_SECTIONS: SectionDefinition[] = [
   {
     id: 'stasis-seed',
-    name: 'I. LATENT BREATH & SEED MOTIF',
+    name: 'I. ESCAPEMENT IGNITION & SEED MOTIF',
     startBar: 0,
     endBar: 12,
     intensity: 0.25,
     description:
-      'Chamber silence, metabolic breath, naked plucked Seed Motif (C-Db-Ab-G-F), first anvil slam',
+      '85mm macro cipher-wheels, naked Babbage Seed Motif (C-Db-Ab-G-F), Bar 6 Drop-Forge smash-cut out to the cathedral',
   },
   {
     id: 'asymmetric-loom',
-    name: 'II. ASYMMETRIC LOOM (CALL / RESPONSE)',
+    name: 'II. FORGE VS. JACQUARD LOOM (CALL / RESPONSE)',
     startBar: 12,
     endBar: 28,
     intensity: 0.65,
     description:
-      '3+3+4+3+3 biomechanical groove: Right Siege-Hammer Call vs Left Mantis-Harp Response + Bass entry',
+      '3+3+4+3+3 cross-cut montage: Drop-Forge Trip-Hammers Call vs. Babbage Cipher-Wheels & Jacquard Shuttle Response',
   },
   {
     id: 'larynx-aria',
-    name: 'III. LARYNX ARIA OVER BREAKCORE',
+    name: 'III. CLAVILUX LIGHT-ORGAN ARIA',
     startBar: 28,
     endBar: 48,
     intensity: 0.86,
     description:
-      'Soaring F-Phrygian vocal-formant melody & bellows polychords over structured breakcore + Bar 44 choir suspension',
+      'Soaring F-Phrygian reed/pipe melody & 24 chromatic quartz tubes over chopped breakcore + Bar 44 nave levitation',
   },
   {
     id: 'flywheel-cadenza',
-    name: 'IV. FLYWHEEL CADENZA & RISER',
+    name: 'IV. ASTROLABE CADENZA & VERTIGO ZOLLY',
     startBar: 48,
     endBar: 60,
     intensity: 0.78,
     description:
-      'Exposed steel stop-start ratchets, 4-bar pitch/density riser, and 2-beat pre-climax dead silence',
+      'Stop-start 64th bursts + Beat 4 brake dead-stops, 4-bar Hitchcock Vertigo dolly-zoom, and 2-beat pre-drop silence',
   },
   {
     id: 'apex-convergence',
-    name: 'V. APEX CONVERGENCE',
+    name: 'V. FULL FOUNDRY OVERDRIVE',
     startBar: 60,
     endBar: 72,
     intensity: 1.0,
     description:
-      'Full thematic recapitulation: octave-doubled Seed Motif + polychords + ferocious breakcore & anvil sparks',
+      'Full thematic convergence: SnorriCam shuttle POV + interior flythroughs + 8 sweeping cathedral beams & anvil sparks',
   },
   {
     id: 'exhaustion',
-    name: 'VI. EXHAUSTION & STILLNESS',
+    name: 'VI. COASTING FLYWHEEL & EPIC PULL-BACK',
     startBar: 72,
     endBar: 80,
     intensity: 0.28,
     description:
-      'Coasting flywheel, panting rib-vents, fragile final Seed Motif echo into terminal latch lock',
+      'Coasting brass cipher-wheels & 6-bar continuous 1m -> 22m cathedral pull-back on the final Seed Motif echo',
   },
 ];
 
@@ -935,3 +936,190 @@ export function evaluateGantzStep(
 ): ImpulseEvent[] {
   return evaluateGantzStepBundle(step64, bar, audioTime, params).events;
 }
+
+/**
+ * Music-Synced Epic Montage & Cinematography Cut Director across all 80 bars!
+ * Evaluated deterministically on every 16th-note step (plus continuous ramps for Zolly & Pullback).
+ */
+export function evaluateGantzMontageCut(
+  barInput: number,
+  step16: number,
+  barFraction: number,
+): ShotCutDirective | null {
+  const bar = ((barInput % 80) + 80) % 80;
+
+  // ACT I (Bars 0..11): Intimate Macro Reveals -> Bar 6 Cathedral Smash-Cut -> Nave Flythrough!
+  if (bar < 12) {
+    if (bar === 0 && step16 === 0) {
+      return { shot: 'macro-babbage', transition: 'hard' };
+    }
+    if (bar === 2 && step16 === 0) {
+      return { shot: 'macro-jacquard', transition: 'hard' };
+    }
+    if (bar === 4 && step16 === 0) {
+      return { shot: 'light-organ-crown', transition: 'hard' };
+    }
+    // BAR 6 STEP 0: First colossal Drop-Forge impact — instant smash-cut out to the Cathedral!
+    if (bar === 6 && step16 === 0) {
+      return { shot: 'cathedral-wide', transition: 'hard' };
+    }
+    if (bar === 8 && step16 === 0) {
+      return { shot: 'interior-flythrough', transition: 'whip' };
+    }
+    if (bar === 10 && step16 === 0) {
+      return { shot: 'forge-hammers-low', transition: 'hard' };
+    }
+    return null;
+  }
+
+  // ACT II (Bars 12..27): Rhythmic Call/Response Cross-Cutting (Forge vs. Loom/Wheels/SnorriCam!)
+  if (bar < 28) {
+    const isCallBar = bar % 2 === 0;
+    if (isCallBar) {
+      if (step16 === 0) {
+        return {
+          shot: bar % 4 === 0 ? 'forge-hammers-low' : 'cathedral-wide',
+          transition: 'hard',
+        };
+      }
+      if (step16 === 10) {
+        return { shot: 'carriage-snorricam', transition: 'hard' };
+      }
+    } else {
+      if (step16 === 0) {
+        return { shot: 'macro-babbage', transition: 'hard' };
+      }
+      if (step16 === 6) {
+        return { shot: 'macro-jacquard', transition: 'hard' };
+      }
+      if (step16 === 12) {
+        return {
+          shot: bar % 4 === 3 ? 'interior-flythrough' : 'gods-eye-plan',
+          transition: 'whip',
+        };
+      }
+    }
+    return null;
+  }
+
+  // ACT III (Bars 28..47): Clavilux Light-Organ Aria + Interior Nave Flythroughs + Bar 44 Levitation!
+  if (bar < 48) {
+    // Bars 44..45: Beatless Plenum Choir Levitation — soar through the interior nave & quartz pipes!
+    if (bar === 44 && step16 === 0) {
+      return { shot: 'interior-flythrough', transition: 'glide' };
+    }
+    if (bar === 45 && step16 === 0) {
+      return { shot: 'light-organ-crown', transition: 'glide' };
+    }
+    // Bars 46..47: Rapid quarter-note smash-cut montage rocketing into Act IV!
+    if (bar >= 46 && step16 % 4 === 0) {
+      const rapidCycle: ShotCutDirective['shot'][] = [
+        'forge-hammers-low',
+        'carriage-snorricam',
+        'macro-babbage',
+        'gods-eye-plan',
+      ];
+      const idx = ((bar - 46) * 4 + Math.floor(step16 / 4)) % rapidCycle.length;
+      return { shot: rapidCycle[idx], transition: 'hard' };
+    }
+    // Main Aria Bars 28..43:
+    if (step16 === 0) {
+      const ariaCycle: ShotCutDirective['shot'][] = [
+        'light-organ-crown',
+        'interior-flythrough',
+        'cathedral-wide',
+        'carriage-snorricam',
+      ];
+      return {
+        shot: ariaCycle[bar % ariaCycle.length],
+        transition: bar % 2 === 0 ? 'whip' : 'hard',
+      };
+    }
+    // Snare turnaround punch on every 4th bar!
+    if (bar % 4 === 3 && step16 === 12) {
+      return { shot: 'macro-jacquard', transition: 'hard' };
+    }
+    return null;
+  }
+
+  // ACT IV (Bars 48..59): Stop-Start Mechanical Cadenza + 4-Bar Hitchcock Vertigo Zolly!
+  if (bar < 60) {
+    if (bar < 56) {
+      // Beats 1..3: Rapid 64th-burst macro jump-cuts!
+      if (step16 === 0) return { shot: 'macro-babbage', transition: 'hard' };
+      if (step16 === 4) return { shot: 'carriage-snorricam', transition: 'hard' };
+      if (step16 === 8) return { shot: 'macro-jacquard', transition: 'hard' };
+      // Beat 4 (step16 === 12): THE DEAD-STOP BRAKE CLAMP — instant wide/plan cut!
+      if (step16 === 12) {
+        return {
+          shot: bar % 2 === 0 ? 'gods-eye-plan' : 'cathedral-wide',
+          transition: 'hard',
+        };
+      }
+      return null;
+    }
+
+    // Bars 56..59 Beat 2 (3.5 bars = 14 beats): HITCHCOCK VERTIGO DOLLY-ZOOM!
+    const riserBars = bar - 56 + barFraction;
+    if (riserBars < 3.5) {
+      return {
+        shot: 'interior-flythrough',
+        transition: 'vertigo',
+        rampProgress: Math.max(0, Math.min(1, riserBars / 3.5)),
+      };
+    }
+
+    // Bar 59 Beat 3..4: 2-Beat Pre-Drop Dead Silence — inches from the cocked trip-hammers!
+    if (bar === 59 && step16 >= 8) {
+      return { shot: 'forge-hammers-low', transition: 'hard' };
+    }
+    return null;
+  }
+
+  // ACT V (Bars 60..71): FULL FOUNDRY OVERDRIVE — Explosive Multi-Scale Montage!
+  if (bar < 72) {
+    if (bar === 60 && step16 === 0) {
+      return { shot: 'cathedral-wide', transition: 'hard' };
+    }
+    if (step16 === 0) {
+      const apexShots: ShotCutDirective['shot'][] = [
+        'cathedral-wide',
+        'interior-flythrough',
+        'carriage-snorricam',
+        'light-organ-crown',
+        'forge-hammers-low',
+        'gods-eye-plan',
+      ];
+      return { shot: apexShots[bar % apexShots.length], transition: 'hard' };
+    }
+    if (step16 === 10) {
+      const subShots: ShotCutDirective['shot'][] = [
+        'macro-babbage',
+        'carriage-snorricam',
+        'macro-jacquard',
+        'forge-hammers-low',
+      ];
+      return { shot: subShots[bar % subShots.length], transition: 'hard' };
+    }
+    return null;
+  }
+
+  // ACT VI (Bars 72..79): Coasting Cipher Wheels -> 6-Bar Epic 1m -> 22m Cathedral Pull-Back!
+  if (bar < 74) {
+    if (bar === 72 && step16 === 0) {
+      return { shot: 'macro-babbage', transition: 'whip' };
+    }
+    return null;
+  }
+
+  const pullbackProgress = Math.max(
+    0,
+    Math.min(1, (bar - 74 + barFraction) / 6.0),
+  );
+  return {
+    shot: 'cathedral-wide',
+    transition: 'epic-pullback',
+    rampProgress: pullbackProgress,
+  };
+}
+

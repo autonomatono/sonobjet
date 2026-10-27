@@ -135,6 +135,7 @@ export interface TelemetrySnapshot {
   structuralStress: number;
   kineticEnergy: number;
   behavioralState?: string;
+  activeShotBadge?: string;
   lastImpulse: ImpulseEvent | null;
   impulseCount: number;
 }
@@ -174,6 +175,7 @@ export interface WorkSceneInstance {
     structuralStress: number;
     kineticEnergy: number;
     behavioralState?: string;
+    activeShotBadge?: string;
   };
   dispose(): void;
 }
