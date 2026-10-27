@@ -1,8 +1,12 @@
 import type {
   BehaviorMapEntry,
+  FocusScale,
+  GraphMacroSnapshot,
+  MachineGraphSnapshot,
   PatchRoute,
   PostFxState,
   RigJointDescriptor,
+  ScoreBindingPatch,
 } from '../../engine/core/types';
 import {
   ARTICULATION_DEFINITIONS,
@@ -38,6 +42,7 @@ export interface DirectorFrameInfo {
   ecology: Record<string, number>;
   cameraMode: DirectorCameraMode;
   enabled: boolean;
+  graph?: MachineGraphSnapshot | null;
 }
 
 export interface DirectorUICallbacks {
@@ -69,9 +74,16 @@ export interface DirectorUICallbacks {
   onImportPresets(raw: string): void;
   onExportPresets(): void;
   onResetProject(): void;
+  onGraphMacro(id: string, value: number): void;
+  onGraphBinding(id: string, patch: ScoreBindingPatch): void;
+  onFocusTarget(id: string): void;
+  onGrowMachine(count: number): void;
+  onRebuildMachine(moduleCount: number): void;
+  onExportGraphConfig(): void;
+  onImportGraphConfig(raw: string): void;
 }
 
-type TabId = 'SHOTS' | 'LOOKS' | 'CONFIG' | 'MAPS' | 'PROJECT';
+type TabId = 'SHOTS' | 'LOOKS' | 'CONFIG' | 'MAPS' | 'MACHINE' | 'PROJECT';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -121,6 +133,8 @@ const INTERPOLATIONS: CameraInterpolation[] = [
 ];
 
 const EASES: MilestoneEase[] = ['LINEAR', 'SMOOTHER', 'STEP'];
+const FOCUS_SCALES: FocusScale[] = ['MACRO', 'CLUSTER', 'MODULE', 'PORT', 'CONDUIT'];
+const GRAPH_BINDING_MODES = ['EXCITE', 'INHIBIT', 'PHASE', 'ENERGY', 'FOCUS'] as const;
 
 /** DOM cockpit for the Director System. It owns no simulation state. */
 export class DirectorStudioUI {
@@ -156,6 +170,9 @@ export class DirectorStudioUI {
   private patchRoutes: PatchRoute[] = [];
   private behaviorMaps: BehaviorMapEntry[] = [];
   private blendActive = false;
+  private machineGraph: MachineGraphSnapshot | null = null;
+  private lastMachineRender = 0;
+  private machineInputActive = false;
 
   constructor(
     mount: HTMLElement,
@@ -178,7 +195,7 @@ export class DirectorStudioUI {
     const subtitle = el(
       'div',
       'director-subtitle',
-      'SHOTS // LOOKS // CONFIGURATIONS // MAPS',
+      'SHOTS // LOOKS // CONFIG // MAPS // MACHINE GRAPH',
     );
     this.statusLine = el('div', 'director-status', 'TIMELINE // IDLE');
     header.append(title, subtitle, this.statusLine);
@@ -204,7 +221,7 @@ export class DirectorStudioUI {
     jointRow.appendChild(this.jointSelect);
 
     this.tabBar = el('div', 'director-tabs');
-    const tabs: TabId[] = ['SHOTS', 'LOOKS', 'CONFIG', 'MAPS', 'PROJECT'];
+    const tabs: TabId[] = ['SHOTS', 'LOOKS', 'CONFIG', 'MAPS', 'MACHINE', 'PROJECT'];
     for (const tab of tabs) {
       const btn = button(tab, 'btn director-tab');
       btn.onclick = () => this.setTab(tab);
@@ -329,6 +346,21 @@ export class DirectorStudioUI {
     if (this.activeTab === 'MAPS') this.renderMapsTab();
   }
 
+  setMachineGraph(snapshot: MachineGraphSnapshot | null): void {
+    this.machineGraph = snapshot;
+    const now = Date.now();
+    const editing =
+      this.activeTab === 'MACHINE' && this.tabContent.contains(document.activeElement);
+    if (
+      this.activeTab === 'MACHINE' &&
+      !this.machineInputActive &&
+      !editing &&
+      now - this.lastMachineRender > 320
+    ) {
+      this.renderMachineTab();
+    }
+  }
+
   setArticulationValues(state: ArticulationState | Record<string, number>): void {
     this.currentArticulation = { ...state };
     for (const [id, input] of this.articulationInputs) {
@@ -373,7 +405,10 @@ export class DirectorStudioUI {
     this.beatLabel.textContent = `BAR ${String(info.bar + 1).padStart(3, '0')}.${beatInBar}.${sub}`;
     const arousal = info.ecology['ecology.arousal'] ?? 0;
     const coherence = info.ecology['ecology.resonance'] ?? 0;
-    this.statusLine.textContent = `${info.cameraMode} // ${info.shotLabel} // AROUSAL ${arousal.toFixed(2)} // PHASE LOCK ${coherence.toFixed(2)}`;
+    this.setMachineGraph(info.graph ?? null);
+    this.statusLine.textContent = info.graph
+      ? `${info.cameraMode} // ${info.graph.moduleCount} MODULES // ${info.graph.edgeCount} CONDUITS // ${info.graph.activeFocusLabel}`
+      : `${info.cameraMode} // ${info.shotLabel} // AROUSAL ${arousal.toFixed(2)} // PHASE LOCK ${coherence.toFixed(2)}`;
   }
 
   refreshProject(): void {
@@ -412,6 +447,9 @@ export class DirectorStudioUI {
         break;
       case 'MAPS':
         this.renderMapsTab();
+        break;
+      case 'MACHINE':
+        this.renderMachineTab();
         break;
       case 'PROJECT':
         this.renderProjectTab();
@@ -791,6 +829,266 @@ export class DirectorStudioUI {
     }
     patchBlock.appendChild(patchList);
     this.tabContent.appendChild(patchBlock);
+  }
+
+  private renderMachineTab(): void {
+    this.tabContent.innerHTML = '';
+    this.articulationInputs.clear();
+    this.postFxInputs.clear();
+    this.lastMachineRender = Date.now();
+    const snapshot = this.machineGraph;
+    const header = el('div', 'director-editor');
+    header.appendChild(el('div', 'director-section-title', 'MACHINE ECOLOGY // LIVE GRAPH'));
+    if (!snapshot) {
+      header.appendChild(
+        el(
+          'div',
+          'director-help',
+          'This work does not expose a machine graph. Load ASTRARIUM // MODULAR ENGINE to author modules, ports, energy sources, conduits, bindings and focus scales.',
+        ),
+      );
+      this.tabContent.appendChild(header);
+      return;
+    }
+
+    const summary = el('div', 'director-graph-summary');
+    summary.textContent = `${snapshot.moduleCount} MODULES // ${snapshot.edgeCount} CONDUITS // ${snapshot.sourceCount} SOURCES // ${snapshot.bindings.length} BINDINGS // FOCUS ${snapshot.activeFocusLabel}`;
+    header.appendChild(summary);
+
+    const canvas = el('canvas', 'director-graph-canvas');
+    canvas.width = 640;
+    canvas.height = 220;
+    header.appendChild(canvas);
+    this.tabContent.appendChild(header);
+    this.drawGraphMap(canvas, snapshot);
+
+    const focusBlock = el('div', 'director-editor');
+    focusBlock.appendChild(el('div', 'director-section-title', 'MULTI-SCALE FOCUS TARGET'));
+    const focusSelect = el('select', 'director-select');
+    for (const scale of FOCUS_SCALES) {
+      const group = el('optgroup');
+      group.label = `${scale} SCALE`;
+      for (const focus of snapshot.focusTargets.filter((f) => f.scale === scale)) {
+        const option = el('option', '', focus.label);
+        option.value = focus.id;
+        group.appendChild(option);
+      }
+      focusSelect.appendChild(group);
+    }
+    focusSelect.value = snapshot.activeFocusId;
+    focusSelect.onchange = () => this.callbacks.onFocusTarget(focusSelect.value);
+    focusBlock.appendChild(focusSelect);
+    const scaleRow = el('div', 'director-editor-actions director-graph-scale-row');
+    for (const scale of FOCUS_SCALES) {
+      const target = snapshot.focusTargets.find((f) => f.scale === scale);
+      if (!target) continue;
+      const btn = button(scale, 'btn director-action');
+      btn.onclick = () => this.callbacks.onFocusTarget(target.id);
+      scaleRow.appendChild(btn);
+    }
+    focusBlock.appendChild(scaleRow);
+    this.tabContent.appendChild(focusBlock);
+
+    const macroBlock = el('div', 'director-editor');
+    macroBlock.appendChild(el('div', 'director-section-title', 'GRAPH MACROS // LIVE ECOLOGY CONTROLS'));
+    snapshot.macros.forEach((macro: GraphMacroSnapshot) => {
+      const row = el('div', 'director-graph-macro');
+      const value = el('span', 'director-graph-value', macro.value.toFixed(2));
+      const range = el('input', 'director-range');
+      range.type = 'range';
+      range.min = String(macro.min);
+      range.max = String(macro.max);
+      range.step = '0.01';
+      range.value = String(macro.value);
+      range.onpointerdown = () => {
+        this.machineInputActive = true;
+      };
+      range.onpointerup = () => {
+        this.machineInputActive = false;
+      };
+      range.oninput = () => {
+        const next = Number(range.value);
+        value.textContent = next.toFixed(2);
+        this.callbacks.onGraphMacro(macro.id, next);
+      };
+      row.append(el('span', '', macro.label), value, range);
+      macroBlock.appendChild(row);
+    });
+    this.tabContent.appendChild(macroBlock);
+
+    const growthBlock = el('div', 'director-editor');
+    growthBlock.appendChild(el('div', 'director-section-title', 'LIVE INSTALLATION GROWTH'));
+    growthBlock.appendChild(
+      el(
+        'div',
+        'director-help',
+        'Modules, ports, gear trains, energy sources, many-to-many conduits and focus descriptors are regenerated deterministically. Growth preserves the 96-bar score and the V5 reference core.',
+      ),
+    );
+    const growRow = el('div', 'director-editor-actions');
+    for (const count of [8, 16, 32]) {
+      const btn = button(`+${count} MODULES`, 'btn director-action');
+      btn.onclick = () => this.callbacks.onGrowMachine(count);
+      growRow.appendChild(btn);
+    }
+    const double = button('DOUBLE INSTALLATION', 'btn director-action');
+    double.onclick = () => this.callbacks.onGrowMachine(snapshot.moduleCount);
+    growRow.appendChild(double);
+    growthBlock.appendChild(growRow);
+    const rebuildRow = el('div', 'director-editor-actions');
+    for (const total of [48, 96, 144, 192, 256]) {
+      const btn = button(`REBUILD ${total}`, 'btn director-action');
+      btn.onclick = () => this.callbacks.onRebuildMachine(total);
+      rebuildRow.appendChild(btn);
+    }
+    growthBlock.appendChild(rebuildRow);
+    const configRow = el('div', 'director-editor-actions');
+    const exportGraph = button('EXPORT MACHINE GRAPH .JSON', 'btn director-action');
+    exportGraph.onclick = () => this.callbacks.onExportGraphConfig();
+    const importGraph = button('IMPORT MACHINE GRAPH .JSON', 'btn director-action');
+    const graphInput = this.fileInput((text) => this.callbacks.onImportGraphConfig(text));
+    importGraph.onclick = () => graphInput.click();
+    configRow.append(exportGraph, importGraph, graphInput);
+    growthBlock.appendChild(configRow);
+    this.tabContent.appendChild(growthBlock);
+
+    const bindingBlock = el('div', 'director-editor');
+    bindingBlock.appendChild(
+      el('div', 'director-section-title', 'MANY-TO-MANY SCORE BINDINGS'),
+    );
+    const bindingList = el('div', 'director-graph-list');
+    for (const binding of snapshot.bindings) {
+      const row = el('div', 'director-graph-binding-row');
+      row.appendChild(
+        el('span', 'director-graph-source', `${binding.source} → ${binding.target} [${binding.mode}]`),
+      );
+      const mode = el('select', 'director-select');
+      for (const modeId of GRAPH_BINDING_MODES) {
+        const option = el('option', '', modeId);
+        option.value = modeId;
+        mode.appendChild(option);
+      }
+      mode.value = binding.mode;
+      mode.onchange = () => this.callbacks.onGraphBinding(binding.id, { mode: mode.value });
+      const weight = number(binding.weight, 0.01);
+      weight.min = '0';
+      weight.max = '2';
+      weight.onchange = () =>
+        this.callbacks.onGraphBinding(binding.id, { weight: num(weight, binding.weight) });
+      const enabled = el('input');
+      enabled.type = 'checkbox';
+      enabled.checked = binding.enabled;
+      enabled.onchange = () =>
+        this.callbacks.onGraphBinding(binding.id, { enabled: enabled.checked });
+      row.append(mode, weight, enabled);
+      bindingList.appendChild(row);
+    }
+    bindingBlock.appendChild(bindingList);
+    this.tabContent.appendChild(bindingBlock);
+
+    const telemetryBlock = el('div', 'director-editor');
+    telemetryBlock.appendChild(el('div', 'director-section-title', 'ENERGY / FLOW TELEMETRY'));
+    const columns = el('div', 'director-graph-columns');
+    const moduleColumn = el('div', 'director-graph-column');
+    moduleColumn.appendChild(el('div', 'director-graph-column-title', 'TOP MODULES'));
+    for (const module of snapshot.modules.slice(0, 7)) {
+      this.appendMeter(moduleColumn, `${module.label} [${module.archetype}]`, module.energy, 1.5);
+    }
+    const edgeColumn = el('div', 'director-graph-column');
+    edgeColumn.appendChild(el('div', 'director-graph-column-title', 'ACTIVE CONDUITS'));
+    for (const edge of snapshot.edges.slice(0, 7)) {
+      this.appendMeter(edgeColumn, `${edge.from}→${edge.to} [${edge.kind}]`, edge.flow, 1.2);
+    }
+    const sourceColumn = el('div', 'director-graph-column');
+    sourceColumn.appendChild(el('div', 'director-graph-column-title', 'PRIME MOVERS'));
+    for (const source of snapshot.sources.slice(0, 7)) {
+      this.appendMeter(sourceColumn, `${source.label} [${source.kind}]`, source.energy, 1.5);
+    }
+    columns.append(moduleColumn, edgeColumn, sourceColumn);
+    telemetryBlock.appendChild(columns);
+    this.tabContent.appendChild(telemetryBlock);
+  }
+
+  private appendMeter(parent: HTMLElement, label: string, value: number, max: number): void {
+    const row = el('div', 'director-graph-meter-row');
+    row.appendChild(el('span', 'director-graph-meter-label', label));
+    const track = el('span', 'director-graph-meter');
+    const fill = el('span', 'director-graph-meter-fill');
+    const pct = Math.max(0, Math.min(100, (value / Math.max(0.001, max)) * 100));
+    fill.style.width = `${pct.toFixed(1)}%`;
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el('span', 'director-graph-value', value.toFixed(2)));
+    parent.appendChild(row);
+  }
+
+  private drawGraphMap(canvas: HTMLCanvasElement, snapshot: MachineGraphSnapshot): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.fillStyle = '#070b10';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(140, 200, 255, 0.08)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 8; i++) {
+      ctx.beginPath();
+      ctx.moveTo((i / 8) * w, 0);
+      ctx.lineTo((i / 8) * w, h);
+      ctx.stroke();
+    }
+    for (let i = 1; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, (i / 4) * h);
+      ctx.lineTo(w, (i / 4) * h);
+      ctx.stroke();
+    }
+
+    const modules = snapshot.modules.slice(0, Math.min(96, snapshot.modules.length));
+    const positions = new Map<string, { x: number; y: number }>();
+    modules.forEach((module, index) => {
+      const angle = (index / Math.max(1, modules.length)) * Math.PI * 6 + (index % 7) * 0.19;
+      const radius = 18 + ((index % 13) / 13) * 94;
+      positions.set(module.id, {
+        x: w * 0.5 + Math.cos(angle) * radius * 2.35,
+        y: h * 0.5 + Math.sin(angle) * radius * 0.78,
+      });
+    });
+
+    for (const edge of snapshot.edges.slice(0, 260)) {
+      const from = positions.get(edge.from);
+      const to = positions.get(edge.to);
+      if (!from || !to || !edge.enabled) continue;
+      const flow = Math.max(0, Math.min(1, edge.flow));
+      ctx.strokeStyle = `rgba(125, 210, 255, ${0.05 + flow * 0.48})`;
+      ctx.lineWidth = 0.4 + flow * 2.1;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    }
+
+    const active = snapshot.focusTargets.find((f) => f.id === snapshot.activeFocusId);
+    for (const module of modules) {
+      const p = positions.get(module.id);
+      if (!p) continue;
+      const isFocus = active?.moduleId === module.id;
+      const energy = Math.max(0, Math.min(1, module.energy));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2 + energy * 3.8 + (isFocus ? 2 : 0), 0, Math.PI * 2);
+      ctx.fillStyle = isFocus ? '#ffe4a3' : `rgba(140, 220, 255, ${0.35 + energy * 0.65})`;
+      ctx.fill();
+      if (isFocus) {
+        ctx.strokeStyle = '#ffe4a3';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = 'rgba(190, 214, 235, 0.72)';
+    ctx.font = '10px monospace';
+    ctx.fillText(`${snapshot.moduleCount} ADDRESSABLE MODULES // ${snapshot.edgeCount} TYPED CONDUITS`, 10, 16);
+    ctx.fillStyle = 'rgba(255, 220, 150, 0.82)';
+    ctx.fillText(`FOCUS: ${snapshot.activeFocusLabel}`, 10, h - 10);
   }
 
   private renderProjectTab(): void {

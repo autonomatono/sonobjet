@@ -1,4 +1,4 @@
-# Architecture — `sonobjet` Engine & `HYPER // TECTON`
+# Architecture — `sonobjet` Engine, V4 Legacy, V5 Automaton & V6 Machine Kit
 
 ## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
@@ -95,7 +95,7 @@ src/
 
 ## 5. V5 Additions — Articulated Automaton & Director Studio
 
-The legacy V4 sections above remain valid for the registered `HYPER // TECTON` work. The current default work is `CHRONO // AUTOMATON`, which reuses the same 96-bar score and audio engine but replaces particle-cloud morphology with a mechanical hierarchy.
+The legacy V4 sections above remain valid for the registered `HYPER // TECTON` work. `CHRONO // AUTOMATON` remains a registered reference work and the mechanical core reused by V6; it uses the same 96-bar score and audio engine but replaces particle-cloud morphology with a mechanical hierarchy.
 
 ```text
 src/
@@ -144,3 +144,66 @@ Clock/Transport → DirectorSystem.update()
 `DirectorSystem` runs after `activeInstance.update()` in `main.ts`, so an enabled director always has final authority over camera, looks and machine pose. Disabling Director Mode immediately returns camera and post-FX control to the work's procedural director.
 
 For controls and authoring details, see [`V5_DIRECTOR_STUDIO.md`](V5_DIRECTOR_STUDIO.md).
+
+---
+
+## 6. V6 Additions — Machine-Building Kit & Graph Director
+
+The current default work is `ASTRARIUM // MODULAR ENGINE`. It extends the V5 kinematic and director vocabulary into a scalable installation whose modules, ports, conduits, sources, bindings and focus targets are data-driven.
+
+```text
+src/
+├── engine/core/types.ts                 # Generic graph snapshots + DirectorWorkHooks
+├── kit/machine/
+│   ├── MachineGraph.ts                 # Weighted typed graph, simulation, selectors, JSON I/O
+│   └── OrreryFactoryConfig.ts          # Deterministic 12–256 module installation generator
+├── studio/director/
+│   ├── DirectorStudioUI.ts             # Adds MACHINE tab: map, macros, bindings, focus, growth
+│   └── DirectorSystem.ts               # Generic graph/focus/growth/config callbacks
+└── works/astrarium-modular-engine/
+    ├── ModularMachine.ts               # Joint-parented assembly, organs, ports, conduits, flow
+    ├── MachineCameraDirector.ts        # Multi-scale focus camera
+    └── OrreryCommonsWork.ts            # WorkDefinition, score/audio/director integration
+```
+
+### 6.1 Graph invariants
+
+- `MachineGraph` is a directed weighted network, not a list of score-to-part pairs.
+- A `ScoreBindingSpec` selects modules by tags, clusters, archetypes, ids or scale; tests assert fan-out and fan-in cardinality greater than one.
+- Every edge has a typed `EdgeKind` and one of five nonlinear `TransferMode`s; every source has one of five energy waveforms.
+- Modules own typed ports, threshold/capacity/base frequency, phase, energy, activation and fatigue.
+- `FocusDescriptor` covers `MACRO | CLUSTER | MODULE | PORT | CONDUIT`; conduit focus resolves moving edge endpoints.
+- `MachineGraphSnapshot` exposes live modules, conduits, sources, bindings, focus targets and macros to the generic Director UI.
+
+### 6.2 Rig invariants
+
+- `ModularMachine` keeps the V5 zero-unparented-mesh rule; `tests/v6.test.ts` enforces it after initial build, growth, rebuild and JSON import.
+- The outer frame, cluster rings, module chassis, gear trains, organ rotors, ports, V5 reference machine and conduit frame are all represented in the same `KinematicRig` tree.
+- `GearRatioDriver` couples cluster rotation to module gear trains; graph state drives the child organ rotors and port collars.
+- Conduit instanced meshes are children of `rig:conduitFrame`; their transforms are recomputed from joint/port world positions every frame.
+
+### 6.3 V6 runtime data flow
+
+```text
+96-bar Clock / live impulses
+  ├─ AudioEngine + preserved SynthRack
+  └─ WorkSceneInstance.triggerImpulse
+       ├─ MachineGraph.emitScore()       → selector bindings → many module energy states
+       ├─ MechanismEcology.stimulate()  → eight coupled organ agents
+       └─ V5 reference automaton impulse
+
+Work.update()
+  ├─ ModulationMatrix targets          → GraphStepContext macros
+  ├─ MachineGraph.step()               → energy propagation, flow, fatigue, phase
+  ├─ ModularMachine.applyGraphToRig()  → joint targets for clusters, rotors, ports
+  ├─ KinematicRig.update()             → gear drivers + spring-damped joints
+  ├─ updateConduits()                  → bent ducts and flow beads follow joint world positions
+  ├─ MachineCameraDirector.update()    → selected focus scale
+  └─ WebGPUStage.setPostFx()           → graph-state-derived optics
+
+Director Studio
+  ├─ MACHINE tab → setGraphMacro / updateGraphBinding / setFocusTarget / grow / rebuild / I/O
+  └─ SHOTS, LOOKS, CONFIG, MAPS, PROJECT tabs remain unchanged
+```
+
+`DirectorSystem` discovers graph capabilities through optional `DirectorWorkHooks`, so legacy works remain compatible. For the full graph schema, installation layout and authoring workflow, see [`V6_MACHINE_BUILDING_KIT.md`](V6_MACHINE_BUILDING_KIT.md).

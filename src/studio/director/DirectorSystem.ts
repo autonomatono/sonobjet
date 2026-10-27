@@ -4,8 +4,10 @@ import type { Clock } from '../../engine/core/Clock';
 import type { ModulationMatrix } from '../../engine/core/ModulationMatrix';
 import type {
   BehaviorMapEntry,
+  MachineGraphSnapshot,
   PatchRoute,
   PostFxState,
+  ScoreBindingPatch,
   TransportState,
   WorkSceneInstance,
 } from '../../engine/core/types';
@@ -79,6 +81,7 @@ export class DirectorSystem {
   private enabled = false;
   private cameraMode: DirectorCameraMode = 'TIMELINE';
   private jointIds: string[] = [];
+  private lastGraphSnapshot: MachineGraphSnapshot | null = null;
 
   private lastPose: CameraPose | null = null;
   private lastLook = { fx: { ...DEFAULT_POST_FX }, keyId: '', label: 'DEFAULT LOOK' };
@@ -126,6 +129,13 @@ export class DirectorSystem {
       onImportPresets: (raw) => this.importPresets(raw),
       onExportPresets: () => this.exportPresets(),
       onResetProject: () => this.resetProject(),
+      onGraphMacro: (id, value) => this.setGraphMacro(id, value),
+      onGraphBinding: (id, patch) => this.updateGraphBinding(id, patch),
+      onFocusTarget: (id) => this.setFocusTarget(id),
+      onGrowMachine: (count) => this.growMachine(count),
+      onRebuildMachine: (moduleCount) => this.rebuildMachine(moduleCount),
+      onExportGraphConfig: () => this.exportGraphConfig(),
+      onImportGraphConfig: (raw) => this.importGraphConfig(raw),
     });
 
     window.addEventListener('keydown', this.onHotkey);
@@ -143,6 +153,8 @@ export class DirectorSystem {
     if (articulation) this.ui.setArticulationValues(articulation);
     work?.setBehaviorMaps?.(this.timeline.getBehaviorMaps());
     this.freeFly.setJointId(undefined);
+    this.lastGraphSnapshot = work?.getMachineGraphSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
   }
 
   isEnabled(): boolean {
@@ -150,7 +162,10 @@ export class DirectorSystem {
   }
 
   getBadge(): string {
-    return `DIRECTOR // ${this.activeShotLabel} // MILESTONE ${this.lastMilestoneBeat.toFixed(1)}`;
+    const focus = this.lastGraphSnapshot?.activeFocusLabel;
+    return focus
+      ? `DIRECTOR // ${focus} // MILESTONE ${this.lastMilestoneBeat.toFixed(1)}`
+      : `DIRECTOR // ${this.activeShotLabel} // MILESTONE ${this.lastMilestoneBeat.toFixed(1)}`;
   }
 
   toggle(): void {
@@ -233,6 +248,7 @@ export class DirectorSystem {
     }
 
     const ecology = this.work?.getEcologySnapshot?.() ?? {};
+    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
     this.ui.updateFrame({
       beat,
       bar: transport.bar,
@@ -242,6 +258,7 @@ export class DirectorSystem {
       ecology,
       cameraMode: this.cameraMode,
       enabled: this.enabled,
+      graph: this.lastGraphSnapshot,
     });
   }
 
@@ -256,6 +273,78 @@ export class DirectorSystem {
 
   private resolveJoint(id: string): Vec3Tuple | null {
     return this.work?.getJointWorldPosition?.(id) ?? null;
+  }
+
+  private setGraphMacro(id: string, value: number): void {
+    this.work?.setGraphMacro?.(id, value);
+    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
+  }
+
+  private updateGraphBinding(id: string, patch: ScoreBindingPatch): void {
+    this.work?.updateGraphBinding?.(id, patch);
+    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
+  }
+
+  private setFocusTarget(id: string): void {
+    this.work?.setFocusTarget?.(id);
+    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    const focus = this.lastGraphSnapshot?.focusTargets.find((f) => f.id === id);
+    if (focus?.jointId && this.cameraMode === 'JOINT') {
+      this.freeFly.setJointId(focus.jointId);
+    }
+    this.ui.showMessage(`MACHINE FOCUS // ${focus?.label ?? id}`);
+  }
+
+  private growMachine(count: number): void {
+    if (!this.work?.growMachine) {
+      this.ui.showMessage('MACHINE GRAPH UNAVAILABLE');
+      return;
+    }
+    this.work.growMachine(count);
+    this.refreshGraphWork('MACHINE INSTALLATION GREW');
+  }
+
+  private rebuildMachine(moduleCount: number): void {
+    if (!this.work?.rebuildMachine) {
+      this.ui.showMessage('MACHINE GRAPH UNAVAILABLE');
+      return;
+    }
+    this.work.rebuildMachine(moduleCount);
+    this.refreshGraphWork(`MACHINE REBUILT // ${moduleCount} MODULES`);
+  }
+
+  private exportGraphConfig(): void {
+    const raw = this.work?.exportGraphConfig?.();
+    if (!raw) {
+      this.ui.showMessage('MACHINE GRAPH UNAVAILABLE');
+      return;
+    }
+    downloadJson('astrarium-machine-graph.json', raw);
+    this.ui.showMessage('MACHINE GRAPH EXPORTED');
+  }
+
+  private importGraphConfig(raw: string): void {
+    if (!this.work?.importGraphConfig) {
+      this.ui.showMessage('MACHINE GRAPH UNAVAILABLE');
+      return;
+    }
+    try {
+      this.work.importGraphConfig(raw);
+      this.refreshGraphWork('MACHINE GRAPH IMPORTED');
+    } catch (error) {
+      this.ui.showMessage(`GRAPH IMPORT FAILED // ${String(error)}`);
+    }
+  }
+
+  private refreshGraphWork(message: string): void {
+    if (!this.work) return;
+    this.setWork(this.work);
+    this.lastGraphSnapshot = this.work.getMachineGraphSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.ui.showMessage(message);
   }
 
   private applyCameraPose(pose: CameraPose): void {

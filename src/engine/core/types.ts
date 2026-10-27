@@ -167,6 +167,95 @@ export interface BehaviorMapEntry {
   enabled: boolean;
 }
 
+/** Generic inspectable machine-graph data exposed to the director. */
+export type FocusScale = 'MACRO' | 'CLUSTER' | 'MODULE' | 'PORT' | 'CONDUIT';
+
+export interface MachineModuleSnapshot {
+  id: string;
+  label: string;
+  archetype: string;
+  cluster: string;
+  jointId: string;
+  scale: number;
+  energy: number;
+  activation: number;
+  fatigue: number;
+  tags: string[];
+}
+
+export interface MachineEdgeSnapshot {
+  id: string;
+  from: string;
+  to: string;
+  kind: string;
+  weight: number;
+  flow: number;
+  enabled: boolean;
+}
+
+export interface EnergySourceSnapshot {
+  id: string;
+  moduleId: string;
+  label: string;
+  kind: string;
+  rate: number;
+  energy: number;
+}
+
+export interface ScoreBindingSnapshot {
+  id: string;
+  source: string;
+  target: string;
+  mode: string;
+  weight: number;
+  enabled: boolean;
+}
+
+export interface GraphMacroSnapshot {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+  value: number;
+}
+
+export interface FocusDescriptor {
+  id: string;
+  label: string;
+  scale: FocusScale;
+  jointId?: string;
+  moduleId?: string;
+  clusterId?: string;
+  edgeId?: string;
+  priority: number;
+  tags: string[];
+}
+
+export interface MachineGraphSnapshot {
+  moduleCount: number;
+  edgeCount: number;
+  sourceCount: number;
+  bindingCount: number;
+  arousal: number;
+  cohesion: number;
+  fatigue: number;
+  curiosity: number;
+  activeFocusId: string;
+  activeFocusLabel: string;
+  modules: MachineModuleSnapshot[];
+  edges: MachineEdgeSnapshot[];
+  sources: EnergySourceSnapshot[];
+  bindings: ScoreBindingSnapshot[];
+  focusTargets: FocusDescriptor[];
+  macros: GraphMacroSnapshot[];
+}
+
+export interface ScoreBindingPatch {
+  weight?: number;
+  enabled?: boolean;
+  mode?: string;
+}
+
 /**
  * Optional adapter implemented by articulated works. Keeping these hooks on the
  * generic WorkSceneInstance lets the Director Studio author any work that can
@@ -181,6 +270,14 @@ export interface DirectorWorkHooks {
   getJointWorldPosition?(id: string): [number, number, number] | null;
   getEcologySnapshot?(): Record<string, number>;
   setBehaviorMaps?(maps: BehaviorMapEntry[]): void;
+  getMachineGraphSnapshot?(): MachineGraphSnapshot;
+  setGraphMacro?(id: string, value: number): void;
+  updateGraphBinding?(id: string, patch: ScoreBindingPatch): void;
+  setFocusTarget?(id: string): void;
+  growMachine?(count: number): void;
+  rebuildMachine?(moduleCount: number): void;
+  exportGraphConfig?(): string;
+  importGraphConfig?(raw: string): void;
 }
 
 export interface TelemetrySnapshot {

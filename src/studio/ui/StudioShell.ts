@@ -460,16 +460,16 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET V5 // PARENTED CLOCKWORK + ECOLOGICAL BEHAVIOR + 14-VOICE SYNTH</div>
+        <div class="ignition-kicker">SONOBJET V6 // MODULAR MACHINE ECOLOGY + MANY-TO-MANY SCORE GRAPH + 14-VOICE SYNTH</div>
         <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          ${initialWork.subtitle}. A physically parented, articulated automaton driven by analytical gears,
-          cam-followers, four-bar strikers, Geneva indexing and a coupled organ ecology — performed through
-          the same 96-bar F-Phrygian score and zero-sample procedural synth.
+          ${initialWork.subtitle}. A growing, joint-parented installation of addressable clockwork modules,
+          orrery rings, organ pipes, marble gates and live energy conduits — with the preserved V5 automaton
+          as its reference core and the same 96-bar F-Phrygian procedural score.
         </p>
         <div class="ignition-shortcuts">
           <b>SPACE</b> Play / Pause 96-Bar Film &amp; Score &nbsp;|&nbsp;
-          <b>[\`]</b> Director Studio / Free-Flight / Keyframes &nbsp;|&nbsp;
+          <b>[\`]</b> Director Studio / Machine Graph / Free-Flight / Keyframes &nbsp;|&nbsp;
           <b>K / L / M</b> Add Camera / Look / Milestone<br/>
           <b>0, 1–8</b> Procedural Camera / 8 Perspectives &nbsp;|&nbsp;
           <b>Z–M , . /</b> Play 10 Voices &nbsp;|&nbsp;
