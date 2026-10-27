@@ -1,6 +1,8 @@
 # V9 — `MODAL FLOW // RESONANT RELAY`
 
-**Status:** implemented on the active Arena session branch.
+**Status:** implemented, verified and deployed from `arena/ebe788b1-sonobjet`.
+
+**Implementation commit:** `aaba52e`; **green Pages CI run:** `40579026761`; **live URL:** `https://autonomatono.github.io/sonobjet/`.
 
 **Default work:** `?work=modal-flow`
 

@@ -37,6 +37,14 @@
 - `git diff --check`: **clean**
 - Local Vite preview available on `0.0.0.0:5173`.
 
+### Deployment
+
+- **Branch:** `arena/ebe788b1-sonobjet`
+- **Implementation commit:** `aaba52e feat(v9): turn Modal Flow into a resonant Cornell relay`
+- **GitHub Pages CI run:** `40579026761` — completed **success** (typecheck, 39 tests, production build and deploy)
+- **Live URL:** `https://autonomatono.github.io/sonobjet/`
+- This handoff/deployment note is a docs-only follow-up; the implementation SHA above is the deployed build verified by that run.
+
 ### Primary files
 
 | File | Role |
