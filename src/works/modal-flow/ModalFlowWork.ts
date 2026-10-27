@@ -135,6 +135,18 @@ const clamp = (value: number, min: number, max: number): number =>
 
 const tuple = (v: Vec3): Vec3Tuple => [v.x, v.y, v.z];
 
+export function quantizePhysicsAudioTime(
+  beat: number,
+  audioNow: number,
+  bpm: number,
+  step64 = 4,
+): number {
+  const gridBeats = Math.max(1, Math.round(step64)) / 16;
+  const nextBeat = Math.ceil((beat + 0.001) / gridBeats) * gridBeats;
+  const delay = Math.max(0.014, (nextBeat - beat) * 60 / Math.max(40, bpm));
+  return audioNow + delay;
+}
+
 export interface PhysicsEventComposer {
   setParams(patch: Partial<ModalFlowComposerParams>): void;
   reset(): void;
@@ -157,6 +169,8 @@ export interface ModalFlowVariantConfig {
   evaluateEnergyCues(step64: number, bar: number, sectionIndex: number): ModalFlowEnergyCue[];
   cameraFocusByMode: Record<number, string>;
   moduleForSubsystem?: (subsystem: SubsystemId) => string;
+  /** Grid size in 64th-note transport steps for unscripted physics notes. */
+  quantizeStep64?: number;
   sectionLook?: (sectionIndex: number) => {
     neon: number;
     lightRig: number;
@@ -184,6 +198,7 @@ const DEFAULT_VARIANT: ModalFlowVariantConfig = {
     return cue ? [cue] : [];
   },
   cameraFocusByMode: CAMERA_FOCUS_BY_MODE,
+  quantizeStep64: 4,
   locusScale: 8,
 };
 
@@ -213,6 +228,7 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
   private gaze = { x: 0, y: 0 };
   private lastPhysicsEvents = 0;
   private lastAudioEvents = 0;
+  private quantizedPhysics = true;
 
   constructor(private readonly variant: ModalFlowVariantConfig = DEFAULT_VARIANT) {
     this.blueprint = variant.createBlueprint(variant.defaultModuleCount);
@@ -284,6 +300,7 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
         velocity: cue.energy * 0.72,
         pitchRatio: 1,
         midiNote: cue.midiNote,
+        chordNotes: cue.chordNotes ? [...cue.chordNotes] : undefined,
         sliceIndex: cue.sliceIndex ?? cue.noteIndex,
         reverse: cue.reverse,
         ratchetStep: cue.ratchetStep,
@@ -318,6 +335,7 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
       ratchetStep: event.ratchetStep,
       ratchetTotal: event.ratchetTotal,
       midiNote: event.midiNote,
+      chordNotes: event.chordNotes ? [...event.chordNotes] : undefined,
       sourceBeat: event.beat,
       velocity: event.velocity,
     });
@@ -364,9 +382,19 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
     });
 
     const synthMacros = this.synthMacros(ctx);
-    const audioTime = ctx.audio.getCurrentTime() + 0.014;
+    const audioNow = ctx.audio.getCurrentTime();
+    this.quantizedPhysics = (macros.eventQuantize ?? 1) >= 0.5;
     let audioEvents = 0;
     for (const event of events) {
+      const bypassGrid =
+        event.sequenced ||
+        event.voice === 'glitch-chirp' ||
+        event.voice === 'arc-discharge' ||
+        ctx.matrix.getSource('punch.stutter') > 0.5 ||
+        ctx.matrix.getSource('punch.ratchet') > 0.5;
+      const audioTime = this.quantizedPhysics && !bypassGrid
+        ? this.getQuantizedAudioTime(transport.beat, audioNow, transport.bpm)
+        : audioNow + 0.014;
       const impulse = this.composer.map(event, transport.beat, audioTime);
       if (!impulse) continue;
       ctx.audio.triggerImpulse(impulse, synthMacros);
@@ -977,6 +1005,7 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
   private createHud(): void {
     if (typeof document === 'undefined') return;
     const hud = document.createElement('div');
+    hud.className = 'work-drone-hud';
     hud.style.cssText = [
       'position:fixed',
       'left:50%',
@@ -1001,6 +1030,15 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
     this.hud = hud;
   }
 
+  private getQuantizedAudioTime(beat: number, audioNow: number, bpm: number): number {
+    return quantizePhysicsAudioTime(
+      beat,
+      audioNow,
+      bpm,
+      this.variant.quantizeStep64 ?? 4,
+    );
+  }
+
   private updateHud(): void {
     if (!this.hud) return;
     if (this.cameraMode !== 1 || this.directorEnabled) {
@@ -1015,7 +1053,7 @@ export class ModalFlowSceneInstance implements WorkSceneInstance {
       'WASD fly · E/Q altitude · Z/X roll · drag look · wheel speed/FOV',
       'F marble lock · V cinematic drift · C follow distance · 0 level horizon',
       `SPEED ${(drone?.speed ?? 1).toFixed(2)}  FOV ${(drone?.fov ?? 47).toFixed(0)}  FOLLOW ${drone?.follow ? 'ON' : 'OFF'}  DRIFT ${drone?.cinematic ? 'ON' : 'OFF'}`,
-      `PHYSICS EVENTS ${this.lastPhysicsEvents}  AUDIBLE NOTES ${this.lastAudioEvents}  PHRASE ${song.phraseIndex + 1}  REST ${song.restRemaining.toFixed(2)}s`,
+      `PHYSICS EVENTS ${this.lastPhysicsEvents}  AUDIBLE NOTES ${this.lastAudioEvents}  TIMING ${this.quantizedPhysics ? 'GRID' : 'FREE'}  PHRASE ${song.phraseIndex + 1}`,
       `LAST NOTE ${song.lastMidiNote || '--'} // ${song.lastSubsystem.toUpperCase()}  EMITTED ${song.emitted}  DROPPED ${song.dropped}`,
     ].join('\n');
   }

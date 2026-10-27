@@ -1,4 +1,4 @@
-# Architecture — `sonobjet` Engine, V4–V10 Works
+# Architecture — `sonobjet` Engine, V4–V11 Works
 
 ## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
@@ -8,6 +8,49 @@
 2. **Non-Euclidean GPU Vertex Deformation**: Laws of rigid-body geometry are intentionally transcended — TSL vertex shaders (`positionNode`) twist, shear, and ripple thousands of instanced ceramic and chrome structures directly on the GPU in tandem with CPU state-machine kinematics.
 3. **Through-Composed Hypermetric Musical Form**: Every section completes its full harmonic and melodic cycles (`8`-bar F-Phrygian Polychord & Aria cycles across a `96`-bar 6-Act score) with sculpted bridge handoffs and cadential drum/glitch rolls.
 4. **State-Coupled Camera & Stylized Optical Post-Processing**: Camera trajectories continuously follow the machine's live bounding envelope (`envelopeRadius`, `interiorRadius`, `verticalSpan`, `primaryBoomTip`) through TSL lens distortion, scan-band glitch tears, RGB chromatic aberration, and Cunningham bleach-bypass color grading.
+
+---
+
+## 1.8 V11 Additions — Quantized Physics, Live Light & Spatial Variations
+
+V11 preserves the chosen V10 implementation at annotated tag `v0.1.3` (`space pinball`) and extends the shared Modal Flow runtime rather than forking its causal model.
+
+### Timing boundary
+
+`eventQuantize` defaults on. Unscripted physics events calculate their next work-specific transport unit with `quantizePhysicsAudioTime()`, then pass that future WebAudio time into the composer. Physics/rig actuation remains immediate; only the note onset waits. Sequenced events are already aligned, while `glitch-chirp`, `arc-discharge` and held time-fracture effects intentionally bypass the grid. `U` and the top-bar `GRID / FREE` control change the macro at runtime.
+
+```text
+free marble/mechanism event at beat b
+  ├─ visual physics + rig actuation now
+  └─ GRID: ceil(b / grid) × grid → future AudioContext time → composer/audio
+     FREE: current AudioContext time + safety offset → composer/audio
+```
+
+### Light/atmosphere boundary
+
+`ModalFlowMachine` samples every conduit curve for additive liquid-neon packets. `ModalFlowMechanismLayer` adds eight independent chromatic movers (four point, four spot), visible additive spot volumes, per-vertex charge colors, a responsive constellation, deforming Tesla lines and musical fireflies. All objects remain under the shared `KinematicRig`; event count controls intensity/opacity while each theme retains several simultaneous colors.
+
+### New work variants
+
+```text
+src/works/
+├── spatial-sequencer/
+│   ├── SpatialSequencerBlueprint.ts # shared legible/glacial 18–40 node graph family
+│   ├── SpatialTranceScore.ts        # 126 BPM / 48-bar explanatory trance score
+│   ├── SpatialTranceWork.ts         # LUMEN GRID variant
+│   ├── AntarcticScore.ts            # 54 BPM / 48-bar sparse pentatonic ambient score
+│   └── AntarcticWork.ts             # ANTARCTICA variant
+└── braindance-collider/
+    ├── BraindanceBlueprint.ts       # 40-node nonlinear Space Pinball transform
+    ├── BraindanceScore.ts           # 188 BPM / 72-bar co-prime break/acid program
+    └── BraindanceWork.ts            # CHAOS VECTOR variant
+```
+
+`NeonPinballComposer` now accepts `breakcore`, `trance`, `chaos` and `ambient` composition characters. They alter only physical-event rationing, velocity and decay; all sequenced metadata still crosses `ModalFlowPhysics` first. Physical chord metadata now traverses cue → `ImpulseEvent` → `PhysicalActuation` → `PhysicsSongEvent` so Antarctica's long underwater harmonies retain the same causal route.
+
+`body.performance-clean` is the all-UI-off state. The Studio HUD, Director and work Drone HUD disappear, while input/sensor polling and the audiovisual runtime continue. Enabling Director exits this state to prevent invisible input capture.
+
+See [`V11_SPATIAL_VARIATIONS.md`](V11_SPATIAL_VARIATIONS.md) for complete work and verification contracts.
 
 ---
 
@@ -122,7 +165,17 @@ src/
     │   ├── NeonPinballScore.ts
     │   ├── NeonPinballComposer.ts
     │   └── NeonPinballWork.ts
-    ├── modal-flow/             # Shared V8–V10 runtime + preserved V9 Resonant Relay work
+    ├── spatial-sequencer/      # V11 legible trance graph + serene Antarctic graph family
+    │   ├── SpatialSequencerBlueprint.ts
+    │   ├── SpatialTranceScore.ts
+    │   ├── SpatialTranceWork.ts
+    │   ├── AntarcticScore.ts
+    │   └── AntarcticWork.ts
+    ├── braindance-collider/    # V11 nonlinear high-density Space Pinball variation
+    │   ├── BraindanceBlueprint.ts
+    │   ├── BraindanceScore.ts
+    │   └── BraindanceWork.ts
+    ├── modal-flow/             # Shared V8–V11 runtime + preserved V9 Resonant Relay work
     │   ├── ModalFlowScore.ts
     │   ├── ModalFlowBlueprint.ts
     │   ├── ModalFlowPhysics.ts

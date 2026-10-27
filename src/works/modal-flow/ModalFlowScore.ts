@@ -93,6 +93,7 @@ export interface ModalFlowEnergyCue {
   /** Sequencer metadata travels through a physical actuator before synthesis. */
   noteIndex?: number;
   midiNote?: number;
+  chordNotes?: number[];
   sliceIndex?: number;
   reverse?: boolean;
   ratchetStep?: number;

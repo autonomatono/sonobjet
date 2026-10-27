@@ -21,6 +21,9 @@ import { MidiGamepadSensor } from './studio/sensors/MidiGamepadSensor';
 import { DirectorSystem } from './studio/director/DirectorSystem';
 import { StudioShell } from './studio/ui/StudioShell';
 import { NeonPinballWork } from './works/neon-pinball/NeonPinballWork';
+import { SpatialTranceWork } from './works/spatial-sequencer/SpatialTranceWork';
+import { BraindanceWork } from './works/braindance-collider/BraindanceWork';
+import { AntarcticWork } from './works/spatial-sequencer/AntarcticWork';
 import { ModalFlowWork } from './works/modal-flow/ModalFlowWork';
 import { MarblePendulumWork } from './works/marble-pendulum/MarblePendulumWork';
 import { OrreryCommonsWork } from './works/astrarium-modular-engine/OrreryCommonsWork';
@@ -34,6 +37,9 @@ async function bootstrap(): Promise<void> {
 
   const registry = new WorkRegistry();
   registry.register(NeonPinballWork, true);
+  registry.register(SpatialTranceWork);
+  registry.register(BraindanceWork);
+  registry.register(AntarcticWork);
   registry.register(ModalFlowWork);
   registry.register(MarblePendulumWork);
   registry.register(OrreryCommonsWork);
@@ -63,7 +69,13 @@ async function bootstrap(): Promise<void> {
   let lastImpulse: ImpulseEvent | null = null;
   let impulseCount = 0;
   let ignited = false;
-  const workHasDrone = (id: string): boolean => id === 'modal-flow' || id === 'neon-pinball';
+  const workHasDrone = (id: string): boolean => [
+    'modal-flow',
+    'neon-pinball',
+    'spatial-trance',
+    'braindance-collider',
+    'antarctica',
+  ].includes(id);
 
   const applyVisualStyle = (fx: Parameters<WebGPUStage['setPostFx']>[0]): void => {
     stage.setPostFx(fx);
@@ -280,6 +292,15 @@ async function bootstrap(): Promise<void> {
       },
       onToggleDirector: () => director?.toggle(),
       onOpenLooks: () => director?.openLooks(),
+      onToggleQuantize: () => {
+        const next = matrix.getTarget('eventQuantize') < 0.5;
+        matrix.setMacroBase('eventQuantize', next ? 1 : 0);
+        return next;
+      },
+      onTogglePerformanceMode: () => {
+        const clean = shell.toggleCinemaMode();
+        if (clean && director?.isEnabled()) director.setEnabled(false);
+      },
     },
   );
 
@@ -295,7 +316,15 @@ async function bootstrap(): Promise<void> {
       await audio.ensureStarted(clock.getBpm());
       clock.toggle(audio.getCurrentTime());
     },
-    onToggleHud: () => shell.toggleCinemaMode(),
+    onToggleHud: () => {
+      const clean = shell.toggleCinemaMode();
+      if (clean && director?.isEnabled()) director.setEnabled(false);
+    },
+    onToggleQuantize: () => {
+      const next = matrix.getTarget('eventQuantize') < 0.5;
+      matrix.setMacroBase('eventQuantize', next ? 1 : 0);
+      shell.setQuantizeState(next);
+    },
     onCameraSelect: (mode) => {
       activeInstance?.setCameraMode?.(mode);
       inputRig?.setDroneMode(mode === 1 && workHasDrone(activeWorkDef.id));
@@ -353,6 +382,7 @@ async function bootstrap(): Promise<void> {
     matrix,
     setPostFx: applyVisualStyle,
     onEnabledChange: (enabled) => {
+      if (enabled) shell.setPerformanceMode(false);
       inputRig?.setDirectorMode(enabled);
       activeInstance?.setDirectorEnabled?.(enabled);
       shell.setDirectorMode(enabled);

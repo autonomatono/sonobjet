@@ -54,6 +54,7 @@ export interface InputRigCallbacks {
   onSectionJump(sectionIdx: number): void;
   onBpmNudge(delta: number): void;
   onToggleTakeRecord(): void;
+  onToggleQuantize(): void;
   onImpulse(event: ImpulseEvent): void;
   onPunchChange(id: PunchFxId, active: boolean): void;
   onPointerStrain(x: number, y: number, tension: number, active: boolean): void;
@@ -231,6 +232,11 @@ export class KeyboardMouseRig {
     }
 
     const key = e.key.toLowerCase();
+    if (key === 'u' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      if (!e.repeat) this.cb.onToggleQuantize();
+      return;
+    }
     if (this.directorMode) {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -240,7 +246,7 @@ export class KeyboardMouseRig {
         (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)
       ) {
         e.preventDefault();
-        this.cb.onToggleHud();
+        if (!e.repeat) this.cb.onToggleHud();
       }
       return;
     }
@@ -253,7 +259,7 @@ export class KeyboardMouseRig {
         (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)
       ) {
         e.preventDefault();
-        this.cb.onToggleHud();
+        if (!e.repeat) this.cb.onToggleHud();
       } else if (/^[0-9]$/.test(key)) {
         this.cb.onCameraSelect(Number(key));
       }
@@ -269,7 +275,7 @@ export class KeyboardMouseRig {
       (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)
     ) {
       e.preventDefault();
-      this.cb.onToggleHud();
+      if (!e.repeat) this.cb.onToggleHud();
       return;
     }
     if (key === 'r' && e.shiftKey) {

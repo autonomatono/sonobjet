@@ -8,6 +8,7 @@ import {
 import {
   createConduitSampler,
   type ConduitSampler,
+  type ConduitSpec,
   type ModalFlowBlueprint,
   type ModuleSpec,
   type Vec3,
@@ -29,6 +30,13 @@ const clamp = (value: number, min: number, max: number): number =>
 
 const vec3 = (v: Vec3): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
+interface ConduitLightPulse {
+  mesh: THREE.Mesh;
+  edge: ConduitSpec;
+  phase: number;
+  lane: number;
+}
+
 /**
  * Parented 3D installation. Every visible mesh hangs from a KinematicRig
  * joint; conduits, marbles, module housings and moving transmission parts all
@@ -47,6 +55,7 @@ export class ModalFlowMachine {
   private readonly moduleLights = new Map<string, THREE.PointLight>();
   private readonly moduleFlash = new Map<string, number>();
   private readonly fillLights: Array<{ light: THREE.Light; base: number }> = [];
+  private readonly conduitLightPulses: ConduitLightPulse[] = [];
   private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly materials: THREE.Material[] = [];
   private readonly dummy = new THREE.Object3D();
@@ -221,6 +230,7 @@ export class ModalFlowMachine {
     }
 
     this.updateMarbles();
+    this.updateConduitLightPulses(elapsed, transport.beat);
   }
 
   dispose(): void {
@@ -240,6 +250,7 @@ export class ModalFlowMachine {
     this.moduleMaterials.clear();
     this.moduleLights.clear();
     this.fillLights.length = 0;
+    this.conduitLightPulses.length = 0;
     this.moduleFlash.clear();
     this.marbleMesh = null;
   }
@@ -977,13 +988,46 @@ export class ModalFlowMachine {
       transparent: true,
       opacity: 0.62,
     });
-    for (const edge of this.blueprint.conduits) {
+    const pulseColors = [0x42e8ff, 0xff4fc8, 0x8dff63, 0xffad42, 0xa986ff, 0xffffff];
+    const pulseMaterials = pulseColors.map((color) => {
+      const material = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.82,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      this.materials.push(material);
+      return material;
+    });
+    const pulseGeometry = this.geometry(new THREE.SphereGeometry(0.1, 8, 6));
+    for (const [edgeIndex, edge] of this.blueprint.conduits.entries()) {
       const points = this.sampler.points(edge, 28).map(vec3);
       const curve = new THREE.CatmullRomCurve3(points);
       const outerGeo = this.geometry(new THREE.TubeGeometry(curve, 32, 0.105, 7, false));
       const innerGeo = this.geometry(new THREE.TubeGeometry(curve, 32, 0.032, 5, false));
       this.addMesh(parent, outerGeo, outer);
       this.addMesh(parent, innerGeo, inner);
+      if (this.blueprint.environment === 'open-pinball') {
+        const pulseCount = edge.kind === 'resonant' || edge.kind === 'pneumatic' ? 3 : 2;
+        for (let lane = 0; lane < pulseCount; lane++) {
+          const mesh = this.addMesh(
+            parent,
+            pulseGeometry,
+            pulseMaterials[(edgeIndex + lane * 2) % pulseMaterials.length],
+          );
+          mesh.name = `liquid-neon:${edge.id}:${lane}`;
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
+          mesh.renderOrder = 3;
+          this.conduitLightPulses.push({
+            mesh,
+            edge,
+            phase: (lane / pulseCount + edgeIndex * 0.137) % 1,
+            lane,
+          });
+        }
+      }
       if (this.blueprint.spatialPorts && points.length > 2) {
         const collarGeo = this.geometry(new THREE.TorusGeometry(0.145, 0.026, 7, 18));
         const startTangent = points[1].clone().sub(points[0]).normalize();
@@ -1001,6 +1045,31 @@ export class ModalFlowMachine {
         });
         end.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), endTangent);
       }
+    }
+  }
+
+  private updateConduitLightPulses(elapsed: number, beat: number): void {
+    for (const pulse of this.conduitLightPulses) {
+      const flow = this.physics.getEdgeFlow(pulse.edge.id);
+      const speed = 0.045 + pulse.edge.speed * 0.055 + flow * 0.08;
+      const t = (pulse.phase + elapsed * speed + beat * 0.006 * (pulse.lane + 1)) % 1;
+      const position = this.sampler.sample(pulse.edge, t);
+      const ahead = this.sampler.sample(pulse.edge, Math.min(1, t + 0.012));
+      pulse.mesh.position.set(position.x, position.y, position.z);
+      const tangent = new THREE.Vector3(
+        ahead.x - position.x,
+        ahead.y - position.y,
+        ahead.z - position.z,
+      );
+      if (tangent.lengthSq() > 0.000001) {
+        pulse.mesh.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          tangent.normalize(),
+        );
+      }
+      const body = 0.55 + flow * 1.2 + Math.sin((t + beat * 0.04) * Math.PI * 2) * 0.12;
+      pulse.mesh.scale.set(0.72 + flow * 0.5, 0.72 + flow * 0.5, 1.8 + body * 2.2);
+      pulse.mesh.visible = body > 0.2;
     }
   }
 

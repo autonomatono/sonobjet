@@ -45,6 +45,8 @@ export interface StudioActions {
   onToggleMute(): void;
   onToggleDirector(): void;
   onOpenLooks(): void;
+  onToggleQuantize(): boolean;
+  onTogglePerformanceMode(): void;
 }
 
 /**
@@ -65,6 +67,7 @@ export class StudioShell {
   private readonly muteBtn: HTMLButtonElement;
   private readonly directorBtn: HTMLButtonElement;
   private readonly looksBtn: HTMLButtonElement;
+  private readonly quantizeBtn: HTMLButtonElement;
 
   private readonly timelineStrip: HTMLDivElement;
   private readonly playheadEl: HTMLDivElement;
@@ -211,10 +214,17 @@ export class StudioShell {
     this.directorBtn.title = 'Toggle Director Studio';
     this.directorBtn.onclick = () => actions.onToggleDirector();
 
+    this.quantizeBtn = document.createElement('button');
+    this.quantizeBtn.className = 'btn quantize-launch active';
+    this.quantizeBtn.textContent = 'GRID [U]';
+    this.quantizeBtn.title = 'Toggle grid-quantized physics notes / completely free timing';
+    this.quantizeBtn.onclick = () => this.setQuantizeState(actions.onToggleQuantize());
+
     const cinemaBtn = document.createElement('button');
-    cinemaBtn.className = 'btn';
-    cinemaBtn.textContent = 'CINEMA [TAB]';
-    cinemaBtn.onclick = () => this.toggleCinemaMode();
+    cinemaBtn.className = 'btn performance-launch';
+    cinemaBtn.textContent = 'PERFORM [TAB]';
+    cinemaBtn.title = 'Remove every overlay while keeping shortcuts, mouse, sensors and audio live';
+    cinemaBtn.onclick = () => actions.onTogglePerformanceMode();
 
     const panelToggles = document.createElement('div');
     panelToggles.className = 'panel-toggle-cluster';
@@ -227,6 +237,7 @@ export class StudioShell {
     metaCluster.append(
       this.looksBtn,
       this.directorBtn,
+      this.quantizeBtn,
       panelToggles,
       this.gpuBadge,
       this.bodyBadge,
@@ -508,12 +519,17 @@ export class StudioShell {
     // --- IGNITION OVERLAY ---
     this.ignitionOverlay = document.createElement('div');
     this.ignitionOverlay.className = 'ignition-overlay';
-    const isNeonPinball = initialWork.id === 'neon-pinball';
-    const ignitionKicker = isNeonPinball
-      ? 'SONOBJET V10 // OPEN PINBALL COMPUTER + PHYSICS BREAKCORE'
-      : 'SONOBJET // PHYSICS-COUPLED AUDIOVISUAL MACHINE';
-    const ignitionDescription = isNeonPinball
-      ? `${initialWork.subtitle}. A ${initialWork.bars}-bar, ${initialWork.bpm} BPM IDM / drum-and-bass machine song is physically addressed through magnetic balls, ratchets, break solenoids, bell rows, crystal memories and a pinned music-box loom.`
+    const workKickers: Record<string, string> = {
+      'neon-pinball': 'SONOBJET V10 // OPEN PINBALL COMPUTER + PHYSICS BREAKCORE',
+      'spatial-trance': 'SONOBJET V11 // LEGIBLE 3D GEOMETRIC SEQUENCER',
+      'braindance-collider': 'SONOBJET V11 // ALGORITHMIC BRAINDANCE + PLASMA COLLIDER',
+      antarctica: 'SONOBJET V11 // SUBGLACIAL AMBIENT LIGHT MACHINE',
+    };
+    const currentSpatial = initialWork.id in workKickers;
+    const ignitionKicker = workKickers[initialWork.id] ??
+      'SONOBJET // PHYSICS-COUPLED AUDIOVISUAL MACHINE';
+    const ignitionDescription = currentSpatial
+      ? `${initialWork.subtitle}. This ${initialWork.bars}-bar, ${initialWork.bpm} BPM work addresses named physical organs before their returned physics events become sound.`
       : `${initialWork.subtitle}. This preserved work remains fully playable and directable.`;
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
@@ -531,10 +547,11 @@ export class StudioShell {
           <b>F</b> lock marble &nbsp;|&nbsp; <b>V</b> drift &nbsp;|&nbsp; <b>C</b> follow distance<br/>
           <b>2–8</b> Cinematic focus shots &nbsp;|&nbsp;
           <b>Z–M , . /</b> Physical actuators &nbsp;|&nbsp;
-          <b>Q W E R T Y</b> Cue six sections
+          <b>Q W E R T Y</b> Cue six sections &nbsp;|&nbsp;
+          <b>U</b> Grid / free physics &nbsp;|&nbsp; <b>TAB</b> No-UI performance
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE ${initialWork.bars}-BAR PHYSICS BREAK [SPACE]</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE ${initialWork.bars}-BAR PHYSICAL SCORE [SPACE]</button>
           <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>
@@ -602,9 +619,21 @@ export class StudioShell {
     this.ignitionOverlay.classList.add('dismissed');
   }
 
-  toggleCinemaMode(): void {
-    this.cinemaHidden = !this.cinemaHidden;
-    this.hudLayer.classList.toggle('cinema-hidden', this.cinemaHidden);
+  toggleCinemaMode(): boolean {
+    return this.setPerformanceMode(!this.cinemaHidden);
+  }
+
+  setPerformanceMode(active: boolean): boolean {
+    this.cinemaHidden = active;
+    this.hudLayer.classList.toggle('cinema-hidden', active);
+    document.body.classList.toggle('performance-clean', active);
+    return active;
+  }
+
+  setQuantizeState(active: boolean): void {
+    this.quantizeBtn.classList.toggle('active', active);
+    this.quantizeBtn.textContent = active ? 'GRID [U]' : 'FREE [U]';
+    this.quantizeBtn.setAttribute('aria-pressed', String(active));
   }
 
   /** Fade the performance decks while the Director Studio owns the screen. */
@@ -623,6 +652,11 @@ export class StudioShell {
 
   bindWorkSchema(work: WorkDefinition, matrix: ModulationMatrix | null): void {
     this.applyCameraModeLabels(work.cameraModeLabels);
+    const quantizeMacro = work.macros.find((macro) => macro.id === 'eventQuantize');
+    this.quantizeBtn.style.display = quantizeMacro ? '' : 'none';
+    this.setQuantizeState(
+      quantizeMacro ? (matrix?.getTarget('eventQuantize') ?? quantizeMacro.defaultValue) >= 0.5 : false,
+    );
     // Rebuild section segments
     this.timelineStrip.innerHTML = '';
     this.sectionEls = [];
@@ -774,6 +808,9 @@ export class StudioShell {
 
     for (const [id, span] of this.macroValueLabels.entries()) {
       span.textContent = matrix.getTarget(id).toFixed(2);
+    }
+    if (this.macroSliders.has('eventQuantize')) {
+      this.setQuantizeState(matrix.getTarget('eventQuantize') >= 0.5);
     }
 
     this.mpStatus.textContent = sensorStatus;

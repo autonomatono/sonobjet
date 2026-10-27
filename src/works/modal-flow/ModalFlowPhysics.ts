@@ -46,6 +46,7 @@ export interface PhysicsSongEvent {
   ratchetStep?: number;
   ratchetTotal?: number;
   midiNote?: number;
+  chordNotes?: number[];
   sourceBeat?: number;
   voice?: SubsystemId;
 }
@@ -59,6 +60,7 @@ export interface PhysicalActuation {
   ratchetStep?: number;
   ratchetTotal?: number;
   midiNote?: number;
+  chordNotes?: number[];
   sourceBeat?: number;
   velocity?: number;
 }
@@ -192,7 +194,10 @@ export class ModalFlowPhysics {
   ) {
     this.blueprint = blueprint;
     this.seed = options.seed ?? 0x4d4f4441;
-    this.marbleCount = Math.max(12, Math.floor(options.marbleCount ?? DEFAULT_MARBLE_COUNT));
+    this.marbleCount = Math.max(
+      12,
+      Math.floor(options.marbleCount ?? blueprint.marbleCount ?? DEFAULT_MARBLE_COUNT),
+    );
     this.sampler = createConduitSampler(blueprint);
     for (const module of blueprint.modules) this.moduleById.set(module.id, module);
     for (const edge of blueprint.conduits) {
@@ -375,6 +380,7 @@ export class ModalFlowPhysics {
         ratchetStep: actuation.ratchetStep,
         ratchetTotal: actuation.ratchetTotal,
         midiNote: actuation.midiNote,
+        chordNotes: actuation.chordNotes ? [...actuation.chordNotes] : undefined,
         sourceBeat: actuation.sourceBeat,
         voice: actuation.voice,
       });

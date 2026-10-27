@@ -63,9 +63,21 @@ body,
   transition: opacity 0.22s ease;
 }
 
-.hud-layer.cinema-hidden .hud-collapsible {
+.hud-layer.cinema-hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+.hud-layer.cinema-hidden * {
+  pointer-events: none !important;
+}
+
+body.performance-clean .director-root,
+body.performance-clean .work-drone-hud,
+body.performance-clean .ignition-overlay {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .hud-layer.director-active .hud-mid,
@@ -116,6 +128,21 @@ body,
 .director-launch {
   border-color: rgba(140, 200, 255, 0.55);
   color: var(--accent-xenon);
+}
+
+.quantize-launch {
+  border-color: rgba(162, 255, 112, 0.48);
+  color: #bdff91;
+}
+
+.quantize-launch:not(.active) {
+  border-color: rgba(255, 179, 71, 0.5);
+  color: var(--accent-amber);
+  background: rgba(255, 179, 71, 0.08);
+}
+
+.performance-launch {
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .panel-toggle-cluster {
@@ -577,7 +604,7 @@ body,
 @media (max-width: 1080px) {
   .brand-mark,
   .transport-cluster .btn:not(:first-child),
-  .meta-cluster > .btn:not(.looks-launch):not(.director-launch) {
+  .meta-cluster > .btn:not(.looks-launch):not(.director-launch):not(.quantize-launch):not(.performance-launch) {
     display: none;
   }
   .clock-readout {

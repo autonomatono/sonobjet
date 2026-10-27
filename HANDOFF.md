@@ -1,10 +1,81 @@
 # Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff for the current V10 open-space Neon Pinball breakcore computer, its reusable V8–V10 physics/transmission runtime, and all preserved V4–V9 reference systems.
+> **Purpose:** Detailed end-of-session handoff for the tagged V10 Space Pinball checkpoint, the V11 spatial variations/live-light upgrade, the reusable V8–V11 causal runtime, and all preserved V4–V9 reference systems.
 
 ---
 
-## 0. Latest Update — V10 NEON PINBALL // BREAKCORE COMPUTER Implemented (2026-10-27)
+## 0. Latest Update — V11 Spatial Variations & Live-Light Upgrade (2026-10-27)
+
+**Favored checkpoint preserved:** annotated tag `v0.1.3` (`space pinball`) points to commit `ad2b9a94d3f1502364a10662521fab03cdecc428`.
+
+**Default flagship remains:** `NEON PINBALL // BREAKCORE COMPUTER`. Three contrasting V11 works now sit immediately after it in the selector: `LUMEN GRID // 3D GEOMETRIC SEQUENCER`, `CHAOS VECTOR // BRAINDANCE COLLIDER`, and `ANTARCTICA // SUBGLACIAL LIGHT`.
+
+### User brief answered
+
+- The chosen Space Pinball result is checkpointed rather than overwritten or lost.
+- Open works now contain multiple independently moving, differently colored point/spot sources whose light blends on physical surfaces; four visible additive beam volumes imply volumetric shafts.
+- TAB/PERFORM removes every overlay while shortcuts, mouse, MediaPipe, mic, MIDI/gamepad and the audiovisual runtime remain live.
+- Machine organs now have deliberate macro/medium/micro scale hierarchy; Chaos Vector exceeds a ten-to-one scale range.
+- Free physical notes quantize to musical units by default, with electric/glitch exceptions and a visible/keyboard `GRID [U] / FREE [U]` toggle for unconstrained performance.
+- Every open tube carries moving liquid-neon packets tied to its exact physical curve and edge flow.
+- Musical fireflies, a responsive constellation graph, per-vertex charge colors and deforming Tesla/plasma branches make the background actively musical.
+- A simpler ambient-trance graph explains clock → route → note → light causality in a 3D geometric-sequencer format.
+- A new original high-density algorithmic jungle/braindance work combines co-prime rhythm streams, recursive microcuts, acid and plasma lighting.
+- A quiet Antarctic work explores stillness, snow/ice crystals, underwater pressure, long glass/chord decay and slow aurora light.
+
+### Shared runtime changes
+
+- Added `eventQuantize` to Modal Flow macros and exported `quantizePhysicsAudioTime()`.
+- Unscripted events schedule sound on each variant's next 1/16, 1/32 or 1/8 boundary while physical actuation remains immediate. Scripted cues are already aligned; `glitch-chirp`, `arc-discharge` and active stutter/ratchet effects bypass the grid intentionally.
+- Added chord metadata across `ModalFlowEnergyCue` → `ImpulseEvent` → `PhysicalActuation` → `PhysicsSongEvent` → composer.
+- Added `breakcore`, `trance`, `chaos` and `ambient` composition characters to `NeonPinballComposer`.
+- Added optional `environmentTheme` and `marbleCount` to `ModalFlowBlueprint`.
+- Added two/three tangent-oriented liquid-neon packets per open conduit.
+- Added arcade/constellation/plasma/glacial atmosphere themes, eight chromatic movers, four additive beam volumes, constellations, lightning and fireflies.
+- Added `body.performance-clean`, top-bar PERFORM and GRID/FREE controls, plus `U` keyboard routing even while the rest of the UI is hidden.
+- Opening Director exits clean-performance mode so invisible UI never captures input.
+
+### New works
+
+| Work | Form | Physical/visual identity |
+| :--- | :--- | :--- |
+| `spatial-trance` | 126 BPM, 48 bars | 18-node legible 3D graph, 28 balls, clock/router/gate/melody/harmony/light/return pedagogy, constellation theme |
+| `braindance-collider` | 188 BPM, 72 bars | 40 transformed modules, 96 balls, 21 transmissions, 3/5/7 pulse lanes, 1/32 grid plus free electric events, plasma theme |
+| `antarctica` | 54 BPM, 48 bars | 24 ice/snow/underwater organs, 18 balls, sparse open-D pentatonic score, long physical chords, glacial theme |
+
+### Primary files
+
+| File | Role |
+| :--- | :--- |
+| `src/works/spatial-sequencer/SpatialSequencerBlueprint.ts` | Shared legible/glacial 18–40 module geometric graph family. |
+| `src/works/spatial-sequencer/SpatialTranceScore.ts` / `SpatialTranceWork.ts` | Lumen Grid score and work variant. |
+| `src/works/spatial-sequencer/AntarcticScore.ts` / `AntarcticWork.ts` | Sparse Antarctic score and work variant. |
+| `src/works/braindance-collider/BraindanceBlueprint.ts` | Nonlinear 40-module Space Pinball transform and cross-routing. |
+| `src/works/braindance-collider/BraindanceScore.ts` / `BraindanceWork.ts` | Dense original collider composition and work variant. |
+| `src/works/modal-flow/ModalFlowMachine.ts` | Liquid conduit packets and shared scale-aware visuals. |
+| `src/works/modal-flow/ModalFlowMechanismLayer.ts` | Chromatic movers, beam volumes, constellation, Tesla lines, fireflies and themes. |
+| `src/works/modal-flow/ModalFlowWork.ts` | Quantized/free physics scheduling and variant grid sizes. |
+| `src/studio/ui/StudioShell.ts` / `styles.css` | Zero-overlay performance state and top-bar timing controls. |
+| `src/studio/input/KeyboardMouseRig.ts` | `U` timing toggle in visible or clean performance. |
+| `tests/v11.test.ts` | Scale, light, timing, topology, score, causality, parenting and disposal contracts. |
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **48 / 48 passing** across eight files
+- `npm run build`: **clean production bundle**, 79 modules transformed
+- `git diff --check`: **clean**
+- V11 tests cover grid-time conversion, scale hierarchy, liquid-light packet count, atmosphere registration, all three score/topology contracts, physical chord metadata, complete rig parenting and clean disposal.
+
+### Documentation
+
+- `docs/V11_SPATIAL_VARIATIONS.md` is the full operating/architecture guide.
+- README and architecture maps include all three works and new controls.
+- Final deployment status is recorded in Section 1 below.
+
+---
+
+## 0.1 Prior Update — V10 NEON PINBALL // BREAKCORE COMPUTER Implemented (2026-10-27)
 
 **Current default flagship:** `NEON PINBALL // BREAKCORE COMPUTER` (`src/works/neon-pinball/`). V10 is a new open-space variant of the Modal Flow causal runtime. It replaces floor/deck alignment and the nearby Cornell shell with arbitrary 3D organ orientations, spatial conduit mouths, sparse shadow receivers and a new 174 BPM physics-addressed breakcore / IDM / drum-and-bass work. V9 remains registered at `?work=modal-flow`.
 
@@ -80,7 +151,7 @@ NeonPinballScore physical cue
 
 ---
 
-## 0.1 Prior Update — V9 MODAL FLOW // RESONANT RELAY Implemented (2026-10-27)
+## 0.2 Prior Update — V9 MODAL FLOW // RESONANT RELAY Implemented (2026-10-27)
 
 **Then-current default flagship (now preserved):** `MODAL FLOW // RESONANT RELAY` (`src/works/modal-flow/`). V9 deliberately iterates the V8 flow instead of replacing it: the deterministic marble song remains, but tubes now share the machine with real animated musical transmissions inside a controllable Cornell-box light and shadow installation.
 
@@ -143,7 +214,7 @@ NeonPinballScore physical cue
 
 ---
 
-## 0.2 Prior Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
+## 0.3 Prior Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
 
 **Then-current default flagship (now preserved):** `MODAL FLOW // PHYSICS SONG` (`src/works/modal-flow/`). V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE` remain registered and selectable.
 
@@ -194,7 +265,7 @@ The user found V7 underwhelming: too 2D, too many events, and essentially a twel
 
 ---
 
-## 0.3 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
+## 0.4 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
 
 **Then-current default flagship (now a preserved reference):** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
 
@@ -249,7 +320,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.4 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+## 0.5 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
 
 **V6 reference work:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
 
@@ -292,7 +363,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.5 Prior Update — V5 Blueprint Implemented (2026-10-27)
+## 0.6 Prior Update — V5 Blueprint Implemented (2026-10-27)
 
 The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
 
@@ -313,14 +384,15 @@ Implemented:
 ## 1. Repository, Branch & Deployment Status
 
 - **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
-- **Active Session Branch:** `arena/ebe788b1-sonobjet` (V9 deployed at `333b3ee`; V10 developed directly from that preserved tip)
+- **Active Session Branch:** `arena/ebe788b1-sonobjet`
+- **Space Pinball checkpoint:** commit `ad2b9a9`, annotated local tag `v0.1.3` (`space pinball`)
 - **Historical Branches:** `arena/23eed999-sonobjet` (V5–V8) and `arena/86769aaf-sonobjet` (V4 handoff)
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Current Verification Status (V10):**
+- **Current Verification Status (V11):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **43 / 43 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9 + 4 V10)
-  - `npm run build` (`vite build`): **Clean production bundle**, 71 modules transformed (offline MediaPipe WASM included)
+  - `npm test` (`vitest run`): **48 / 48 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9 + 4 V10 + 5 V11)
+  - `npm run build` (`vite build`): **Clean production bundle**, 79 modules transformed (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
   - V9 deployed tip: `333b3ee`; V8 reference implementation: `31e2cef`; V7 reference: `090cbf2`.
 

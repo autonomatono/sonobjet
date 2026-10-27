@@ -132,6 +132,10 @@ export interface ModalFlowBlueprint {
   modules: ModuleSpec[];
   /** Scene language. V9 uses its Cornell room; newer variants use an open void stage. */
   environment?: 'cornell-relay' | 'open-pinball';
+  /** Color/motion language for open-stage light, particles and atmospheric electricity. */
+  environmentTheme?: 'arcade' | 'constellation' | 'plasma' | 'glacial';
+  /** Work-specific ball population; lower counts make teaching/ambient graphs easier to read. */
+  marbleCount?: number;
   /** Offset conduit mouths around each oriented housing instead of sharing node centres. */
   spatialPorts?: boolean;
   /** Suggested macro-shot radius for camera framing and unconstrained drone flight. */
@@ -194,6 +198,14 @@ export const MODAL_FLOW_MACROS: MacroDefinition[] = [
     max: 0.9,
     defaultValue: 0.34,
     description: 'Elastic energy preserved in same-conduit marble collisions.',
+  },
+  {
+    id: 'eventQuantize',
+    label: 'PHYSICS NOTE GRID',
+    min: 0,
+    max: 1,
+    defaultValue: 1,
+    description: 'Above 0.5, free physics notes wait for the next musical grid line; disable for fully free timing.',
   },
   {
     id: 'phraseDensity',
@@ -980,6 +992,8 @@ export function createModalFlowBlueprint(
     moduleCount: total,
     modules,
     environment: 'cornell-relay',
+    environmentTheme: 'arcade',
+    marbleCount: DEFAULT_MARBLE_COUNT,
     spatialPorts: false,
     cameraEnvelopeRadius: 8.2,
     conduits,

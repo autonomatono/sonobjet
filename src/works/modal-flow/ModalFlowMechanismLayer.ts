@@ -79,6 +79,27 @@ interface ProjectorRig {
   role: 'key' | 'rim' | 'shadow';
 }
 
+interface ChromaticMover {
+  light: THREE.PointLight | THREE.SpotLight;
+  target?: THREE.Object3D;
+  beam?: THREE.Mesh;
+  beamMaterial?: THREE.MeshBasicMaterial;
+  phase: number;
+  radius: number;
+  height: number;
+  speed: number;
+  baseIntensity: number;
+  colorA: THREE.Color;
+  colorB: THREE.Color;
+}
+
+interface FireflyField {
+  points: THREE.Points;
+  geometry: THREE.BufferGeometry;
+  material: THREE.PointsMaterial;
+  base: Float32Array;
+}
+
 const TAU = Math.PI * 2;
 const X_AXIS = new THREE.Vector3(1, 0, 0);
 
@@ -160,9 +181,16 @@ export class ModalFlowMechanismLayer {
   private readonly practicalLights: THREE.PointLight[] = [];
   private readonly shadowGobos: RigJoint[] = [];
   private readonly environmentNeon: THREE.MeshStandardMaterial[] = [];
+  private readonly chromaticMovers: ChromaticMover[] = [];
   private particleField: THREE.Points | null = null;
   private particleMaterial: THREE.PointsMaterial | null = null;
+  private fireflies: FireflyField | null = null;
+  private constellation: THREE.LineSegments | null = null;
+  private lightning: THREE.LineSegments | null = null;
+  private lightningBase: Float32Array | null = null;
   private hemisphere: THREE.HemisphereLight | null = null;
+  private atmospherePulse = 0;
+  private lastAtmosphereElapsed = 0;
   private paletteIndex = -1;
   private style: Pick<
     PostFxState,
@@ -243,7 +271,24 @@ export class ModalFlowMechanismLayer {
         params.elapsed * direction * (0.11 + section * 0.018 + index * 0.025),
       );
     });
-    const soundPulse = clamp(params.recentEvents / 9, 0, 1);
+    const rawSoundPulse = clamp(params.recentEvents / 9, 0, 1);
+    const atmosphereDt = this.lastAtmosphereElapsed > 0
+      ? clamp(params.elapsed - this.lastAtmosphereElapsed, 0, 0.1)
+      : 1 / 60;
+    this.lastAtmosphereElapsed = params.elapsed;
+    const theme = this.blueprint.environmentTheme ?? 'arcade';
+    const pulseDecayRate = theme === 'glacial'
+      ? 0.35
+      : theme === 'constellation'
+        ? 1.2
+        : theme === 'plasma'
+          ? 3
+          : 2;
+    this.atmospherePulse = Math.max(
+      rawSoundPulse,
+      this.atmospherePulse * Math.exp(-atmosphereDt * pulseDecayRate),
+    );
+    const soundPulse = this.atmospherePulse;
     this.environmentNeon.forEach((material, index) => {
       material.emissiveIntensity =
         0.7 + this.style.neonGlow * 2.4 + soundPulse * (2.8 + (index % 3) * 0.45) +
@@ -255,6 +300,7 @@ export class ModalFlowMechanismLayer {
       this.particleMaterial.size = 0.045 + this.style.neonGlow * 0.025 + soundPulse * 0.075;
       this.particleMaterial.opacity = 0.28 + this.style.neonGlow * 0.16 + soundPulse * 0.34;
     }
+    this.updateChromaticAtmosphere(params.elapsed, soundPulse, section);
     this.updateLightRig(section, params.elapsed);
   }
 
@@ -269,9 +315,16 @@ export class ModalFlowMechanismLayer {
     this.practicalLights.length = 0;
     this.shadowGobos.length = 0;
     this.environmentNeon.length = 0;
+    this.chromaticMovers.length = 0;
     this.particleField = null;
     this.particleMaterial = null;
+    this.fireflies = null;
+    this.constellation = null;
+    this.lightning = null;
+    this.lightningBase = null;
     this.hemisphere = null;
+    this.atmospherePulse = 0;
+    this.lastAtmosphereElapsed = 0;
   }
 
   private geometry<T extends THREE.BufferGeometry>(geometry: T): T {
@@ -401,21 +454,30 @@ export class ModalFlowMechanismLayer {
   }
 
   private buildOpenPinballStage(frame: RigJoint): void {
-    const floor = this.material('floor', 0x070b10, { metalness: 0.18, roughness: 0.86 });
-    const paper = this.material('paper', 0x9d9b92, {
+    const theme = this.blueprint.environmentTheme ?? 'arcade';
+    const themeColors = {
+      arcade: [0x42e8ff, 0xff4fc8, 0x9cff57, 0xffa340, 0x9b7bff, 0xffffff],
+      constellation: [0x7edcff, 0xffd36a, 0x91ffcf, 0xff83ba, 0xb6a0ff, 0xf5fbff],
+      plasma: [0x35f2ff, 0xff375f, 0xd6ff2f, 0xff48dc, 0x7b5cff, 0xffb52e],
+      glacial: [0xbff6ff, 0x72a9ff, 0xd9c7ff, 0x72ffe4, 0xf7fdff, 0x4d77c7],
+    }[theme];
+    const floorColor = theme === 'glacial' ? 0x07131d : 0x070b10;
+    const sailColor = theme === 'glacial' ? 0xbfd5dd : 0x9d9b92;
+    const floor = this.material('floor', floorColor, { metalness: 0.18, roughness: 0.86 });
+    const paper = this.material('paper', sailColor, {
       metalness: 0.02,
       roughness: 0.94,
       side: THREE.DoubleSide,
     });
     const iron = this.material('iron', 0x0d1821, { metalness: 0.82, roughness: 0.42 });
-    const neon = this.material('accent', 0x66edff, {
-      emissive: 0x36c6e8,
+    const neon = this.material('accent', themeColors[0], {
+      emissive: themeColors[0],
       emissiveIntensity: 2.2,
       metalness: 0.05,
       roughness: 0.12,
     });
-    const neonPink = this.material('accent', 0xff5bc8, {
-      emissive: 0xd92795,
+    const neonPink = this.material('accent', themeColors[3], {
+      emissive: themeColors[3],
       emissiveIntensity: 2.2,
       metalness: 0.05,
       roughness: 0.12,
@@ -468,6 +530,7 @@ export class ModalFlowMechanismLayer {
     const particleGeometry = this.geometry(new THREE.BufferGeometry());
     const count = 960;
     const positions = new Float32Array(count * 3);
+    const particleColors = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const u = ((i * 0.61803398875) % 1) * 2 - 1;
       const angle = i * 2.39996323;
@@ -476,10 +539,16 @@ export class ModalFlowMechanismLayer {
       positions[i * 3] = Math.cos(angle) * radial;
       positions[i * 3 + 1] = u * shell * 0.62;
       positions[i * 3 + 2] = Math.sin(angle) * radial;
+      const color = new THREE.Color(themeColors[i % themeColors.length]);
+      particleColors[i * 3] = color.r;
+      particleColors[i * 3 + 1] = color.g;
+      particleColors[i * 3 + 2] = color.b;
     }
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
     this.particleMaterial = new THREE.PointsMaterial({
-      color: 0x8eefff,
+      color: 0xffffff,
+      vertexColors: true,
       size: 0.055,
       transparent: true,
       opacity: 0.42,
@@ -519,10 +588,276 @@ export class ModalFlowMechanismLayer {
 
     this.hemisphere = new THREE.HemisphereLight(0x9bdcff, 0x12091e, 0.42);
     frame.group.add(this.hemisphere);
-    this.addProjector(frame.group, [-18, 13, 16], [0, 1, -25], 0xffb066, 94, 'key', 72);
-    this.addProjector(frame.group, [19, 9, 18], [-24, 0, -2], 0x57dfff, 88, 'rim', 72);
-    this.addProjector(frame.group, [-2, 20, 8], [21, 7, -11], 0xff4fb8, 106, 'shadow', 74);
-    this.addProjector(frame.group, [15, -8, -5], [0, -16, 0], 0x8b74ff, 72, 'shadow', 66);
+    this.addProjector(frame.group, [-18, 13, 16], [0, 1, -25], themeColors[5], 94, 'key', 72);
+    this.addProjector(frame.group, [19, 9, 18], [-24, 0, -2], themeColors[0], 88, 'rim', 72);
+    this.addProjector(frame.group, [-2, 20, 8], [21, 7, -11], themeColors[3], 106, 'shadow', 74);
+    this.addProjector(frame.group, [15, -8, -5], [0, -16, 0], themeColors[4], 72, 'shadow', 66);
+    this.buildChromaticMovers(frame.group, themeColors, theme);
+    this.buildConstellationAndLightning(frame.group, themeColors, theme);
+    this.buildFireflies(frame.group, themeColors, theme);
+  }
+
+  private buildChromaticMovers(
+    parent: THREE.Object3D,
+    colors: number[],
+    theme: NonNullable<ModalFlowBlueprint['environmentTheme']>,
+  ): void {
+    const slow = theme === 'glacial' ? 0.22 : theme === 'constellation' ? 0.55 : theme === 'plasma' ? 1.45 : 1;
+    const beamGeometry = this.geometry(new THREE.ConeGeometry(1, 1, 18, 1, true));
+    beamGeometry.translate(0, 0.5, 0);
+    for (let i = 0; i < 8; i++) {
+      const colorA = new THREE.Color(colors[i % colors.length]);
+      const colorB = new THREE.Color(colors[(i + 2 + (i % 2)) % colors.length]);
+      const phase = i / 8 * TAU;
+      const radius = 9 + (i % 4) * 2.8;
+      const height = -3 + (i % 5) * 2.4;
+      const baseIntensity = theme === 'glacial' ? 16 : theme === 'plasma' ? 36 : 25;
+      if (i % 2 === 0) {
+        const light = new THREE.PointLight(colors[i % colors.length], baseIntensity, 18, 1.55);
+        light.name = `light:chromatic-point:${i}`;
+        parent.add(light);
+        this.chromaticMovers.push({
+          light,
+          phase,
+          radius,
+          height,
+          speed: slow * (0.075 + i * 0.009),
+          baseIntensity,
+          colorA,
+          colorB,
+        });
+      } else {
+        const target = new THREE.Object3D();
+        target.name = `light:chromatic-target:${i}`;
+        parent.add(target);
+        const light = new THREE.SpotLight(
+          colors[i % colors.length],
+          baseIntensity * 1.7,
+          42,
+          Math.PI * 0.11,
+          0.72,
+          1.2,
+        );
+        light.name = `light:chromatic-spot:${i}`;
+        light.target = target;
+        parent.add(light);
+        const beamMaterial = new THREE.MeshBasicMaterial({
+          color: colors[i % colors.length],
+          transparent: true,
+          opacity: 0.035,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+        });
+        this.materials.push(beamMaterial);
+        const beam = this.addMesh(parent, beamGeometry, beamMaterial, [0, 0, 0]);
+        beam.name = `light:volumetric-beam:${i}`;
+        beam.castShadow = false;
+        beam.receiveShadow = false;
+        beam.renderOrder = 1;
+        this.chromaticMovers.push({
+          light,
+          target,
+          beam,
+          beamMaterial,
+          phase,
+          radius,
+          height,
+          speed: slow * (0.055 + i * 0.007),
+          baseIntensity: baseIntensity * 1.7,
+          colorA,
+          colorB,
+        });
+      }
+    }
+  }
+
+  private buildConstellationAndLightning(
+    parent: THREE.Object3D,
+    colors: number[],
+    theme: NonNullable<ModalFlowBlueprint['environmentTheme']>,
+  ): void {
+    const constellationPositions: number[] = [];
+    const nodes: THREE.Vector3[] = [];
+    for (let i = 0; i < 54; i++) {
+      const angle = i * 2.39996323;
+      const radius = 18 + (i % 7) * 1.6;
+      nodes.push(new THREE.Vector3(
+        Math.cos(angle) * radius,
+        -7 + ((i * 11) % 23),
+        Math.sin(angle) * radius,
+      ));
+    }
+    nodes.forEach((node, index) => {
+      const next = nodes[(index + 5 + index % 4) % nodes.length];
+      constellationPositions.push(node.x, node.y, node.z, next.x, next.y, next.z);
+    });
+    const constellationGeometry = this.geometry(new THREE.BufferGeometry());
+    constellationGeometry.setAttribute(
+      'position',
+      new THREE.Float32BufferAttribute(constellationPositions, 3),
+    );
+    const constellationMaterial = new THREE.LineBasicMaterial({
+      color: colors[theme === 'glacial' ? 0 : 5],
+      transparent: true,
+      opacity: theme === 'constellation' ? 0.24 : 0.11,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.materials.push(constellationMaterial);
+    this.constellation = new THREE.LineSegments(constellationGeometry, constellationMaterial);
+    this.constellation.name = 'vfx:responsive-constellation';
+    parent.add(this.constellation);
+
+    const segments = 56;
+    const lightningPositions = new Float32Array(segments * 6);
+    for (let i = 0; i < segments; i++) {
+      const branch = i % 4;
+      const branchSegments = Math.max(1, Math.floor(segments / 4));
+      const u0 = Math.floor(i / 4) / branchSegments;
+      const u1 = Math.min(1, u0 + 1 / branchSegments);
+      const x0 = -17 + u0 * 34;
+      const x1 = -17 + u1 * 34;
+      const y = 7 + branch * 2.3;
+      const z = -20 + branch * 3.4;
+      const offset = Math.sin(i * 12.9898) * 1.2;
+      lightningPositions.set([x0, y + offset, z, x1, y - offset * 0.7, z + offset], i * 6);
+    }
+    this.lightningBase = new Float32Array(lightningPositions);
+    const lightningGeometry = this.geometry(new THREE.BufferGeometry());
+    lightningGeometry.setAttribute('position', new THREE.BufferAttribute(lightningPositions, 3));
+    const lightningMaterial = new THREE.LineBasicMaterial({
+      color: colors[theme === 'plasma' ? 2 : 0],
+      transparent: true,
+      opacity: theme === 'plasma' ? 0.34 : 0.08,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.materials.push(lightningMaterial);
+    this.lightning = new THREE.LineSegments(lightningGeometry, lightningMaterial);
+    this.lightning.name = 'vfx:tesla-lightning';
+    parent.add(this.lightning);
+  }
+
+  private buildFireflies(
+    parent: THREE.Object3D,
+    colors: number[],
+    theme: NonNullable<ModalFlowBlueprint['environmentTheme']>,
+  ): void {
+    const count = theme === 'glacial' ? 180 : 120;
+    const base = new Float32Array(count * 3);
+    const current = new Float32Array(count * 3);
+    const colorData = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = i * 2.39996323;
+      const radius = 4 + ((i * 17) % 100) / 100 * 13;
+      base[i * 3] = Math.cos(angle) * radius;
+      base[i * 3 + 1] = -8 + ((i * 29) % 100) / 100 * 18;
+      base[i * 3 + 2] = Math.sin(angle) * radius;
+      current.set(base.subarray(i * 3, i * 3 + 3), i * 3);
+      const color = new THREE.Color(colors[i % colors.length]);
+      colorData.set([color.r, color.g, color.b], i * 3);
+    }
+    const geometry = this.geometry(new THREE.BufferGeometry());
+    geometry.setAttribute('position', new THREE.BufferAttribute(current, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colorData, 3));
+    const material = new THREE.PointsMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      size: theme === 'glacial' ? 0.085 : 0.11,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.materials.push(material);
+    const points = new THREE.Points(geometry, material);
+    points.name = 'vfx:musical-fireflies';
+    parent.add(points);
+    this.fireflies = { points, geometry, material, base };
+  }
+
+  private updateChromaticAtmosphere(elapsed: number, soundPulse: number, section: number): void {
+    const theme = this.blueprint.environmentTheme ?? 'arcade';
+    const atmosphereSpeed = theme === 'glacial'
+      ? 0.22
+      : theme === 'constellation'
+        ? 0.55
+        : theme === 'plasma'
+          ? 1.45
+          : 1;
+    const scratchA = new THREE.Vector3();
+    const scratchB = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+    for (const [index, mover] of this.chromaticMovers.entries()) {
+      const angle = mover.phase + elapsed * mover.speed;
+      const wobble = Math.sin(elapsed * mover.speed * 2.7 + index) * 2.2;
+      mover.light.position.set(
+        Math.cos(angle) * mover.radius,
+        mover.height + Math.sin(angle * 1.7 + index) * 4.2,
+        Math.sin(angle) * mover.radius + wobble,
+      );
+      const blend = Math.sin(elapsed * mover.speed * 1.3 + index * 0.9) * 0.5 + 0.5;
+      mover.light.color.copy(mover.colorA).lerp(mover.colorB, blend);
+      mover.light.intensity = mover.baseIntensity * this.style.lightIntensity *
+        (0.36 + this.style.neonGlow * 0.28 + soundPulse * 1.35 + (section % 3) * 0.08);
+      if (mover.target) {
+        mover.target.position.set(
+          Math.sin(angle * 0.71 + index) * 4,
+          Math.cos(angle * 0.47) * 3,
+          Math.cos(angle * 0.83 - index) * 4,
+        );
+      }
+      if (mover.beam && mover.beamMaterial && mover.target) {
+        mover.light.getWorldPosition(scratchA);
+        mover.target.getWorldPosition(scratchB);
+        const direction = scratchB.clone().sub(scratchA);
+        const length = Math.max(0.1, direction.length());
+        // The cone geometry is translated to span local Y 0..1, so anchoring
+        // at the light projects it exactly toward the target.
+        mover.beam.position.copy(scratchA);
+        mover.beam.quaternion.setFromUnitVectors(up, direction.normalize());
+        mover.beam.scale.set(0.055 * length, length, 0.055 * length);
+        mover.beamMaterial.color.copy(mover.light.color);
+        mover.beamMaterial.opacity = 0.018 + soundPulse * 0.07 + this.style.neonGlow * 0.022;
+      }
+    }
+
+    if (this.constellation) {
+      this.constellation.rotation.y = elapsed * 0.004 * atmosphereSpeed;
+      const material = this.constellation.material as THREE.LineBasicMaterial;
+      material.opacity = 0.07 + soundPulse * 0.28 + this.style.neonGlow * 0.06;
+    }
+    if (this.lightning && this.lightningBase) {
+      const attribute = this.lightning.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const array = attribute.array as Float32Array;
+      for (let i = 0; i < array.length / 3; i++) {
+        array[i * 3] = this.lightningBase[i * 3];
+        array[i * 3 + 1] = this.lightningBase[i * 3 + 1] +
+          Math.sin(elapsed * 7.2 * atmosphereSpeed + i * 12.9898) *
+          (0.08 + soundPulse * 1.15);
+        array[i * 3 + 2] = this.lightningBase[i * 3 + 2] +
+          Math.cos(elapsed * 5.7 * atmosphereSpeed + i * 4.37) * soundPulse * 0.72;
+      }
+      attribute.needsUpdate = true;
+      const material = this.lightning.material as THREE.LineBasicMaterial;
+      material.opacity = 0.025 + soundPulse * 0.72 + this.style.neonGlow * 0.08;
+    }
+    if (this.fireflies) {
+      const attribute = this.fireflies.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const array = attribute.array as Float32Array;
+      for (let i = 0; i < array.length / 3; i++) {
+        array[i * 3] = this.fireflies.base[i * 3] +
+          Math.sin(elapsed * 0.27 * atmosphereSpeed + i * 1.7) * 0.42;
+        array[i * 3 + 1] = this.fireflies.base[i * 3 + 1] +
+          Math.sin(elapsed * 0.19 * atmosphereSpeed + i) * 0.7;
+        array[i * 3 + 2] = this.fireflies.base[i * 3 + 2] +
+          Math.cos(elapsed * 0.23 * atmosphereSpeed + i * 2.1) * 0.42;
+      }
+      attribute.needsUpdate = true;
+      this.fireflies.material.size = 0.07 + soundPulse * 0.13 + this.style.neonGlow * 0.035;
+      this.fireflies.material.opacity = 0.4 + soundPulse * 0.48;
+    }
   }
 
   private buildSpatialChassis(frame: RigJoint): void {

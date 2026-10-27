@@ -351,10 +351,15 @@ export function createNeonPinballBlueprint(
     MIN_NEON_PINBALL_MODULES,
     Math.min(MAX_NEON_PINBALL_MODULES, Math.round(moduleCount)),
   );
-  const modules: ModuleSpec[] = CORE_NODES.map((module) => ({
+  const scaleProfile = [
+    1.35, 0.68, 0.92, 1.28, 0.72, 0.52, 1.72, 1.48, 1.22, 0.62,
+    1.08, 0.58, 0.76, 2, 1.52, 0.74, 0.64, 1.3, 0.82, 0.5,
+  ];
+  const modules: ModuleSpec[] = CORE_NODES.map((module, index) => ({
     ...module,
     position: { ...module.position },
     orientation: module.orientation ? { ...module.orientation } : undefined,
+    scale: module.scale * (scaleProfile[index] ?? 1),
     outputs: [],
     tags: [...module.tags],
   }));
@@ -373,7 +378,7 @@ export function createNeonPinballBlueprint(
       z: Math.sin(angle) * radius,
     }, {
       orientation: { x: angle * 0.37, y: second * 0.22, z: angle * -0.28 },
-      cluster: 'orbit', tier: 1 + (i % 3), scale: 0.72 + (i % 4) * 0.1,
+      cluster: 'orbit', tier: 1 + (i % 3), scale: 0.38 + (i % 6) * 0.19,
       noteRole: 5 + i, register: 2, subsystem: i % 3 === 2 ? 'arc-discharge' : 'glass-armonica',
       color: [COLORS.cyan, COLORS.violet, COLORS.magenta, COLORS.acid][i % 4],
       gain: 0.84 + (i % 3) * 0.08, tags: ['orbital', 'crystal', 'particle-field'],
@@ -405,6 +410,8 @@ export function createNeonPinballBlueprint(
     moduleCount: total,
     modules,
     environment: 'open-pinball',
+    environmentTheme: 'arcade',
+    marbleCount: 72,
     spatialPorts: true,
     cameraEnvelopeRadius: 14.5,
     conduits,

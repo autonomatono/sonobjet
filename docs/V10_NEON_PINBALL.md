@@ -4,6 +4,8 @@
 
 **Default work:** `?work=neon-pinball`
 
+**Chosen checkpoint:** annotated tag `v0.1.3` — `space pinball`. Shared timing, lighting, liquid-tube and performance-mode upgrades added after that checkpoint are documented in [`V11_SPATIAL_VARIATIONS.md`](V11_SPATIAL_VARIATIONS.md).
+
 V10 is a new work built on the deterministic marble/transmission foundation introduced by Modal Flow V8/V9. It is not a reskin of the Cornell relay. The new installation is an open-space retrofuturistic analog computer crossed with an elaborate pinball machine, with a new 64-bar physics-first breakcore / IDM / drum-and-bass composition at 174 BPM.
 
 ## 1. Spatial machine language

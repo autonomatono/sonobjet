@@ -14,6 +14,15 @@ const hash = (value: string): number => {
   return result;
 };
 
+export type NeonCompositionCharacter = 'breakcore' | 'trance' | 'chaos' | 'ambient';
+
+const CHARACTER = {
+  breakcore: { freeRate: 1, freeProbability: 1, velocity: 1, decay: 1 },
+  trance: { freeRate: 0.72, freeProbability: 0.72, velocity: 0.82, decay: 1.35 },
+  chaos: { freeRate: 1.75, freeProbability: 1.22, velocity: 1.08, decay: 0.82 },
+  ambient: { freeRate: 0.22, freeProbability: 0.34, velocity: 0.5, decay: 2.8 },
+} as const;
+
 /**
  * Dense physics-to-audio mapper for the open pinball computer. Sequenced events
  * are not MIDI notes sent around the machine: they are metadata attached to an
@@ -37,6 +46,8 @@ export class NeonPinballComposer {
   private phraseIndex = 0;
   private lastMidiNote = 0;
   private lastSubsystem: SubsystemId = 'break-shred';
+
+  constructor(private readonly character: NeonCompositionCharacter = 'breakcore') {}
 
   setParams(patch: Partial<ModalFlowComposerParams>): void {
     Object.assign(this.params, patch);
@@ -73,15 +84,20 @@ export class NeonPinballComposer {
     }
 
     // Free physics provides fills rather than an uncontrolled wall of notes.
+    const profile = CHARACTER[this.character];
     const density = clamp(this.params.phraseDensity, 0.18, 1.35);
     const sectionEnergy = clamp(this.params.scoreIntensity, 0, 1.2);
-    const minInterval = 0.14 - Math.min(1, density) * 0.075;
-    const moduleCooldown = 0.22 - Math.min(1, density) * 0.1;
+    const minInterval = (0.14 - Math.min(1, density) * 0.075) / profile.freeRate;
+    const moduleCooldown = (0.22 - Math.min(1, density) * 0.1) / profile.freeRate;
     const previous = this.lastModuleTime.get(event.moduleId) ?? -Infinity;
     const important = event.kind === 'strike' || event.kind === 'mechanism' || event.kind === 'collision';
     const expression = event.energy * (important ? 1 : 0.55) + event.velocity * 0.18;
     const deterministicGate = ((event.id * 17 + hash(event.moduleId)) % 100) / 100;
-    const probability = clamp(0.18 + density * 0.24 + sectionEnergy * 0.16, 0.2, 0.72);
+    const probability = clamp(
+      (0.18 + density * 0.24 + sectionEnergy * 0.16) * profile.freeProbability,
+      0.08,
+      0.92,
+    );
     if (
       !important ||
       expression < 0.24 ||
@@ -102,13 +118,17 @@ export class NeonPinballComposer {
     const midiNote = this.noteFor(event, subsystem);
     const impulse: ImpulseEvent = {
       subsystem,
-      velocity: clamp(0.16 + expression * 0.48, 0.16, 0.78),
+      velocity: clamp((0.16 + expression * 0.48) * profile.velocity, 0.08, 0.92),
       pitchRatio: subsystem === 'break-shred' ? 0.9 + (event.noteIndex % 5) * 0.07 : 1,
       midiNote,
       durationSec: subsystem === 'glass-armonica' || subsystem === 'modal-clang'
-        ? 0.38 + this.params.timbreBloom * 0.7
-        : 0.16,
-      decay: clamp(0.46 + event.energy * 0.5 + this.params.timbreBloom * 0.3, 0.4, 1.35),
+        ? (0.38 + this.params.timbreBloom * 0.7) * profile.decay
+        : 0.16 * Math.min(2, profile.decay),
+      decay: clamp(
+        (0.46 + event.energy * 0.5 + this.params.timbreBloom * 0.3) * profile.decay,
+        0.32,
+        4.8,
+      ),
       sliceIndex: event.sliceIndex ?? ((event.id + event.noteIndex * 3) % 16 + 16) % 16,
       reverse: event.reverse ?? (event.kind === 'collision' && event.id % 7 === 0),
       locus: this.locus(event),
@@ -125,6 +145,7 @@ export class NeonPinballComposer {
     beat: number,
     audioTime: number,
   ): ImpulseEvent {
+    const profile = CHARACTER[this.character];
     const subsystem = event.voice ?? this.voiceFor(event);
     const ratchetProgress = event.ratchetTotal
       ? (event.ratchetStep ?? 0) / Math.max(1, event.ratchetTotal - 1)
@@ -136,24 +157,33 @@ export class NeonPinballComposer {
       subsystem === 'bellows-choir';
     const impulse: ImpulseEvent = {
       subsystem,
-      velocity: clamp(event.velocity * 0.64 + event.energy * 0.72, 0.14, 1.18),
+      velocity: clamp(
+        (event.velocity * 0.64 + event.energy * 0.72) * profile.velocity,
+        0.08,
+        1.24,
+      ),
       pitchRatio:
         subsystem === 'break-shred'
           ? clamp(0.84 + ratchetProgress * 0.58 + (event.noteIndex % 3) * 0.04, 0.72, 1.55)
           : 1,
       midiNote: melodic ? event.midiNote ?? this.noteFor(event, subsystem) : event.midiNote,
+      chordNotes: event.chordNotes ? [...event.chordNotes] : undefined,
       durationSec:
-        subsystem === 'glass-armonica'
-          ? 0.54 + this.params.timbreBloom * 0.82
-          : subsystem === 'modal-clang'
-            ? 0.42 + this.params.timbreBloom * 0.45
-            : subsystem === 'acid-squelch'
-              ? 0.13 + (event.noteIndex % 4) * 0.045
-              : 0.1 + (1 - ratchetProgress) * 0.12,
+        subsystem === 'bellows-choir'
+          ? (2.8 + this.params.timbreBloom * 2.4) * Math.min(1.8, profile.decay)
+          : subsystem === 'glass-armonica'
+            ? (0.54 + this.params.timbreBloom * 0.82) * profile.decay
+            : subsystem === 'modal-clang'
+              ? (0.42 + this.params.timbreBloom * 0.45) * profile.decay
+              : subsystem === 'acid-squelch'
+                ? (0.13 + (event.noteIndex % 4) * 0.045) * Math.min(1.6, profile.decay)
+                : (0.1 + (1 - ratchetProgress) * 0.12) * Math.min(1.5, profile.decay),
       decay:
-        subsystem === 'glass-armonica' || subsystem === 'modal-clang'
-          ? 0.82 + this.params.timbreBloom * 0.65
-          : clamp(0.42 + event.energy * 0.42, 0.38, 0.96),
+        subsystem === 'bellows-choir'
+          ? 3.2 * profile.decay
+          : subsystem === 'glass-armonica' || subsystem === 'modal-clang'
+            ? (0.82 + this.params.timbreBloom * 0.65) * profile.decay
+            : clamp((0.42 + event.energy * 0.42) * profile.decay, 0.32, 3.8),
       sliceIndex: event.sliceIndex ?? ((event.noteIndex * 5 + event.id) % 16 + 16) % 16,
       reverse: event.reverse,
       ratchetStep: event.ratchetStep,

@@ -15,6 +15,12 @@ Every push to **any branch** (including active Arena session branches such as `a
 
 ---
 
+## Named Checkpoints
+
+The selected Space Pinball baseline is preserved as annotated tag `v0.1.3` with annotation `space pinball`, pointing to implementation commit `ad2b9a94d3f1502364a10662521fab03cdecc428`. Tags identify immutable creative checkpoints; branch CI/deployment continues from the active Arena branch.
+
+---
+
 ## Turn-End Operational Checklist (Mandatory After Every Turn)
 
 To ensure continuous deployment and zero-loss continuity if a session is interrupted, execute this sequence at the end of **every** turn:

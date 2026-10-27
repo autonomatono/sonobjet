@@ -94,6 +94,7 @@ export const NEON_PINBALL_VARIANT: ModalFlowVariantConfig = {
   createComposer: () => new NeonPinballComposer(),
   evaluateEnergyCues: evaluateNeonPinballCues,
   cameraFocusByMode: CAMERA_FOCUS,
+  quantizeStep64: 4,
   moduleForSubsystem,
   locusScale: 14,
   sectionLook: (index) => {
