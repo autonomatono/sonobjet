@@ -1,7 +1,10 @@
 # V8 — `MODAL FLOW // PHYSICS SONG`
 
-**Status:** implemented and verified on `arena/23eed999-sonobjet`.  
-**Default work:** `MODAL FLOW // PHYSICS SONG` (`?work=modal-flow`).  
+**Status:** implemented, deployed and verified on `arena/23eed999-sonobjet`.
+
+**Implementation commit:** `31e2cef`; **green Pages CI run:** `40570090738`; **live URL:** `https://autonomatono.github.io/sonobjet/`.
+
+**Default work:** `MODAL FLOW // PHYSICS SONG` (`?work=modal-flow`).
 **Preserved references:** V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE`.
 
 ---
@@ -245,7 +248,7 @@ No prior work was removed. V4's Section IV anti-mewing/humming fix remains intac
 - `npm run build` — clean production bundle.
 - `git diff --check` — clean.
 - V8 tests cover: new 48-bar D-Lydian composition, 32-module blueprint, all five focus scales, deterministic 15-second physics, zero lost marbles, strike/gate/lift/collision/recycle events, sparse phrase rationing, scale membership, no humming voices, parented meshes, graph/physics snapshots, routing/program/config round-trips, live growth, drone mode toggles and clean disposal.
-- Local Vite preview verified on `0.0.0.0:5173`.
+- Local Vite preview verified on `0.0.0.0:5173`; live Pages verified at `https://autonomatono.github.io/sonobjet/` with SHA `31e2cef`.
 
 ---
 

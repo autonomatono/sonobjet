@@ -38,7 +38,10 @@ The user found V7 underwhelming: too 2D, too many events, and essentially a twel
 
 - **Branch:** `arena/23eed999-sonobjet`
 - **Live URL:** `https://autonomatono.github.io/sonobjet/`
-- **Implementation commit / Pages run:** recorded below after the final push and CI watch.
+- **Implementation commit:** `31e2cef feat(v8): physics-generated modular marble song with drone camera`
+- **GitHub Pages CI run:** `40570090738` — completed **success** (`gh run watch 40570090738 --exit-status`)
+- Live page verified to serve the V8 title, `MODAL FLOW // PHYSICS SONG`, default `?work=modal-flow`, 48-bar section labels, the ten V8 macros, per-work camera labels including `1 // DRONE PILOT`, the Director Studio `DRONE PILOT` button, all eight Director tabs, build SHA `31e2cef`, and branch `arena/23eed999-sonobjet`.
+- This `HANDOFF.md` deployment note is a docs-only follow-up commit on the same branch; Pages rebuilds it through the same workflow.
 
 ### Next extension vectors
 
@@ -179,7 +182,7 @@ Implemented:
   - `npm test` (`vitest run`): **35 / 35 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8)
   - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
-  - Last V7 implementation commit: `090cbf2`; last V7 green Pages run: `40555766238`. V8 implementation commit and green Pages run are recorded in section 0 after deployment.
+  - V8 implementation commit: `31e2cef`; V8 green Pages run: `40570090738`. V7 reference commit: `090cbf2`; V7 green Pages run: `40555766238`.
 
 ---
 
