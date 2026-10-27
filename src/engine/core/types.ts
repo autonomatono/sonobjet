@@ -84,6 +84,8 @@ export interface ImpulseEvent {
   pitchRatio: number;
   /** Exact MIDI note number when playing melodic/harmonic material (e.g. 60 = C4) */
   midiNote?: number;
+  /** Optional named machine part that receives this impulse before it becomes sound. */
+  physicalTarget?: string;
   /** Polychord MIDI notes when playing bellows-choir harmonies */
   chordNotes?: number[];
   /** Formant vowel morph [0 = 'AH', 0.25 = 'EH', 0.5 = 'EE', 0.75 = 'OH', 1.0 = 'OO'] */

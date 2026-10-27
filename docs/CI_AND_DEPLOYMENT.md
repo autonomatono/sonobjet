@@ -4,7 +4,7 @@
 
 GitHub Pages for `autonomatono/sonobjet` is configured with `build_type: "workflow"` and an unrestricted `github-pages` environment (`deployment_branch_policy: null`).
 
-Every push to **any branch** (including active Arena session branches such as `arena/86769aaf-sonobjet` as well as `main`) automatically triggers `.github/workflows/deploy.yml`, which:
+Every push to **any branch** (including active Arena session branches such as `arena/ebe788b1-sonobjet` as well as `main`) automatically triggers `.github/workflows/deploy.yml`, which:
 1. Checks out the pushed commit on `ubuntu-latest` with Node.js 22,
 2. Runs `npm ci`,
 3. Runs `npm run typecheck` (`tsc --noEmit`),
@@ -29,10 +29,10 @@ To ensure continuous deployment and zero-loss continuity if a session is interru
    ```bash
    git add -A
    git commit -m "<descriptive message>"
-   git push origin arena/86769aaf-sonobjet
+   git push origin arena/ebe788b1-sonobjet
    ```
 4. **Verify GitHub Actions Pages Deployment:**
    ```bash
-   gh run list --branch arena/86769aaf-sonobjet --limit 1
+   gh run list --branch arena/ebe788b1-sonobjet --limit 1
    ```
    Wait/confirm the `CI & Deploy GitHub Pages` workflow completes green so `https://autonomatono.github.io/sonobjet/` reflects the latest turn.

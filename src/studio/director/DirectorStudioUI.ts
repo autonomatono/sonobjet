@@ -332,14 +332,27 @@ export class DirectorStudioUI {
     this.root.appendChild(this.drawer);
 
     const header = el('div', 'director-header');
+    const headerTop = el('div', 'director-header-top');
     const title = el('div', 'director-title', 'DIRECTOR STUDIO');
+    const headerActions = el('div', 'director-header-actions');
+    const minimizeDrawer = button('−', 'btn director-panel-toggle');
+    minimizeDrawer.title = 'Minimize Director sidebar';
+    minimizeDrawer.onclick = () => {
+      const minimized = this.drawer.classList.toggle('minimized');
+      minimizeDrawer.textContent = minimized ? '+' : '−';
+    };
+    const closeDrawer = button('×', 'btn director-panel-toggle');
+    closeDrawer.title = 'Close Director Studio';
+    closeDrawer.onclick = () => callbacks.onToggle();
+    headerActions.append(minimizeDrawer, closeDrawer);
+    headerTop.append(title, headerActions);
     const subtitle = el(
       'div',
       'director-subtitle',
       'SHOTS // LOOKS // CONFIG // MAPS // PHYSICS // GRAPH',
     );
     this.statusLine = el('div', 'director-status', 'TIMELINE // IDLE');
-    header.append(title, subtitle, this.statusLine);
+    header.append(headerTop, subtitle, this.statusLine);
 
     const modeRow = el('div', 'director-mode-row');
     const modes: Array<[DirectorCameraMode, string]> = [
@@ -382,7 +395,13 @@ export class DirectorStudioUI {
       'director-hint',
       'CLICK = SCRUB // DIAMONDS = SELECT // [`] TOGGLE // K ADD SHOT',
     );
-    dockHead.append(this.beatLabel, hint);
+    const minimizeDock = button('− TIMELINE', 'btn director-panel-toggle');
+    minimizeDock.title = 'Minimize Director timeline';
+    minimizeDock.onclick = () => {
+      const minimized = this.dock.classList.toggle('minimized');
+      minimizeDock.textContent = minimized ? '+ TIMELINE' : '− TIMELINE';
+    };
+    dockHead.append(this.beatLabel, hint, minimizeDock);
 
     const ruler = el('div', 'director-ruler');
     for (let i = 0; i <= 8; i++) {
@@ -458,6 +477,10 @@ export class DirectorStudioUI {
 
   isEnabled(): boolean {
     return this.enabled;
+  }
+
+  showLooks(): void {
+    this.setTab('LOOKS');
   }
 
   setMode(mode: DirectorCameraMode): void {
@@ -761,7 +784,7 @@ export class DirectorStudioUI {
       el(
         'div',
         'director-help',
-        'Start from a render style, then bypass any trick independently. Palette and light rig drive both the TSL image treatment and the physical Cornell installation.',
+        'Start from a render style, then bypass any trick independently. Palette and light rig drive both the TSL image treatment and the physical installation. These are the live controls you see changing during the score.',
       ),
     );
 

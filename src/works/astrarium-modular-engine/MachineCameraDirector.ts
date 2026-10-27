@@ -18,6 +18,8 @@ export interface MachineCameraSource {
   setActiveFocusId(id: string): void;
   getJointWorldPosition(id: string): Vec3Tuple | null;
   getEdgeEndpoints(edgeId: string): [Vec3Tuple, Vec3Tuple] | null;
+  /** Optional radius used to frame installations larger than the V6/V9 default. */
+  getCameraEnvelopeRadius?(): number;
   getGraphState(): GraphCameraState;
 }
 
@@ -162,7 +164,11 @@ export class MachineCameraDirector {
       state.phase * 0.035 +
       state.curiosity * 0.15;
     const zoom = this.zoomScale;
-    const distance = spec.distance * zoom;
+    const envelope = this.source.getCameraEnvelopeRadius?.() ?? 0;
+    const macroDistance = scale === 'MACRO' && envelope > 0
+      ? Math.max(spec.distance, envelope * 1.58)
+      : spec.distance;
+    const distance = macroDistance * zoom;
     let goalFov = spec.fov;
     let goalRoll = spec.roll + Math.sin(elapsed * 0.21 + state.phase) * 0.012;
 

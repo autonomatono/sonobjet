@@ -196,6 +196,11 @@ export class DirectorSystem {
     }
   }
 
+  openLooks(): void {
+    if (!this.enabled) this.setEnabled(true);
+    this.ui.showLooks();
+  }
+
   setCameraMode(mode: DirectorCameraMode): void {
     this.cameraMode = mode;
     if (

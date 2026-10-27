@@ -20,6 +20,7 @@ import { MicSensor } from './studio/sensors/MicSensor';
 import { MidiGamepadSensor } from './studio/sensors/MidiGamepadSensor';
 import { DirectorSystem } from './studio/director/DirectorSystem';
 import { StudioShell } from './studio/ui/StudioShell';
+import { NeonPinballWork } from './works/neon-pinball/NeonPinballWork';
 import { ModalFlowWork } from './works/modal-flow/ModalFlowWork';
 import { MarblePendulumWork } from './works/marble-pendulum/MarblePendulumWork';
 import { OrreryCommonsWork } from './works/astrarium-modular-engine/OrreryCommonsWork';
@@ -32,7 +33,8 @@ async function bootstrap(): Promise<void> {
   if (!mount) throw new Error('Missing #app container');
 
   const registry = new WorkRegistry();
-  registry.register(ModalFlowWork, true);
+  registry.register(NeonPinballWork, true);
+  registry.register(ModalFlowWork);
   registry.register(MarblePendulumWork);
   registry.register(OrreryCommonsWork);
   registry.register(ChronoAutomatonWork);
@@ -61,6 +63,7 @@ async function bootstrap(): Promise<void> {
   let lastImpulse: ImpulseEvent | null = null;
   let impulseCount = 0;
   let ignited = false;
+  const workHasDrone = (id: string): boolean => id === 'modal-flow' || id === 'neon-pinball';
 
   const applyVisualStyle = (fx: Parameters<WebGPUStage['setPostFx']>[0]): void => {
     stage.setPostFx(fx);
@@ -124,7 +127,7 @@ async function bootstrap(): Promise<void> {
     shell.bindWorkSchema(work, matrix);
     const initialCameraMode = activeInstance.getCameraMode?.() ?? 0;
     shell.setCameraActive(initialCameraMode);
-    inputRig?.setDroneMode(initialCameraMode === 1 && work.id === 'modal-flow');
+    inputRig?.setDroneMode(initialCameraMode === 1 && workHasDrone(work.id));
     activeInstance.setDirectorEnabled?.(director?.isEnabled() ?? false);
     director?.setWork(activeInstance);
 
@@ -197,7 +200,7 @@ async function bootstrap(): Promise<void> {
       onToggleMic: () => mic.toggle(),
       onSelectCamera: (mode) => {
         activeInstance?.setCameraMode?.(mode);
-        inputRig?.setDroneMode(mode === 1 && activeWorkDef.id === 'modal-flow');
+        inputRig?.setDroneMode(mode === 1 && workHasDrone(activeWorkDef.id));
         shell.setCameraActive(mode);
         takeRecorder.record(performance.now() * 0.001, {
           kind: 'camera',
@@ -275,6 +278,8 @@ async function bootstrap(): Promise<void> {
         audio.setMuted(nextMuted);
         shell.setAudioMuted(nextMuted);
       },
+      onToggleDirector: () => director?.toggle(),
+      onOpenLooks: () => director?.openLooks(),
     },
   );
 
@@ -293,7 +298,7 @@ async function bootstrap(): Promise<void> {
     onToggleHud: () => shell.toggleCinemaMode(),
     onCameraSelect: (mode) => {
       activeInstance?.setCameraMode?.(mode);
-      inputRig?.setDroneMode(mode === 1 && activeWorkDef.id === 'modal-flow');
+      inputRig?.setDroneMode(mode === 1 && workHasDrone(activeWorkDef.id));
       shell.setCameraActive(mode);
       takeRecorder.record(performance.now() * 0.001, { kind: 'camera', mode });
     },

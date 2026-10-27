@@ -1,4 +1,4 @@
-# Architecture — `sonobjet` Engine, V4–V9 Works
+# Architecture — `sonobjet` Engine, V4–V10 Works
 
 ## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
@@ -11,9 +11,37 @@
 
 ---
 
+## 1.7 V10 Additions — Spatial Pinball Computer & Physical Breakcore
+
+The current default, `NEON PINBALL // BREAKCORE COMPUTER`, is a V10 variant of the reusable Modal Flow runtime. It replaces V9's floor-aligned decks and nearby Cornell enclosure with a 32-module open spatial graph: independently rotated organs, deterministic arbitrary-orientation ports, helical/weaving 3D conduits, compact gimbals, a sparse radial chassis, distant shadow sails and a 960-point reactive charge field. V9 remains registered unchanged through the same variant boundary.
+
+```text
+src/works/neon-pinball/
+├── NeonPinballBlueprint.ts  # 32-module spatial graph, open stage, transmissions, routing and bindings
+├── NeonPinballScore.ts      # deterministic 174 BPM / 64-bar physical actuator program
+├── NeonPinballComposer.ts   # physics-event → breakcore/IDM/DnB ImpulseEvent mapper
+└── NeonPinballWork.ts       # Modal Flow variant, section looks, camera focuses and defaults
+```
+
+V10 extends the reusable mechanism renderer with `ratchet`, `music-box`, `bell-crank` and `solenoid` transmissions. Ratchets, curved bell rows, percussion cells, a pinball switchyard, crystal memory, a pinned-cylinder data loom, patch-computer organs and sound-reactive neon all expose named rig joints and are advanced by physical state rather than decorative wall time.
+
+The score is a mechanical addressing program. Each cue names a physical target and optional break-slice, reverse, ratchet and pitch metadata. The work injects that command into `ModalFlowPhysics`; the target emits a sequenced physical event; only `NeonPinballComposer` converts that returned event into sound. Free marble impacts and mechanism crossings produce additional rationed fills. This preserves bidirectional causality:
+
+```text
+174 BPM score cue → injectEnergy(target, metadata) → solver/module/transmission event
+       → named rig actuation + reactive neon → NeonPinballComposer → physics-origin audio
+       → analyser/event energy → local lights + particle field + camera response
+```
+
+`MachineCameraSource.getCameraEnvelopeRadius()` generalizes whole-machine framing for installations larger than the original graph. V10 reports `14.5`; the shared camera scales macro orbits accordingly while retaining focus shots and the work-owned inertial Drone Pilot. The top bar now exposes `LOOKS / LIGHTS` and `DIRECTOR`, while shell panels and both Director regions have independent visibility controls.
+
+See [`V10_NEON_PINBALL.md`](V10_NEON_PINBALL.md) for the complete spatial, musical, environmental, UI and verification contracts.
+
+---
+
 ## 1.6 V9 Additions — Resonant Relay, Cornell Room & Visual Lab
 
-The current default, `MODAL FLOW // RESONANT RELAY`, preserves V8's marble solver and adds a parallel mechanical transmission graph. Ten `TransmissionSpec` links (`gear-train`, `belt`, `four-bar`, `camshaft`, `chain`, `nested-ring`) propagate module energy, advance deterministic phase, emit physical `mechanism` events at tooth/lug/lobe/cycle crossings, and animate from that same state. `ModalFlowComposer` rations these events with marble impacts, so mechanisms are instruments rather than decorative visualizers.
+The preserved V9 work, `MODAL FLOW // RESONANT RELAY`, preserves V8's marble solver and adds a parallel mechanical transmission graph. Ten `TransmissionSpec` links (`gear-train`, `belt`, `four-bar`, `camshaft`, `chain`, `nested-ring`) propagate module energy, advance deterministic phase, emit physical `mechanism` events at tooth/lug/lobe/cycle crossings, and animate from that same state. `ModalFlowComposer` rations these events with marble impacts, so mechanisms are instruments rather than decorative visualizers.
 
 `ModalFlowMechanismLayer.ts` adds a shared-rig multi-deck chassis, an open-front Cornell room, receiving scrims, rotating gobos, shadow-casting spot projectors, practical fixtures and local energy lights. `PostFxState` and `WebGPUStage` add linocut, neon edge/GI, five palettes, four physical light rigs, exposure, light energy and shadow depth. Director `LOOKS` exposes authored style presets and true independent effect bypass controls. See `docs/V9_RESONANT_RELAY.md` for the full system.
 
@@ -21,7 +49,7 @@ The current default, `MODAL FLOW // RESONANT RELAY`, preserves V8's marble solve
 
 ## 1.5 V8 Foundation — Physics-Generated Song & Drone Camera
 
-The current default work, `MODAL FLOW // PHYSICS SONG`, adds a second composition paradigm to the engine. V4–V7 schedule score events and let mechanisms respond; V8 schedules only sparse **physical energy cues**. A deterministic 3D marble solver emits releases, lifts, flow, diverter, gate, strike, collision, return and recycle events. `ModalFlowComposer` rations those events through phrase rests, a global event budget and per-module cooldowns, then maps allowed impacts into a new D-Lydian melody. Elevation chooses register, energy chooses velocity/decay, module identity chooses timbre, and a 6-phrase theme advances one step per audible impact.
+The preserved V8 work, `MODAL FLOW // PHYSICS SONG`, adds a second composition paradigm to the engine. V4–V7 schedule score events and let mechanisms respond; V8 schedules only sparse **physical energy cues**. A deterministic 3D marble solver emits releases, lifts, flow, diverter, gate, strike, collision, return and recycle events. `ModalFlowComposer` rations those events through phrase rests, a global event budget and per-module cooldowns, then maps allowed impacts into a new D-Lydian melody. Elevation chooses register, energy chooses velocity/decay, module identity chooses timbre, and a 6-phrase theme advances one step per audible impact.
 
 ```text
 src/works/modal-flow/
@@ -89,12 +117,18 @@ src/
 │       ├── StudioShell.ts      # Collapsible HUD, act launcher, camera rig selector, oscilloscope, patchbay
 │       └── styles.css          # Stark architectural studio styling
 └── works/                      # Self-contained audiovisual works
-    ├── modal-flow/             # 01: MODAL FLOW // RESONANT RELAY (V9 default; V8 marbles + musical transmissions)
+    ├── neon-pinball/           # V10 default: open spatial pinball computer + physical breakcore score
+    │   ├── NeonPinballBlueprint.ts
+    │   ├── NeonPinballScore.ts
+    │   ├── NeonPinballComposer.ts
+    │   └── NeonPinballWork.ts
+    ├── modal-flow/             # Shared V8–V10 runtime + preserved V9 Resonant Relay work
     │   ├── ModalFlowScore.ts
     │   ├── ModalFlowBlueprint.ts
     │   ├── ModalFlowPhysics.ts
     │   ├── ModalFlowComposer.ts
     │   ├── ModalFlowMachine.ts
+    │   ├── ModalFlowMechanismLayer.ts
     │   └── ModalFlowWork.ts
     ├── marble-pendulum/        # V7: PENDULUM // MARBLE ENGINE (preserved 2.5D gate-bank reference)
     ├── astrarium-modular-engine/ # V6: machine-building graph kit reference
@@ -195,7 +229,7 @@ For controls and authoring details, see [`V5_DIRECTOR_STUDIO.md`](V5_DIRECTOR_ST
 
 ## 6. V6 Additions — Machine-Building Kit & Graph Director
 
-The current default work is `ASTRARIUM // MODULAR ENGINE`. It extends the V5 kinematic and director vocabulary into a scalable installation whose modules, ports, conduits, sources, bindings and focus targets are data-driven.
+The preserved V6 work is `ASTRARIUM // MODULAR ENGINE`. It extends the V5 kinematic and director vocabulary into a scalable installation whose modules, ports, conduits, sources, bindings and focus targets are data-driven.
 
 ```text
 src/
@@ -258,7 +292,7 @@ Director Studio
 
 ## 7. V7 Additions — Custom Physics & Blank-Slate Marble Machine
 
-The current default work is `PENDULUM // MARBLE ENGINE`. It does not instantiate the V6 graph installation; it starts from an empty scene and uses a purpose-built deterministic physics engine. V4–V6 remain registered as reference works.
+The preserved V7 work is `PENDULUM // MARBLE ENGINE`. It does not instantiate the V6 graph installation; it starts from an empty scene and uses a purpose-built deterministic physics engine. V4–V6 remain registered as reference works.
 
 ```text
 src/

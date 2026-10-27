@@ -145,11 +145,11 @@ const PALETTES: Array<Record<MaterialRole, number>> = [
 ];
 
 /**
- * The non-marble half of Modal Flow: a Cornell-box machine room containing
- * interlocking gear trains, belts, exact four-bars, camshafts, chains and nested
- * resonators. Every visible part is a child of the same KinematicRig as the
- * tubes and marbles. Transmission phase comes from ModalFlowPhysics, and each
- * tooth/lug/cam crossing is eligible to become a musical event.
+ * The non-marble mechanism/environment layer shared by Modal Flow variants.
+ * V9 builds the Cornell relay; V10 builds a sparse open pinball stage and adds
+ * ratchets, music-box barrels, bell cranks and solenoids. Every visible part is
+ * a child of the same KinematicRig as the tubes and marbles. Transmission phase
+ * comes from ModalFlowPhysics, and each crossing can become a musical event.
  */
 export class ModalFlowMechanismLayer {
   private readonly geometries: THREE.BufferGeometry[] = [];
@@ -159,6 +159,9 @@ export class ModalFlowMechanismLayer {
   private readonly projectors: ProjectorRig[] = [];
   private readonly practicalLights: THREE.PointLight[] = [];
   private readonly shadowGobos: RigJoint[] = [];
+  private readonly environmentNeon: THREE.MeshStandardMaterial[] = [];
+  private particleField: THREE.Points | null = null;
+  private particleMaterial: THREE.PointsMaterial | null = null;
   private hemisphere: THREE.HemisphereLight | null = null;
   private paletteIndex = -1;
   private style: Pick<
@@ -183,8 +186,13 @@ export class ModalFlowMechanismLayer {
       type: 'root',
       category: 'transmission',
     });
-    this.buildCornellRoom(frame);
-    this.buildSectionChassis(frame);
+    if (blueprint.environment === 'open-pinball') {
+      this.buildOpenPinballStage(frame);
+      this.buildSpatialChassis(frame);
+    } else {
+      this.buildCornellRoom(frame);
+      this.buildSectionChassis(frame);
+    }
     for (const transmission of blueprint.transmissions) {
       this.buildTransmission(frame, transmission);
     }
@@ -235,6 +243,18 @@ export class ModalFlowMechanismLayer {
         params.elapsed * direction * (0.11 + section * 0.018 + index * 0.025),
       );
     });
+    const soundPulse = clamp(params.recentEvents / 9, 0, 1);
+    this.environmentNeon.forEach((material, index) => {
+      material.emissiveIntensity =
+        0.7 + this.style.neonGlow * 2.4 + soundPulse * (2.8 + (index % 3) * 0.45) +
+        Math.sin(params.elapsed * (1.2 + index * 0.07)) * 0.18;
+    });
+    if (this.particleField && this.particleMaterial) {
+      this.particleField.rotation.y = params.elapsed * 0.008;
+      this.particleField.rotation.x = Math.sin(params.elapsed * 0.045) * 0.08;
+      this.particleMaterial.size = 0.045 + this.style.neonGlow * 0.025 + soundPulse * 0.075;
+      this.particleMaterial.opacity = 0.28 + this.style.neonGlow * 0.16 + soundPulse * 0.34;
+    }
     this.updateLightRig(section, params.elapsed);
   }
 
@@ -248,6 +268,9 @@ export class ModalFlowMechanismLayer {
     this.projectors.length = 0;
     this.practicalLights.length = 0;
     this.shadowGobos.length = 0;
+    this.environmentNeon.length = 0;
+    this.particleField = null;
+    this.particleMaterial = null;
     this.hemisphere = null;
   }
 
@@ -377,6 +400,173 @@ export class ModalFlowMechanismLayer {
     this.addProjector(frame.group, [0, 7.7, -1.6], [0, 0.5, -6.2], 0xff835e, 82, 'shadow');
   }
 
+  private buildOpenPinballStage(frame: RigJoint): void {
+    const floor = this.material('floor', 0x070b10, { metalness: 0.18, roughness: 0.86 });
+    const paper = this.material('paper', 0x9d9b92, {
+      metalness: 0.02,
+      roughness: 0.94,
+      side: THREE.DoubleSide,
+    });
+    const iron = this.material('iron', 0x0d1821, { metalness: 0.82, roughness: 0.42 });
+    const neon = this.material('accent', 0x66edff, {
+      emissive: 0x36c6e8,
+      emissiveIntensity: 2.2,
+      metalness: 0.05,
+      roughness: 0.12,
+    });
+    const neonPink = this.material('accent', 0xff5bc8, {
+      emissive: 0xd92795,
+      emissiveIntensity: 2.2,
+      metalness: 0.05,
+      roughness: 0.12,
+    });
+    this.environmentNeon.push(neon, neonPink);
+
+    // A distant ground catches occasional long shadows but no wall, ceiling or
+    // close box can occlude a zoomed-out drone shot.
+    this.addMesh(
+      frame.group,
+      this.geometry(new THREE.BoxGeometry(72, 0.18, 72)),
+      floor,
+      [0, -16, 0],
+    );
+
+    // Four isolated projection sails provide deliberate shadow surfaces while
+    // leaving most of the 70-unit environment open for drone flight and VFX.
+    const sailGeo = this.geometry(new THREE.PlaneGeometry(12, 9));
+    const sails: Array<{
+      position: [number, number, number];
+      rotation: [number, number, number];
+    }> = [
+      { position: [0, 1.5, -25], rotation: [0, 0, 0] },
+      { position: [-24, 0.5, -2], rotation: [0, Math.PI / 2, -0.08] },
+      { position: [21, 6.8, -11], rotation: [0.12, -0.78, 0.16] },
+      { position: [3, 18, 3], rotation: [Math.PI / 2, 0.3, 0.22] },
+    ];
+    sails.forEach((sail, index) => {
+      const mesh = this.addMesh(frame.group, sailGeo, paper, sail.position, sail.rotation);
+      mesh.name = `shadow:sail:${index}`;
+      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+    });
+
+    // Long neon coordinate rails describe scale without enclosing the machine.
+    const railGeo = this.geometry(new THREE.CylinderGeometry(0.035, 0.035, 10, 7));
+    const railPoses: Array<[[number, number, number], [number, number, number]]> = [
+      [[-15, 11, -15], [0.8, 0.2, 0.68]],
+      [[15, 9, 12], [1.2, -0.4, -0.52]],
+      [[-18, -7, 10], [0.3, 0.92, 1.1]],
+      [[19, -4, -17], [1.05, 0.34, 0.2]],
+      [[0, 14, -20], [Math.PI / 2, 0.3, 0]],
+      [[0, -11, 20], [0.2, 1.1, -0.7]],
+    ];
+    railPoses.forEach(([position, rotation], index) => {
+      this.addMesh(frame.group, railGeo, index % 2 === 0 ? neon : neonPink, position, rotation);
+    });
+
+    // Deterministic dust/charge field gives bloom and neon somewhere to travel.
+    const particleGeometry = this.geometry(new THREE.BufferGeometry());
+    const count = 960;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const u = ((i * 0.61803398875) % 1) * 2 - 1;
+      const angle = i * 2.39996323;
+      const shell = 14 + ((i * 37) % 101) / 100 * 21;
+      const radial = Math.sqrt(Math.max(0, 1 - u * u)) * shell;
+      positions[i * 3] = Math.cos(angle) * radial;
+      positions[i * 3 + 1] = u * shell * 0.62;
+      positions[i * 3 + 2] = Math.sin(angle) * radial;
+    }
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.particleMaterial = new THREE.PointsMaterial({
+      color: 0x8eefff,
+      size: 0.055,
+      transparent: true,
+      opacity: 0.42,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.materials.push(this.particleMaterial);
+    this.particleField = new THREE.Points(particleGeometry, this.particleMaterial);
+    this.particleField.name = 'vfx:open-charge-field';
+    frame.group.add(this.particleField);
+
+    // Four perforated wheels sit in independent projector lanes rather than on
+    // one back wall. Their silhouettes travel across multiple sails and floor.
+    const goboPositions: Array<[number, number, number]> = [
+      [-10, 3, -13],
+      [11, 6, -15],
+      [-13, -2, 7],
+      [10, 11, 4],
+    ];
+    goboPositions.forEach((position, index) => {
+      const gobo = this.rig.createJoint({
+        id: `joint:shadowGobo:${index}`,
+        label: `OPEN SHADOW WHEEL ${index + 1}`,
+        type: 'revolute',
+        category: 'shadow',
+        parent: frame.id,
+        position,
+        rotation: [index * 0.42, index * -0.28, index * 0.2],
+        axis: [index % 2, (index + 1) % 2, 1],
+      });
+      const wheel = this.geometry(
+        createSpokedGearGeometry(22 + index * 3, 0.16, 1.25 + index * 0.12, 0.06, 7).clone(),
+      );
+      this.addMesh(gobo.group, wheel, iron);
+      this.shadowGobos.push(gobo);
+    });
+
+    this.hemisphere = new THREE.HemisphereLight(0x9bdcff, 0x12091e, 0.42);
+    frame.group.add(this.hemisphere);
+    this.addProjector(frame.group, [-18, 13, 16], [0, 1, -25], 0xffb066, 94, 'key', 72);
+    this.addProjector(frame.group, [19, 9, 18], [-24, 0, -2], 0x57dfff, 88, 'rim', 72);
+    this.addProjector(frame.group, [-2, 20, 8], [21, 7, -11], 0xff4fb8, 106, 'shadow', 74);
+    this.addProjector(frame.group, [15, -8, -5], [0, -16, 0], 0x8b74ff, 72, 'shadow', 66);
+  }
+
+  private buildSpatialChassis(frame: RigJoint): void {
+    const iron = this.material('iron', 0x14212b, { metalness: 0.9, roughness: 0.34 });
+    const brass = this.material('brass', 0xc0914e, { metalness: 0.94, roughness: 0.2 });
+    const beamGeo = this.geometry(new THREE.CylinderGeometry(0.045, 0.07, 1, 7));
+    const nodes = this.blueprint.modules
+      .filter((module) => !module.id.startsWith('orbital-crystal-'))
+      .map((module) => new THREE.Vector3(module.position.x, module.position.y, module.position.z));
+    const origin = new THREE.Vector3(0, 0, 0);
+    const stride = Math.max(1, Math.floor(nodes.length / 10));
+    for (let i = 0; i < nodes.length; i += stride) {
+      const node = nodes[i];
+      this.addStructuralBeam(frame.group, beamGeo, i % 2 === 0 ? iron : brass, origin, node);
+      const across = nodes[(i + stride * 3) % nodes.length];
+      if (across) this.addStructuralBeam(frame.group, beamGeo, iron, node, across, 0.7);
+    }
+    const busGeo = this.geometry(new THREE.TorusGeometry(7.5, 0.055, 7, 80));
+    this.addMesh(frame.group, busGeo, brass, [0, 0, 0], [0.42, 0.66, 0.18]);
+    this.addMesh(frame.group, busGeo, iron, [0, 0, 0], [1.1, -0.32, 0.78], [0.72, 0.72, 0.72]);
+  }
+
+  private addStructuralBeam(
+    parent: THREE.Object3D,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    a: THREE.Vector3,
+    b: THREE.Vector3,
+    thickness = 1,
+  ): void {
+    const direction = b.clone().sub(a);
+    const length = Math.max(0.001, direction.length());
+    direction.normalize();
+    const mesh = this.addMesh(
+      parent,
+      geometry,
+      material,
+      [(a.x + b.x) * 0.5, (a.y + b.y) * 0.5, (a.z + b.z) * 0.5],
+      [0, 0, 0],
+      [thickness, length, thickness],
+    );
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+  }
+
   private addProjector(
     parent: THREE.Object3D,
     position: [number, number, number],
@@ -384,17 +574,18 @@ export class ModalFlowMechanismLayer {
     color: number,
     intensity: number,
     role: ProjectorRig['role'],
+    distance = 28,
   ): void {
     const target = new THREE.Object3D();
     target.position.fromArray(targetPosition);
     parent.add(target);
-    const light = new THREE.SpotLight(color, intensity, 28, Math.PI * 0.16, 0.42, 1.45);
+    const light = new THREE.SpotLight(color, intensity, distance, Math.PI * 0.16, 0.42, 1.45);
     light.position.fromArray(position);
     light.target = target;
     light.castShadow = true;
     light.shadow.mapSize.set(1024, 1024);
     light.shadow.camera.near = 0.5;
-    light.shadow.camera.far = 30;
+    light.shadow.camera.far = distance + 2;
     light.shadow.bias = -0.00025;
     parent.add(light);
     this.projectors.push({ light, baseIntensity: intensity, role });
@@ -555,6 +746,74 @@ export class ModalFlowMechanismLayer {
         );
         const follower = this.geometry(new THREE.BoxGeometry(0.065, 0.65, 0.075));
         this.addMesh(root.group, follower, iron, [-0.68 * spec.scale + i * 0.34 * spec.scale, 0.42, 0]);
+      }
+    } else if (spec.kind === 'ratchet') {
+      const drive = this.createRotor(root, spec, 0, [0, 0, 0], [0, 0, 1]);
+      rotors.push({ joint: drive, multiplier: Math.sign(spec.ratio) || 1 });
+      const wheel = this.geometry(createSpokedGearGeometry(24, 0.12, 0.58 * spec.scale, 0.075, 7).clone());
+      this.addMesh(drive.group, wheel, brass);
+      const tooth = this.geometry(new THREE.ConeGeometry(0.055, 0.19, 3));
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * TAU;
+        this.addMesh(
+          drive.group,
+          tooth,
+          i % 4 === 0 ? accent : brass,
+          [Math.cos(a) * 0.68 * spec.scale, Math.sin(a) * 0.68 * spec.scale, 0],
+          [0, 0, a - Math.PI / 2],
+        );
+      }
+      const pawl = this.geometry(new THREE.BoxGeometry(0.62 * spec.scale, 0.07, 0.1));
+      this.addMesh(root.group, pawl, accent, [0.44 * spec.scale, 0.72 * spec.scale, 0.08], [0, 0, -0.78]);
+    } else if (spec.kind === 'music-box') {
+      const drive = this.createRotor(root, spec, 0, [0, 0, 0], [1, 0, 0]);
+      rotors.push({ joint: drive, multiplier: spec.ratio });
+      const barrel = this.geometry(new THREE.CylinderGeometry(0.4 * spec.scale, 0.4 * spec.scale, 1.55 * spec.scale, 24));
+      barrel.rotateZ(Math.PI / 2);
+      this.addMesh(drive.group, barrel, iron);
+      const pin = this.geometry(new THREE.SphereGeometry(0.045, 7, 5));
+      for (let i = 0; i < 36; i++) {
+        const x = -0.7 * spec.scale + (i % 6) * 0.28 * spec.scale;
+        const a = ((i * 7) % 19) / 19 * TAU;
+        this.addMesh(drive.group, pin, i % 3 === 0 ? accent : brass, [x, Math.cos(a) * 0.44 * spec.scale, Math.sin(a) * 0.44 * spec.scale]);
+      }
+      const comb = this.geometry(new THREE.BoxGeometry(0.035, 0.54 * spec.scale, 0.035));
+      for (let i = 0; i < 12; i++) {
+        this.addMesh(root.group, comb, accent, [-0.7 * spec.scale + i * 0.13 * spec.scale, -0.66 * spec.scale, 0.16]);
+      }
+    } else if (spec.kind === 'bell-crank') {
+      const crank = this.createRotor(root, spec, 0, [-0.55 * spec.scale, 0, 0], [0, 0, 1]);
+      const bellRotor = this.createRotor(root, spec, 1, [0.55 * spec.scale, 0, 0], [1, 0, 0]);
+      rotors.push(
+        { joint: crank, multiplier: 1 },
+        { joint: bellRotor, multiplier: spec.ratio },
+      );
+      const wheel = this.geometry(createSpokedGearGeometry(16, 0.13, 0.42 * spec.scale, 0.07, 5).clone());
+      this.addMesh(crank.group, wheel, brass);
+      const bell = this.geometry(new THREE.CylinderGeometry(0.11, 0.28, 0.42, 14, 1, true));
+      for (let i = 0; i < 5; i++) {
+        this.addMesh(
+          bellRotor.group,
+          bell,
+          i % 2 === 0 ? accent : brass,
+          [0, (-0.56 + i * 0.28) * spec.scale, 0],
+          [0, 0, Math.PI / 2],
+        );
+      }
+      const arm = this.geometry(new THREE.BoxGeometry(1.25 * spec.scale, 0.055, 0.07));
+      this.addMesh(root.group, arm, accent, [0, 0.35 * spec.scale, 0], [0, 0, -0.25]);
+    } else if (spec.kind === 'solenoid') {
+      const sequencer = this.createRotor(root, spec, 0, [0, 0, 0], [1, 0, 0]);
+      rotors.push({ joint: sequencer, multiplier: spec.ratio });
+      const shaft = this.geometry(new THREE.CylinderGeometry(0.045, 0.045, 1.8 * spec.scale, 9));
+      shaft.rotateZ(Math.PI / 2);
+      this.addMesh(sequencer.group, shaft, brass);
+      const coil = this.geometry(new THREE.TorusGeometry(0.18 * spec.scale, 0.035, 7, 20));
+      const striker = this.geometry(new THREE.BoxGeometry(0.08, 0.72 * spec.scale, 0.08));
+      for (let i = 0; i < 7; i++) {
+        const x = (-0.72 + i * 0.24) * spec.scale;
+        this.addMesh(sequencer.group, coil, i % 2 === 0 ? accent : brass, [x, 0, 0], [0, Math.PI / 2, 0]);
+        this.addMesh(root.group, striker, iron, [x, 0.48 * spec.scale, 0]);
       }
     } else {
       const axes: Array<[number, number, number]> = [

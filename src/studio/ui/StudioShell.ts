@@ -43,6 +43,8 @@ export interface StudioActions {
   onImportTake(json: string): void;
   onToggleVideoCapture(): void;
   onToggleMute(): void;
+  onToggleDirector(): void;
+  onOpenLooks(): void;
 }
 
 /**
@@ -61,6 +63,8 @@ export class StudioShell {
   private readonly gpuBadge: HTMLSpanElement;
   private readonly bodyBadge: HTMLSpanElement;
   private readonly muteBtn: HTMLButtonElement;
+  private readonly directorBtn: HTMLButtonElement;
+  private readonly looksBtn: HTMLButtonElement;
 
   private readonly timelineStrip: HTMLDivElement;
   private readonly playheadEl: HTMLDivElement;
@@ -147,7 +151,7 @@ export class StudioShell {
     this.playBtn.onclick = () => actions.onTogglePlay();
 
     this.modeBtn = document.createElement('button');
-    this.modeBtn.className = 'btn active';
+    this.modeBtn.className = 'btn active mode-button';
     this.modeBtn.textContent = 'SCORE + LIVE';
     this.modeBtn.onclick = () => {
       const next =
@@ -195,12 +199,40 @@ export class StudioShell {
     this.muteBtn.textContent = 'AUDIO ON';
     this.muteBtn.onclick = () => actions.onToggleMute();
 
+    this.looksBtn = document.createElement('button');
+    this.looksBtn.className = 'btn looks-launch';
+    this.looksBtn.textContent = 'LOOKS / LIGHTS';
+    this.looksBtn.title = 'Open palettes, render styles, lights, shadows and individual FX toggles';
+    this.looksBtn.onclick = () => actions.onOpenLooks();
+
+    this.directorBtn = document.createElement('button');
+    this.directorBtn.className = 'btn director-launch';
+    this.directorBtn.textContent = 'DIRECTOR [`]';
+    this.directorBtn.title = 'Toggle Director Studio';
+    this.directorBtn.onclick = () => actions.onToggleDirector();
+
     const cinemaBtn = document.createElement('button');
     cinemaBtn.className = 'btn';
     cinemaBtn.textContent = 'CINEMA [TAB]';
     cinemaBtn.onclick = () => this.toggleCinemaMode();
 
-    metaCluster.append(this.gpuBadge, this.bodyBadge, this.muteBtn, cinemaBtn);
+    const panelToggles = document.createElement('div');
+    panelToggles.className = 'panel-toggle-cluster';
+    const leftToggle = this.makePanelButton('L', 'Toggle left controls');
+    const rightToggle = this.makePanelButton('R', 'Toggle camera / recorder controls');
+    const timelineToggle = this.makePanelButton('TIME', 'Toggle section timeline');
+    const padsToggle = this.makePanelButton('PADS', 'Toggle performance pads');
+    panelToggles.append(leftToggle, rightToggle, timelineToggle, padsToggle);
+
+    metaCluster.append(
+      this.looksBtn,
+      this.directorBtn,
+      panelToggles,
+      this.gpuBadge,
+      this.bodyBadge,
+      this.muteBtn,
+      cinemaBtn,
+    );
     topbar.append(brandCluster, transportCluster, metaCluster);
 
     // --- MOVEMENT TIMELINE ---
@@ -223,7 +255,9 @@ export class StudioShell {
 
     // LEFT PANEL: Telemetry + Macros + Sensors + Patchbay
     const leftPanel = document.createElement('div');
-    leftPanel.className = 'side-panel';
+    leftPanel.className = 'side-panel left-panel';
+    const leftPanelHead = this.makePanelHeader('LEFT // CONTROL DECK');
+    const leftCollapse = leftPanelHead.querySelector('button') as HTMLButtonElement;
 
     const scopeBlock = document.createElement('div');
     scopeBlock.innerHTML = `<div class="panel-section-title"><span>BIOMECHANICAL STATE</span><span id="behavior-state-lbl" style="color:var(--accent-amber)">DORMANT_BREATH</span></div>`;
@@ -296,11 +330,13 @@ export class StudioShell {
     this.patchContainer.className = 'patch-list';
     patchBlock.appendChild(this.patchContainer);
 
-    leftPanel.append(scopeBlock, macroBlock, sensorBlock, patchBlock);
+    leftPanel.append(leftPanelHead, scopeBlock, macroBlock, sensorBlock, patchBlock);
 
     // RIGHT PANEL: Camera Director + Multi-Pass Take Recorder + Video Export
     const rightPanel = document.createElement('div');
-    rightPanel.className = 'side-panel';
+    rightPanel.className = 'side-panel right-panel';
+    const rightPanelHead = this.makePanelHeader('RIGHT // CAMERA + CAPTURE');
+    const rightCollapse = rightPanelHead.querySelector('button') as HTMLButtonElement;
 
     const camBlock = document.createElement('div');
     camBlock.innerHTML = `<div class="panel-section-title"><span>PROCEDURAL CAMERA</span><span>KEYS 0, 1–8</span></div>`;
@@ -425,13 +461,17 @@ export class StudioShell {
       </div>
     `;
 
-    rightPanel.append(camBlock, recBlock, vidBlock, helpBlock);
+    rightPanel.append(rightPanelHead, camBlock, recBlock, vidBlock, helpBlock);
     mid.append(leftPanel, rightPanel);
     this.hudLayer.appendChild(mid);
 
     // --- BOTTOM LIVE PAD & PUNCH STRIP ---
     const bottom = document.createElement('div');
     bottom.className = 'hud-bottom hud-collapsible';
+    const bottomCollapse = document.createElement('button');
+    bottomCollapse.className = 'btn inline-panel-collapse';
+    bottomCollapse.textContent = '− PADS';
+    bottomCollapse.title = 'Minimize performance pads';
 
     const padBank = document.createElement('div');
     padBank.className = 'pad-bank';
@@ -457,20 +497,31 @@ export class StudioShell {
       punchBank.appendChild(btn);
     }
 
-    bottom.append(padBank, punchBank);
+    bottom.append(bottomCollapse, padBank, punchBank);
     this.hudLayer.appendChild(bottom);
+
+    this.bindPanelVisibility(leftToggle, leftPanel, [leftCollapse]);
+    this.bindPanelVisibility(rightToggle, rightPanel, [rightCollapse]);
+    this.bindPanelVisibility(timelineToggle, this.timelineStrip);
+    this.bindPanelVisibility(padsToggle, bottom, [bottomCollapse]);
 
     // --- IGNITION OVERLAY ---
     this.ignitionOverlay = document.createElement('div');
     this.ignitionOverlay.className = 'ignition-overlay';
+    const isNeonPinball = initialWork.id === 'neon-pinball';
+    const ignitionKicker = isNeonPinball
+      ? 'SONOBJET V10 // OPEN PINBALL COMPUTER + PHYSICS BREAKCORE'
+      : 'SONOBJET // PHYSICS-COUPLED AUDIOVISUAL MACHINE';
+    const ignitionDescription = isNeonPinball
+      ? `${initialWork.subtitle}. A ${initialWork.bars}-bar, ${initialWork.bpm} BPM IDM / drum-and-bass machine song is physically addressed through magnetic balls, ratchets, break solenoids, bell rows, crystal memories and a pinned music-box loom.`
+      : `${initialWork.subtitle}. This preserved work remains fully playable and directable.`;
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET V9 // MODAL FLOW + MUSICAL TRANSMISSIONS + CORNELL SHADOW LAB</div>
+        <div class="ignition-kicker">${ignitionKicker}</div>
         <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          ${initialWork.subtitle}. A 48-bar D-Lydian composition emerges from marbles and mechanisms:
-          gravity, gears, belts, cams, chains, exact linkages and nested resonators all generate sparse
-          phrases. Open Director LOOKS for clean, linocut, neon-GI, palette, light and shadow control.
+          ${ignitionDescription} Use the always-visible <b>LOOKS / LIGHTS</b> button for palettes,
+          render styles, neon, shadows and individual effect bypasses.
         </p>
         <div class="ignition-shortcuts">
           <b>SPACE</b> Play / Pause Physics Film &nbsp;|&nbsp;
@@ -483,7 +534,7 @@ export class StudioShell {
           <b>Q W E R T Y</b> Cue six sections
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 48-BAR PHYSICS FILM [SPACE]</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE ${initialWork.bars}-BAR PHYSICS BREAK [SPACE]</button>
           <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>
@@ -509,6 +560,44 @@ export class StudioShell {
     this.bindWorkSchema(initialWork, null);
   }
 
+  private makePanelButton(label: string, title: string): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.className = 'btn panel-visibility-btn active';
+    button.textContent = label;
+    button.title = title;
+    button.setAttribute('aria-pressed', 'true');
+    return button;
+  }
+
+  private makePanelHeader(label: string): HTMLDivElement {
+    const header = document.createElement('div');
+    header.className = 'side-panel-head';
+    const title = document.createElement('span');
+    title.textContent = label;
+    const collapse = document.createElement('button');
+    collapse.className = 'btn inline-panel-collapse';
+    collapse.textContent = '−';
+    collapse.title = `Minimize ${label.toLowerCase()}`;
+    header.append(title, collapse);
+    return header;
+  }
+
+  private bindPanelVisibility(
+    primary: HTMLButtonElement,
+    panel: HTMLElement,
+    secondary: HTMLButtonElement[] = [],
+  ): void {
+    const toggle = (): void => {
+      const hidden = panel.classList.toggle('panel-hidden');
+      primary.classList.toggle('active', !hidden);
+      primary.setAttribute('aria-pressed', String(!hidden));
+    };
+    primary.onclick = toggle;
+    secondary.forEach((button) => {
+      button.onclick = toggle;
+    });
+  }
+
   dismissIgnition(): void {
     this.ignitionOverlay.classList.add('dismissed');
   }
@@ -521,6 +610,8 @@ export class StudioShell {
   /** Fade the performance decks while the Director Studio owns the screen. */
   setDirectorMode(active: boolean): void {
     this.hudLayer.classList.toggle('director-active', active);
+    this.directorBtn.classList.toggle('active', active);
+    this.looksBtn.classList.toggle('active', active);
   }
 
   private applyCameraModeLabels(labels?: string[]): void {

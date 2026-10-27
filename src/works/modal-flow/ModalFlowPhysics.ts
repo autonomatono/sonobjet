@@ -1,5 +1,5 @@
 import { SeededRandom } from '../../engine/core/SeededRandom';
-import type { ProgrammingPinSnapshot } from '../../engine/core/types';
+import type { ProgrammingPinSnapshot, SubsystemId } from '../../engine/core/types';
 import {
   createConduitSampler,
   DEFAULT_MARBLE_COUNT,
@@ -39,6 +39,28 @@ export interface PhysicsSongEvent {
   speed: number;
   noteIndex: number;
   velocity: number;
+  /** Metadata carried by a sequenced physical actuator into the audio mapper. */
+  sequenced?: boolean;
+  sliceIndex?: number;
+  reverse?: boolean;
+  ratchetStep?: number;
+  ratchetTotal?: number;
+  midiNote?: number;
+  sourceBeat?: number;
+  voice?: SubsystemId;
+}
+
+export interface PhysicalActuation {
+  sequenced?: boolean;
+  voice?: SubsystemId;
+  noteIndex?: number;
+  sliceIndex?: number;
+  reverse?: boolean;
+  ratchetStep?: number;
+  ratchetTotal?: number;
+  midiNote?: number;
+  sourceBeat?: number;
+  velocity?: number;
 }
 
 export type MarbleRunState = 'queued' | 'flowing' | 'lift' | 'settled';
@@ -328,7 +350,11 @@ export class ModalFlowPhysics {
   }
 
   /** Live pads and score cues are actuators, not direct sound generators. */
-  injectEnergy(amount: number, moduleId = 'crank-flywheel'): void {
+  injectEnergy(
+    amount: number,
+    moduleId = 'crank-flywheel',
+    actuation: PhysicalActuation = {},
+  ): void {
     const energy = clamp(amount, 0, 2);
     this.injectedEnergy += energy;
     this.moduleEnergy.set(moduleId, clamp((this.moduleEnergy.get(moduleId) ?? 0) + energy, 0, 2));
@@ -341,8 +367,16 @@ export class ModalFlowPhysics {
         position: { ...module.position },
         energy: energy * 0.55,
         speed: 0.7,
-        noteIndex: module.noteRole,
-        velocity: energy * 0.4,
+        noteIndex: actuation.noteIndex ?? module.noteRole,
+        velocity: actuation.velocity ?? energy * 0.4,
+        sequenced: actuation.sequenced,
+        sliceIndex: actuation.sliceIndex,
+        reverse: actuation.reverse,
+        ratchetStep: actuation.ratchetStep,
+        ratchetTotal: actuation.ratchetTotal,
+        midiNote: actuation.midiNote,
+        sourceBeat: actuation.sourceBeat,
+        voice: actuation.voice,
       });
     }
     const wake = Math.max(1, Math.round(energy * 3));
@@ -714,6 +748,14 @@ export class ModalFlowPhysics {
       case 'chime':
       case 'drum':
       case 'satellite':
+      case 'ratchet':
+      case 'bells':
+      case 'crystal':
+      case 'percussion':
+      case 'loom':
+      case 'pinball':
+      case 'computer':
+      case 'neon':
         this.emit({
           kind: 'strike',
           moduleId: module.id,
@@ -873,7 +915,15 @@ export class ModalFlowPhysics {
   }
 
   private emit(event: Omit<PhysicsSongEvent, 'id' | 'time'>): void {
-    if (this.pendingEvents.length > 32) return;
+    // Dense V10 ratchets can legitimately layer several actuators and marble
+    // releases in one render frame. Preserve those causal score events while
+    // still bounding pathological collision storms.
+    if (this.pendingEvents.length >= 128) {
+      if (!event.sequenced) return;
+      const replace = this.pendingEvents.findIndex((candidate) => !candidate.sequenced);
+      if (replace < 0) return;
+      this.pendingEvents.splice(replace, 1);
+    }
     this.pendingEvents.push({
       ...event,
       id: this.eventId++,

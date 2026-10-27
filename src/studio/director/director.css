@@ -8,6 +8,7 @@
 }
 
 .director-toggle {
+  display: none;
   position: absolute;
   top: 46px;
   right: 14px;
@@ -59,6 +60,53 @@
 .director-header {
   padding: 10px 12px 8px;
   border-bottom: 1px solid var(--panel-border);
+}
+
+.director-header-top,
+.director-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.director-panel-toggle {
+  padding: 2px 6px;
+  min-width: 24px;
+  font-size: 8px;
+  color: var(--text-dim);
+}
+
+.director-drawer.minimized {
+  bottom: auto;
+  height: 39px;
+  overflow: hidden;
+}
+
+.director-drawer.minimized > :not(.director-header),
+.director-drawer.minimized .director-subtitle,
+.director-drawer.minimized .director-status {
+  display: none;
+}
+
+.director-drawer.minimized .director-header {
+  flex: 1;
+  padding-block: 9px;
+  border-bottom: 0;
+}
+
+.director-dock.minimized {
+  height: 34px;
+  overflow: hidden;
+  padding-block: 5px;
+}
+
+.director-dock.minimized > :not(.director-dock-head) {
+  display: none;
+}
+
+.director-dock.minimized .director-hint {
+  display: none;
 }
 
 .director-title {

@@ -42,6 +42,7 @@ export class ModalFlowMachine {
   private readonly moduleJoints = new Map<string, RigJoint>();
   private readonly portJoints = new Map<string, RigJoint>();
   private readonly hammerJoints = new Map<string, RigJoint>();
+  private readonly moduleRotors = new Map<string, RigJoint[]>();
   private readonly moduleMaterials = new Map<string, THREE.MeshStandardMaterial>();
   private readonly moduleLights = new Map<string, THREE.PointLight>();
   private readonly moduleFlash = new Map<string, number>();
@@ -163,6 +164,16 @@ export class ModalFlowMachine {
       const energy = physics.getModuleEnergy(moduleId);
       joint.setTarget(Math.sin(elapsed * 0.83 + moduleId.length * 0.7) * energy * 0.14);
     }
+    for (const [moduleId, rotors] of this.moduleRotors) {
+      const energy = physics.getModuleEnergy(moduleId);
+      const flash = this.moduleFlash.get(moduleId) ?? 0;
+      rotors.forEach((rotor, index) => {
+        const direction = index % 2 === 0 ? 1 : -1;
+        rotor.setTarget(
+          direction * (elapsed * (0.34 + index * 0.13 + energy * 0.92) + flash * 0.34),
+        );
+      });
+    }
 
     this.mechanismLayer?.update({
       elapsed,
@@ -225,6 +236,7 @@ export class ModalFlowMachine {
     this.moduleJoints.clear();
     this.portJoints.clear();
     this.hammerJoints.clear();
+    this.moduleRotors.clear();
     this.moduleMaterials.clear();
     this.moduleLights.clear();
     this.fillLights.length = 0;
@@ -328,11 +340,15 @@ export class ModalFlowMachine {
       category: 'marble',
     });
 
-    const baseMaterial = this.material(0x1a2530, { metalness: 0.5, roughness: 0.62 });
-    const baseGeo = this.geometry(new THREE.CylinderGeometry(7.6, 8.1, 0.18, 48));
-    this.addMesh(chassis.group, baseGeo, baseMaterial, { x: 0, y: -3.05, z: 0.8 });
-    const ringGeo = this.geometry(new THREE.TorusGeometry(7.3, 0.06, 8, 64));
-    this.addMesh(chassis.group, ringGeo, baseMaterial, { x: 0, y: -2.92, z: 0.8 }, { x: Math.PI / 2, y: 0, z: 0 });
+    if (this.blueprint.environment === 'open-pinball') {
+      this.buildSpatialBackbone(chassis.group);
+    } else {
+      const baseMaterial = this.material(0x1a2530, { metalness: 0.5, roughness: 0.62 });
+      const baseGeo = this.geometry(new THREE.CylinderGeometry(7.6, 8.1, 0.18, 48));
+      this.addMesh(chassis.group, baseGeo, baseMaterial, { x: 0, y: -3.05, z: 0.8 });
+      const ringGeo = this.geometry(new THREE.TorusGeometry(7.3, 0.06, 8, 64));
+      this.addMesh(chassis.group, ringGeo, baseMaterial, { x: 0, y: -2.92, z: 0.8 }, { x: Math.PI / 2, y: 0, z: 0 });
+    }
     this.buildLights(chassis.group);
 
     for (const module of this.blueprint.modules) {
@@ -346,6 +362,75 @@ export class ModalFlowMachine {
 
     this.rig.addDriver(new GearRatioDriver('joint:flywheel', 'joint:liftAuger', -2.35));
     this.rig.addDriver(new GearRatioDriver('joint:flywheel', 'joint:gateEscapement', 1.45, 0.2));
+  }
+
+  private buildSpatialBackbone(parent: THREE.Group): void {
+    const darkMetal = this.material(0x111c25, { metalness: 0.9, roughness: 0.34 });
+    const busMetal = this.material(0xb98745, { metalness: 0.94, roughness: 0.2 });
+    const signal = this.material(0x55dfff, {
+      emissive: 0x167f9d,
+      emissiveIntensity: 1.1,
+      metalness: 0.42,
+      roughness: 0.18,
+    });
+    const beamGeo = this.geometry(new THREE.CylinderGeometry(0.055, 0.075, 1, 8));
+    const nodeGeo = this.geometry(new THREE.IcosahedronGeometry(0.18, 1));
+    const anchors = this.blueprint.modules
+      .filter((module) => !module.id.startsWith('orbital-crystal-'))
+      .map((module) => vec3(module.position));
+    const centre = new THREE.Vector3(0, 0.2, 0);
+    const stride = Math.max(1, Math.floor(anchors.length / 8));
+    for (let i = 0; i < anchors.length; i += stride) {
+      const anchor = anchors[i];
+      this.addBeam(parent, beamGeo, i % 2 === 0 ? darkMetal : busMetal, centre, anchor);
+      this.addMesh(parent, nodeGeo, i % 3 === 0 ? signal : busMetal, {
+        x: anchor.x,
+        y: anchor.y,
+        z: anchor.z,
+      });
+      const next = anchors[(i + stride * 2) % anchors.length];
+      if (next) this.addBeam(parent, beamGeo, darkMetal, anchor, next, 0.72);
+    }
+
+    // Three mutually tilted buses replace the old horizontal base/floor stack.
+    const ringGeo = this.geometry(new THREE.TorusGeometry(5.4, 0.065, 8, 72));
+    this.addMesh(parent, ringGeo, busMetal, { x: 0, y: 0.4, z: 0 }, { x: 0.42, y: 0.78, z: 0.18 });
+    this.addMesh(parent, ringGeo, darkMetal, { x: -0.8, y: 0, z: 0.7 }, { x: 1.14, y: -0.28, z: 0.72 }, { x: 0.72, y: 0.72, z: 0.72 });
+    this.addMesh(parent, ringGeo, signal, { x: 0.5, y: -0.2, z: -0.6 }, { x: -0.68, y: 0.35, z: 1.12 }, { x: 0.44, y: 0.44, z: 0.44 });
+
+    const panelGeo = this.geometry(new THREE.BoxGeometry(2.8, 1.6, 0.065));
+    this.addMesh(parent, panelGeo, darkMetal, { x: -2.2, y: 0.9, z: -0.8 }, { x: 0.3, y: 0.72, z: -0.46 });
+    this.addMesh(parent, panelGeo, darkMetal, { x: 2.4, y: -1.1, z: 0.6 }, { x: -0.52, y: -0.58, z: 0.76 });
+    const lampGeo = this.geometry(new THREE.SphereGeometry(0.055, 7, 5));
+    for (let i = 0; i < 34; i++) {
+      const a = i * 2.399963;
+      const radius = 1.1 + (i % 5) * 0.2;
+      this.addMesh(parent, lampGeo, signal, {
+        x: Math.cos(a) * radius,
+        y: -0.7 + (i % 7) * 0.22,
+        z: Math.sin(a) * radius,
+      });
+    }
+  }
+
+  private addBeam(
+    parent: THREE.Object3D,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    a: THREE.Vector3,
+    b: THREE.Vector3,
+    radiusScale = 1,
+  ): THREE.Mesh {
+    const direction = b.clone().sub(a);
+    const length = Math.max(0.001, direction.length());
+    direction.normalize();
+    const mesh = this.addMesh(parent, geometry, material, {
+      x: (a.x + b.x) * 0.5,
+      y: (a.y + b.y) * 0.5,
+      z: (a.z + b.z) * 0.5,
+    }, undefined, { x: radiusScale, y: length, z: radiusScale });
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+    return mesh;
   }
 
   private buildLights(parent: THREE.Group): void {
@@ -373,6 +458,9 @@ export class ModalFlowMachine {
       type: 'revolute',
       category: 'module',
       position: [module.position.x, module.position.y, module.position.z],
+      rotation: module.orientation
+        ? [module.orientation.x, module.orientation.y, module.orientation.z]
+        : [0, 0, 0],
       axis: [0, 1, 0],
       min: -0.18,
       max: 0.18,
@@ -413,13 +501,23 @@ export class ModalFlowMachine {
       side: THREE.DoubleSide,
     });
 
-    const plateGeo = this.geometry(new THREE.CylinderGeometry(0.62 * scale, 0.7 * scale, 0.12, 18));
-    this.addMesh(joint.group, plateGeo, housing, { x: 0, y: -0.4 * scale, z: 0 });
-    const ringGeo = this.geometry(new THREE.TorusGeometry(0.58 * scale, 0.035, 8, 26));
-    this.addMesh(joint.group, ringGeo, glow, { x: 0, y: -0.32 * scale, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 });
-
-    const postGeo = this.geometry(new THREE.CylinderGeometry(0.08, 0.1, 0.9 * scale, 10));
-    this.addMesh(joint.group, postGeo, housing, { x: 0, y: 0.05 * scale, z: 0 });
+    if (this.blueprint.environment === 'open-pinball') {
+      // A compact three-axis gimbal supports each organ without implying a
+      // shared floor. The parent joint's arbitrary rest orientation turns the
+      // entire local instrument, including its conduit collar, into 3D space.
+      const gimbalA = this.geometry(new THREE.TorusGeometry(0.44 * scale, 0.035, 7, 24));
+      const gimbalB = this.geometry(new THREE.TorusGeometry(0.34 * scale, 0.03, 7, 22));
+      this.addMesh(joint.group, gimbalA, housing, { x: 0, y: 0, z: 0 }, { x: Math.PI / 2, y: 0.3, z: 0 });
+      this.addMesh(joint.group, gimbalB, glow, { x: 0, y: 0, z: 0 }, { x: 0.2, y: Math.PI / 2, z: 0.5 });
+      this.addMesh(joint.group, this.geometry(new THREE.IcosahedronGeometry(0.16 * scale, 1)), brass);
+    } else {
+      const plateGeo = this.geometry(new THREE.CylinderGeometry(0.62 * scale, 0.7 * scale, 0.12, 18));
+      this.addMesh(joint.group, plateGeo, housing, { x: 0, y: -0.4 * scale, z: 0 });
+      const ringGeo = this.geometry(new THREE.TorusGeometry(0.58 * scale, 0.035, 8, 26));
+      this.addMesh(joint.group, ringGeo, glow, { x: 0, y: -0.32 * scale, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 });
+      const postGeo = this.geometry(new THREE.CylinderGeometry(0.08, 0.1, 0.9 * scale, 10));
+      this.addMesh(joint.group, postGeo, housing, { x: 0, y: 0.05 * scale, z: 0 });
+    }
     const collarGeo = this.geometry(new THREE.TorusGeometry(0.22 * scale, 0.045, 8, 18));
     this.addMesh(port.group, collarGeo, brass, { x: 0, y: 0, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 });
 
@@ -601,6 +699,222 @@ export class ModalFlowMachine {
         }
         break;
       }
+      case 'ratchet': {
+        const rotor = this.rig.createJoint({
+          id: module.id === 'gate-bank' ? 'joint:gateEscapement' : `joint:ratchet:${module.id}`,
+          label: `${module.label} RATCHET WHEEL`,
+          type: 'revolute',
+          category: 'ratchet',
+          parent: `module:${module.id}`,
+          position: [0, 0.08, 0],
+          axis: [0, 0, 1],
+        });
+        this.moduleRotors.set(module.id, [rotor]);
+        const disc = this.geometry(new THREE.CylinderGeometry(0.44 * scale, 0.44 * scale, 0.12, 24));
+        disc.rotateX(Math.PI / 2);
+        this.addMesh(rotor.group, disc, housing);
+        const tooth = this.geometry(new THREE.ConeGeometry(0.09 * scale, 0.25 * scale, 3));
+        for (let i = 0; i < 18; i++) {
+          const a = (i / 18) * Math.PI * 2;
+          this.addMesh(rotor.group, tooth, i % 3 === 0 ? glow : brass, {
+            x: Math.cos(a) * 0.55 * scale,
+            y: Math.sin(a) * 0.55 * scale,
+            z: 0,
+          }, { x: 0, y: 0, z: a - Math.PI / 2 });
+        }
+        const pawl = this.geometry(new THREE.BoxGeometry(0.48 * scale, 0.08, 0.1));
+        this.addMesh(joint.group, pawl, glow, { x: 0.46 * scale, y: 0.56 * scale, z: 0.08 }, { x: 0, y: 0, z: -0.7 });
+        const counter = this.geometry(new THREE.BoxGeometry(0.58 * scale, 0.28 * scale, 0.09));
+        this.addMesh(joint.group, counter, housing, { x: -0.62 * scale, y: 0.42 * scale, z: 0 });
+        break;
+      }
+      case 'bells': {
+        const hammer = this.createHammer(module.id, joint);
+        this.hammerJoints.set(module.id, hammer);
+        const bellGeo = this.geometry(new THREE.CylinderGeometry(0.1, 0.25, 0.42, 14, 1, true));
+        const clapperGeo = this.geometry(new THREE.SphereGeometry(0.055, 7, 5));
+        for (let i = 0; i < 10; i++) {
+          const a = -1.2 + (i / 9) * 2.4;
+          const radius = 0.92 * scale;
+          const height = 0.42 + (i % 4) * 0.08;
+          const bell = this.addMesh(joint.group, bellGeo, i % 2 === 0 ? brass : glow, {
+            x: Math.sin(a) * radius,
+            y: Math.cos(a) * 0.34 * scale,
+            z: Math.cos(a) * radius * 0.42,
+          }, { x: Math.PI, y: a * 0.3, z: a * 0.28 }, { x: 1, y: height / 0.42, z: 1 });
+          bell.castShadow = true;
+          this.addMesh(joint.group, clapperGeo, glow, {
+            x: Math.sin(a) * radius,
+            y: Math.cos(a) * 0.34 * scale - height * 0.46,
+            z: Math.cos(a) * radius * 0.42,
+          });
+        }
+        const rail = this.geometry(new THREE.TorusGeometry(0.94 * scale, 0.035, 7, 32, Math.PI * 1.5));
+        this.addMesh(joint.group, rail, housing, { x: 0, y: 0.2, z: 0 }, { x: Math.PI / 2, y: 0, z: -Math.PI * 0.75 });
+        break;
+      }
+      case 'crystal': {
+        const rotor = this.rig.createJoint({
+          id: `joint:crystal:${module.id}`,
+          label: `${module.label} MEMORY GIMBAL`,
+          type: 'revolute',
+          category: 'crystal',
+          parent: `module:${module.id}`,
+          axis: [1, 0.4, 0.2],
+        });
+        this.moduleRotors.set(module.id, [rotor]);
+        const crystalGeo = this.geometry(new THREE.OctahedronGeometry(0.24 * scale, 0));
+        for (let i = 0; i < 13; i++) {
+          const a = i * 2.399963;
+          const radius = 0.18 + (i % 4) * 0.17 * scale;
+          this.addMesh(rotor.group, crystalGeo, i % 3 === 0 ? brass : glow, {
+            x: Math.cos(a) * radius,
+            y: -0.42 * scale + (i / 12) * 0.86 * scale,
+            z: Math.sin(a) * radius,
+          }, { x: a * 0.37, y: a, z: -a * 0.22 }, {
+            x: 0.52 + (i % 3) * 0.18,
+            y: 0.9 + (i % 5) * 0.2,
+            z: 0.52 + (i % 3) * 0.18,
+          });
+        }
+        const cage = this.geometry(new THREE.TorusGeometry(0.72 * scale, 0.028, 6, 30));
+        this.addMesh(rotor.group, cage, glow, { x: 0, y: 0, z: 0 }, { x: 0.35, y: 0.9, z: 0.2 });
+        this.addMesh(rotor.group, cage, glow, { x: 0, y: 0, z: 0 }, { x: 1.1, y: -0.3, z: 0.7 });
+        break;
+      }
+      case 'percussion': {
+        const hammer = this.createHammer(module.id, joint);
+        this.hammerJoints.set(module.id, hammer);
+        const shell = this.geometry(new THREE.CylinderGeometry(0.19, 0.19, 0.24, 14));
+        const cymbal = this.geometry(new THREE.CylinderGeometry(0.28, 0.34, 0.035, 18));
+        for (let i = 0; i < 8; i++) {
+          const x = (-1.05 + (i % 4) * 0.7) * scale;
+          const y = (i < 4 ? 0.35 : -0.35) * scale;
+          this.addMesh(joint.group, i % 3 === 2 ? cymbal : shell, i % 3 === 2 ? brass : glow, {
+            x,
+            y,
+            z: (i % 2 === 0 ? -0.18 : 0.18) * scale,
+          }, { x: i % 3 === 2 ? Math.PI / 2 : 0, y: 0, z: (i - 3.5) * 0.08 });
+        }
+        const rail = this.geometry(new THREE.BoxGeometry(2.7 * scale, 0.055, 0.055));
+        this.addMesh(joint.group, rail, housing, { x: 0, y: 0.72 * scale, z: 0 });
+        break;
+      }
+      case 'loom': {
+        const cylinder = this.rig.createJoint({
+          id: `joint:loom:${module.id}`,
+          label: `${module.label} PINNED CYLINDER`,
+          type: 'revolute',
+          category: 'music-box',
+          parent: `module:${module.id}`,
+          axis: [1, 0, 0],
+        });
+        this.moduleRotors.set(module.id, [cylinder]);
+        const barrel = this.geometry(new THREE.CylinderGeometry(0.46 * scale, 0.46 * scale, 1.6 * scale, 28));
+        barrel.rotateZ(Math.PI / 2);
+        this.addMesh(cylinder.group, barrel, housing);
+        const pinGeo = this.geometry(new THREE.CylinderGeometry(0.025, 0.035, 0.16, 6));
+        for (let i = 0; i < 42; i++) {
+          const x = -0.72 * scale + (i % 7) * 0.24 * scale;
+          const a = ((i * 5 + Math.floor(i / 7) * 3) % 18) / 18 * Math.PI * 2;
+          this.addMesh(cylinder.group, pinGeo, i % 4 === 0 ? glow : brass, {
+            x,
+            y: Math.cos(a) * 0.5 * scale,
+            z: Math.sin(a) * 0.5 * scale,
+          }, { x: 0, y: 0, z: a });
+        }
+        const tine = this.geometry(new THREE.BoxGeometry(0.045, 0.5 * scale, 0.03));
+        for (let i = 0; i < 14; i++) {
+          this.addMesh(joint.group, tine, glow, {
+            x: -0.78 * scale + i * 0.12 * scale,
+            y: -0.72 * scale + (i % 3) * 0.035,
+            z: 0.22 * scale,
+          }, { x: 0.25, y: 0, z: 0 });
+        }
+        break;
+      }
+      case 'pinball': {
+        const board = this.geometry(new THREE.BoxGeometry(2.2 * scale, 0.08, 2.8 * scale));
+        this.addMesh(joint.group, board, housing, { x: 0, y: 0, z: 0 });
+        const bumper = this.geometry(new THREE.CylinderGeometry(0.2, 0.27, 0.18, 14));
+        const cap = this.geometry(new THREE.TorusGeometry(0.23, 0.04, 7, 20));
+        for (let i = 0; i < 7; i++) {
+          const x = ((i * 5) % 7 - 3) * 0.28 * scale;
+          const z = (-1.05 + i * 0.35) * scale;
+          this.addMesh(joint.group, bumper, i % 2 === 0 ? glow : brass, { x, y: 0.14, z });
+          this.addMesh(joint.group, cap, glow, { x, y: 0.25, z }, { x: Math.PI / 2, y: 0, z: 0 });
+        }
+        const flippers: RigJoint[] = [];
+        for (let i = 0; i < 2; i++) {
+          const flipper = this.rig.createJoint({
+            id: `joint:pinball:${module.id}:${i}`,
+            label: `${module.label} FLIPPER ${i + 1}`,
+            type: 'revolute',
+            category: 'solenoid',
+            parent: `module:${module.id}`,
+            position: [i === 0 ? -0.42 * scale : 0.42 * scale, 0.18, 0.95 * scale],
+            axis: [0, 1, 0],
+          });
+          const bat = this.geometry(new THREE.BoxGeometry(0.72 * scale, 0.11, 0.16));
+          this.addMesh(flipper.group, bat, glow, { x: i === 0 ? 0.28 : -0.28, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 });
+          flippers.push(flipper);
+        }
+        this.moduleRotors.set(module.id, flippers);
+        break;
+      }
+      case 'computer': {
+        const panel = this.geometry(new THREE.BoxGeometry(1.55 * scale, 1.08 * scale, 0.12));
+        this.addMesh(joint.group, panel, housing, { x: 0, y: 0.1, z: 0 });
+        const rotors: RigJoint[] = [];
+        for (let i = 0; i < 6; i++) {
+          const dial = this.rig.createJoint({
+            id: `joint:computer:${module.id}:${i}`,
+            label: `${module.label} CV DIAL ${i + 1}`,
+            type: 'revolute',
+            category: 'computer',
+            parent: `module:${module.id}`,
+            position: [(-0.5 + (i % 3) * 0.5) * scale, (0.35 - Math.floor(i / 3) * 0.5) * scale, 0.12],
+            axis: [0, 0, 1],
+          });
+          this.addMesh(dial.group, this.geometry(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 12)), i % 2 === 0 ? glow : brass, { x: 0, y: 0, z: 0 }, { x: Math.PI / 2, y: 0, z: 0 });
+          this.addMesh(dial.group, this.geometry(new THREE.BoxGeometry(0.03, 0.14, 0.03)), glow, { x: 0, y: 0.08, z: 0.06 });
+          rotors.push(dial);
+        }
+        this.moduleRotors.set(module.id, rotors);
+        const tube = this.geometry(new THREE.CylinderGeometry(0.045, 0.065, 0.24, 8));
+        for (let i = 0; i < 9; i++) {
+          this.addMesh(joint.group, tube, glow, {
+            x: (-0.6 + (i % 5) * 0.3) * scale,
+            y: -0.55 * scale,
+            z: (0.18 + Math.floor(i / 5) * 0.17) * scale,
+          });
+        }
+        break;
+      }
+      case 'neon': {
+        const rotor = this.rig.createJoint({
+          id: `joint:neon:${module.id}`,
+          label: `${module.label} PHOTONIC BUS`,
+          type: 'revolute',
+          category: 'neon',
+          parent: `module:${module.id}`,
+          axis: [0.3, 1, 0.4],
+        });
+        this.moduleRotors.set(module.id, [rotor]);
+        const reed = this.geometry(new THREE.CylinderGeometry(0.025, 0.025, 1.2 * scale, 7));
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2;
+          this.addMesh(rotor.group, reed, glow, {
+            x: Math.cos(a) * 0.62 * scale,
+            y: Math.sin(a * 2) * 0.32 * scale,
+            z: Math.sin(a) * 0.62 * scale,
+          }, { x: a * 0.5, y: 0, z: a });
+        }
+        const halo = this.geometry(new THREE.TorusGeometry(0.78 * scale, 0.04, 8, 36));
+        this.addMesh(rotor.group, halo, glow, { x: 0, y: 0, z: 0 }, { x: 0.72, y: 0.3, z: 0.2 });
+        this.addMesh(rotor.group, halo, glow, { x: 0, y: 0, z: 0 }, { x: -0.38, y: 1.04, z: 0.55 }, { x: 0.72, y: 0.72, z: 0.72 });
+        break;
+      }
       case 'return': {
         const spiralGeo = this.geometry(
           new THREE.TubeGeometry(
@@ -670,6 +984,23 @@ export class ModalFlowMachine {
       const innerGeo = this.geometry(new THREE.TubeGeometry(curve, 32, 0.032, 5, false));
       this.addMesh(parent, outerGeo, outer);
       this.addMesh(parent, innerGeo, inner);
+      if (this.blueprint.spatialPorts && points.length > 2) {
+        const collarGeo = this.geometry(new THREE.TorusGeometry(0.145, 0.026, 7, 18));
+        const startTangent = points[1].clone().sub(points[0]).normalize();
+        const endTangent = points[points.length - 1].clone().sub(points[points.length - 2]).normalize();
+        const start = this.addMesh(parent, collarGeo, inner, {
+          x: points[0].x,
+          y: points[0].y,
+          z: points[0].z,
+        });
+        start.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), startTangent);
+        const end = this.addMesh(parent, collarGeo, inner, {
+          x: points[points.length - 1].x,
+          y: points[points.length - 1].y,
+          z: points[points.length - 1].z,
+        });
+        end.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), endTangent);
+      }
     }
   }
 

@@ -1,12 +1,88 @@
 # Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with the preserved Section IV anti-humming fix, V5–V8 reference systems, and the current V9 marble-plus-mechanism Cornell-box audiovisual instrument.
+> **Purpose:** Detailed end-of-session handoff for the current V10 open-space Neon Pinball breakcore computer, its reusable V8–V10 physics/transmission runtime, and all preserved V4–V9 reference systems.
 
 ---
 
-## 0. Latest Update — V9 MODAL FLOW // RESONANT RELAY Implemented (2026-10-27)
+## 0. Latest Update — V10 NEON PINBALL // BREAKCORE COMPUTER Implemented (2026-10-27)
 
-**Current default flagship:** `MODAL FLOW // RESONANT RELAY` (`src/works/modal-flow/`). V9 deliberately iterates the V8 flow instead of replacing it: the deterministic marble song remains, but tubes now share the machine with real animated musical transmissions inside a controllable Cornell-box light and shadow installation.
+**Current default flagship:** `NEON PINBALL // BREAKCORE COMPUTER` (`src/works/neon-pinball/`). V10 is a new open-space variant of the Modal Flow causal runtime. It replaces floor/deck alignment and the nearby Cornell shell with arbitrary 3D organ orientations, spatial conduit mouths, sparse shadow receivers and a new 174 BPM physics-addressed breakcore / IDM / drum-and-bass work. V9 remains registered at `?work=modal-flow`.
+
+### User brief answered
+
+- Modules, ports, tubes and pipes are no longer constrained to horizontal floors, stacked levels, a global up direction, coplanar openings or planar routing.
+- The machine reads as an elaborate pinball table crossed with a retrofuturistic analog computer.
+- Ratchets, bell rows, crystals, percussion objects, a music-box loom, belts, linkages, gears and nested/transmitting mechanisms are visible and causally active.
+- A new breakcore / IDM / DnB song is generated through physical target actuation rather than disconnected animation.
+- The environment is much larger and open, but retains selected planes/sails for projected shadow play and VFX.
+- Director and LOOKS are explicit top-bar controls; shell panels, Director sidebar and Director timeline can all be hidden/minimized; Drone telemetry moved into a centered safe area.
+- Palette, light-rig, physical-light, exposure, shadow, linocut, neon/GI and independent effect controls remain available. Glitch stays an optional accent rather than a continuously forced identity.
+
+### What changed
+
+- Added `NeonPinballBlueprint.ts`: 20 independently oriented fixed organs plus 12 default orbital crystal/neon satellites, 51 default arbitrary-frame conduits, 17 transmissions, an open-stage flag, and a 14.5-unit camera envelope. Module growth is bounded to 20–72.
+- Generalized `ModalFlowBlueprint.ts` with optional XYZ module orientation, `spatialPorts`, open/cornell environment selection, `weave` curves, camera envelope metadata and four new transmission families. V9 explicitly retains `spatialPorts: false` and `environment: 'cornell-relay'`.
+- Added physical/visual families for logic ratchets, curved ten-bell choir, break percussion matrix, vertical pinball bumpers/flippers, crystal-memory clusters, analog CV/patch-computer panels, sound-active neon reeds and a rotating 42-pin / 14-tine music-box loom.
+- Extended the mechanism layer with `ratchet`, `music-box`, `bell-crank` and `solenoid` transmissions alongside preserved gear/belt/chain/cam/four-bar/nested-ring systems.
+- Added `NeonPinballScore.ts`: deterministic 64-bar, 174 BPM, 64th-note actuator program across Cold Boot, Pinball Break-In, Crystal Memory, Ratchet Overflow, Neon High-Score and Tilt/Power-Down sections.
+- Added `NeonPinballComposer.ts`: sequenced break slices/reversals/ratchets, sub, acid, bells, crystal harmonics and neon events become audio only after `ModalFlowPhysics` emits the receiving physical event. Free marbles/collisions/transmission crossings remain rationed fills.
+- Raised the bounded physics event queue from 32 to 128 and protects sequenced events from dense collision/ratchet overflow.
+- Added the open environment: distant 72 × 72 shadow floor, four independently oriented projection sails, four shadow projectors/gobos, six remote neon rails and a deterministic 960-point sound-reactive charge field. No nearby wall or ceiling encloses drone pullbacks.
+- Added work-specific adaptive macro framing through `MachineCameraSource.getCameraEnvelopeRadius()` and V10 focus shots for the switchyard, ratchet, percussion, loom, crystal bus, bells and neon.
+- Added top-bar `LOOKS / LIGHTS`, `DIRECTOR`, `L`, `R`, `TIME` and `PADS` controls; added Director drawer/timeline minimizers and close affordance; moved Drone HUD to top-center below the score strip; tightened responsive top-bar behavior.
+- Registered `neon-pinball` as the default work, updated ignition copy and metadata, added `tests/v10.test.ts`, and documented the system in `docs/V10_NEON_PINBALL.md` and `docs/ARCHITECTURE.md`.
+
+### Causal data path
+
+```text
+NeonPinballScore physical cue
+  → Clock DAC-aligned visual event with named physicalTarget
+  → ModalFlowSceneInstance.triggerImpulse()
+  → ModalFlowPhysics.injectEnergy(target, sequence metadata)
+  → receiving module energy event + rig flash / mechanism motion
+  → NeonPinballComposer.map(physics event)
+  → physics-origin procedural audio
+  → local lights, environmental neon, particles and camera response
+```
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **43 / 43 passing** across seven files, including four new V10 tests
+- `npm run build`: **clean production bundle**, 71 modules transformed
+- `git diff --check`: **clean**
+- The V10-specific suite enforces spatial topology, causal metadata, score density, all new mechanism families, open-stage sails/particles, complete rig parenting, registry integration and clean disposal.
+
+### Primary files
+
+| File | Role |
+| :--- | :--- |
+| `src/works/neon-pinball/NeonPinballBlueprint.ts` | 32-module open spatial graph, non-coplanar conduits, transmissions, routing, bindings and camera focuses. |
+| `src/works/neon-pinball/NeonPinballScore.ts` | Deterministic 174 BPM / 64-bar physical breakcore actuator program. |
+| `src/works/neon-pinball/NeonPinballComposer.ts` | Sequenced/free physics event mapper for the new song. |
+| `src/works/neon-pinball/NeonPinballWork.ts` | V10 variant definition, defaults, looks, camera labels and registration. |
+| `src/works/modal-flow/ModalFlowMachine.ts` | Arbitrary module rotation, gimbals, open chassis and new instrument geometry. |
+| `src/works/modal-flow/ModalFlowMechanismLayer.ts` | Open stage, particles/neon, shadow sails/projectors and expanded transmissions. |
+| `src/works/modal-flow/ModalFlowPhysics.ts` | Physical actuation metadata, V10 module handling and protected dense-event queue. |
+| `src/works/modal-flow/ModalFlowWork.ts` | Reusable variant runtime, physical score route, adaptive camera and Drone HUD. |
+| `src/studio/ui/StudioShell.ts` / `styles.css` | Top-bar discovery, panel toggles, responsive controls and adaptive ignition. |
+| `src/studio/director/DirectorStudioUI.ts` / `director.css` | Director minimization/close controls and discoverable LOOKS workflow. |
+| `tests/v10.test.ts` | Spatial, musical, causal, environment, rig and integration contracts. |
+
+### Next extension vectors
+
+- Raycast selection and direct manipulation of arbitrarily oriented ports, tubes and transmission parts.
+- Authorable spatial port placement rather than deterministic generated mouths.
+- Physical pinball ball/bumper and bell-clapper contact solvers beyond the shared marble flow abstraction.
+- Timeline lanes for explicit palette/light-rig edits independent of full look keyframes.
+- A multi-drone choreography layer and saved Drone poses.
+- GPU particle advection and portable ambient occlusion/light-probe paths when the renderer exposes stable cross-backend support.
+
+---
+
+## 0.1 Prior Update — V9 MODAL FLOW // RESONANT RELAY Implemented (2026-10-27)
+
+**Then-current default flagship (now preserved):** `MODAL FLOW // RESONANT RELAY` (`src/works/modal-flow/`). V9 deliberately iterates the V8 flow instead of replacing it: the deterministic marble song remains, but tubes now share the machine with real animated musical transmissions inside a controllable Cornell-box light and shadow installation.
 
 ### User brief answered
 
@@ -67,9 +143,9 @@
 
 ---
 
-## 0.1 Prior Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
+## 0.2 Prior Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
 
-**Current default flagship:** `MODAL FLOW // PHYSICS SONG` (`src/works/modal-flow/`). V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE` remain registered and selectable.
+**Then-current default flagship (now preserved):** `MODAL FLOW // PHYSICS SONG` (`src/works/modal-flow/`). V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE` remain registered and selectable.
 
 ### Why this turn changed direction
 
@@ -118,7 +194,7 @@ The user found V7 underwhelming: too 2D, too many events, and essentially a twel
 
 ---
 
-## 0.2 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
+## 0.3 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
 
 **Then-current default flagship (now a preserved reference):** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
 
@@ -173,7 +249,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.3 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+## 0.4 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
 
 **V6 reference work:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
 
@@ -216,11 +292,11 @@ Research findings that shaped V7:
 
 ---
 
-## 0.4 Prior Update — V5 Blueprint Implemented (2026-10-27)
+## 0.5 Prior Update — V5 Blueprint Implemented (2026-10-27)
 
 The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
 
-**New current flagship:** `CHRONO // AUTOMATON` (`src/works/chrono-automaton/`). V4 `HYPER // TECTON` and `PHASE // LATTICE` remain registered in the work selector.
+**Then-current flagship (now preserved):** `CHRONO // AUTOMATON` (`src/works/chrono-automaton/`). V4 `HYPER // TECTON` and `PHASE // LATTICE` remain registered in the work selector.
 
 Implemented:
 
@@ -237,16 +313,16 @@ Implemented:
 ## 1. Repository, Branch & Deployment Status
 
 - **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
-- **Active Session Branch:** `arena/ebe788b1-sonobjet` *(fast-forwarded from the latest V8 branch tip `2b5e3e0` before V9 work began)*
+- **Active Session Branch:** `arena/ebe788b1-sonobjet` (V9 deployed at `333b3ee`; V10 developed directly from that preserved tip)
 - **Historical Branches:** `arena/23eed999-sonobjet` (V5–V8) and `arena/86769aaf-sonobjet` (V4 handoff)
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Current Verification Status (V9):**
+- **Current Verification Status (V10):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **39 / 39 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9)
-  - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
+  - `npm test` (`vitest run`): **43 / 43 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9 + 4 V10)
+  - `npm run build` (`vite build`): **Clean production bundle**, 71 modules transformed (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
-  - V8 reference implementation: `31e2cef`; V7 reference: `090cbf2`.
+  - V9 deployed tip: `333b3ee`; V8 reference implementation: `31e2cef`; V7 reference: `090cbf2`.
 
 ---
 

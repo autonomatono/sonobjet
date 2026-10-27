@@ -25,10 +25,28 @@ export type ModuleKind =
   | 'drum'
   | 'collector'
   | 'return'
-  | 'satellite';
+  | 'satellite'
+  | 'ratchet'
+  | 'bells'
+  | 'crystal'
+  | 'percussion'
+  | 'loom'
+  | 'pinball'
+  | 'computer'
+  | 'neon';
 
-export type ConduitCurve = 'straight' | 'arc' | 'sag' | 'helix';
-export type TransmissionKind = 'gear-train' | 'belt' | 'four-bar' | 'camshaft' | 'chain' | 'nested-ring';
+export type ConduitCurve = 'straight' | 'arc' | 'sag' | 'helix' | 'weave';
+export type TransmissionKind =
+  | 'gear-train'
+  | 'belt'
+  | 'four-bar'
+  | 'camshaft'
+  | 'chain'
+  | 'nested-ring'
+  | 'ratchet'
+  | 'music-box'
+  | 'bell-crank'
+  | 'solenoid';
 
 export interface ModuleSpec {
   id: string;
@@ -36,6 +54,8 @@ export interface ModuleSpec {
   kind: ModuleKind;
   cluster: 'lower' | 'middle' | 'upper' | 'orbit';
   position: Vec3;
+  /** Rest orientation in radians. Spatial variants are not constrained to Y-up. */
+  orientation?: Vec3;
   tier: number;
   scale: number;
   noteRole: number;
@@ -110,6 +130,12 @@ export interface RoutingLaneSpec {
 export interface ModalFlowBlueprint {
   moduleCount: number;
   modules: ModuleSpec[];
+  /** Scene language. V9 uses its Cornell room; newer variants use an open void stage. */
+  environment?: 'cornell-relay' | 'open-pinball';
+  /** Offset conduit mouths around each oriented housing instead of sharing node centres. */
+  spatialPorts?: boolean;
+  /** Suggested macro-shot radius for camera framing and unconstrained drone flight. */
+  cameraEnvelopeRadius?: number;
   conduits: ConduitSpec[];
   /** Non-marble energy paths: meshed gears, belts, chains, cams and linkages. */
   transmissions: TransmissionSpec[];
@@ -826,6 +852,7 @@ export function createModalFlowBlueprint(
   const modules: ModuleSpec[] = CORE_MODULES.map((m) => ({
     ...m,
     position: { ...m.position },
+    orientation: m.orientation ? { ...m.orientation } : undefined,
     outputs: [],
     tags: [...m.tags],
   }));
@@ -952,6 +979,9 @@ export function createModalFlowBlueprint(
   return {
     moduleCount: total,
     modules,
+    environment: 'cornell-relay',
+    spatialPorts: false,
+    cameraEnvelopeRadius: 8.2,
     conduits,
     transmissions: TRANSMISSIONS.map((transmission) => ({ ...transmission })),
     sources: SOURCES.map((s) => ({ ...s })),
@@ -971,38 +1001,135 @@ export interface ConduitSampler {
 
 /** Shared geometry source for the solver, tube meshes and camera endpoints. */
 export function createConduitSampler(blueprint: ModalFlowBlueprint): ConduitSampler {
-  const positions = new Map(blueprint.modules.map((m) => [m.id, m.position]));
+  const modules = new Map(blueprint.modules.map((m) => [m.id, m]));
+  const hash = (value: string): number => {
+    let result = 2166136261;
+    for (let i = 0; i < value.length; i++) {
+      result ^= value.charCodeAt(i);
+      result = Math.imul(result, 16777619);
+    }
+    return (result >>> 0) / 0xffffffff;
+  };
+  const endpoint = (edge: ConduitSpec, outgoing: boolean): Vec3 => {
+    const module = modules.get(outgoing ? edge.from : edge.to);
+    if (!module) return { x: 0, y: 0, z: 0 };
+    if (!blueprint.spatialPorts) return { ...module.position };
+    const seed = hash(`${edge.id}:${outgoing ? 'out' : 'in'}`);
+    const azimuth = seed * MODAL_FLOW_TAU;
+    const elevation = (hash(`${edge.id}:elevation:${outgoing ? 1 : 0}`) - 0.5) * 1.5;
+    const cosElevation = Math.cos(elevation);
+    const local = {
+      x: Math.cos(azimuth) * cosElevation * module.scale * 0.62,
+      y: Math.sin(elevation) * module.scale * 0.62,
+      z: Math.sin(azimuth) * cosElevation * module.scale * 0.62,
+    };
+    const rotation = module.orientation ?? { x: 0, y: 0, z: 0 };
+    // XYZ Euler rotation without importing the render layer into the blueprint.
+    const cx = Math.cos(rotation.x);
+    const sx = Math.sin(rotation.x);
+    const cy = Math.cos(rotation.y);
+    const sy = Math.sin(rotation.y);
+    const cz = Math.cos(rotation.z);
+    const sz = Math.sin(rotation.z);
+    const x1 = local.x;
+    const y1 = local.y * cx - local.z * sx;
+    const z1 = local.y * sx + local.z * cx;
+    const x2 = x1 * cy + z1 * sy;
+    const y2 = y1;
+    const z2 = -x1 * sy + z1 * cy;
+    return {
+      x: module.position.x + x2 * cz - y2 * sz,
+      y: module.position.y + x2 * sz + y2 * cz,
+      z: module.position.z + z2,
+    };
+  };
+  const endpoints = (edge: ConduitSpec): [Vec3, Vec3] => [
+    endpoint(edge, true),
+    endpoint(edge, false),
+  ];
   const sample = (edge: ConduitSpec, t: number): Vec3 => {
-    const a = positions.get(edge.from) ?? { x: 0, y: 0, z: 0 };
-    const b = positions.get(edge.to) ?? { x: 0, y: 0, z: 0 };
+    const [a, b] = endpoints(edge);
     const u = clamp(t, 0, 1);
     const envelope = Math.sin(Math.PI * u);
     const x = lerp(a.x, b.x, u);
     const y = lerp(a.y, b.y, u);
     const z = lerp(a.z, b.z, u);
-    if (edge.curve === 'helix') {
-      const angle = u * MODAL_FLOW_TAU * edge.turns;
-      return {
-        x: x + Math.cos(angle) * edge.radius * envelope,
-        y: y + edge.arc * envelope,
-        z: z + Math.sin(angle) * edge.radius * envelope,
-      };
+
+    // Preserve the V8/V9 vertical-plane conduit language for those blueprints.
+    if (!blueprint.spatialPorts) {
+      if (edge.curve === 'helix') {
+        const angle = u * MODAL_FLOW_TAU * edge.turns;
+        return {
+          x: x + Math.cos(angle) * edge.radius * envelope,
+          y: y + edge.arc * envelope,
+          z: z + Math.sin(angle) * edge.radius * envelope,
+        };
+      }
+      if (edge.curve === 'arc') return { x, y: y + edge.arc * envelope, z };
+      if (edge.curve === 'sag') return { x, y: y - edge.arc * envelope, z };
+      return { x, y, z };
     }
+
+    // Spatial variants bend around a deterministic local frame derived from
+    // each edge. No global up-axis is privileged, so tube mouths and curves can
+    // approach a housing from any direction.
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dz = b.z - a.z;
+    const length = Math.max(0.0001, Math.hypot(dx, dy, dz));
+    dx /= length;
+    dy /= length;
+    dz /= length;
+    const phase = hash(`${edge.id}:frame`) * MODAL_FLOW_TAU;
+    let rx = Math.cos(phase);
+    let ry = Math.sin(phase * 1.37);
+    let rz = Math.sin(phase);
+    let sx = dy * rz - dz * ry;
+    let sy = dz * rx - dx * rz;
+    let sz = dx * ry - dy * rx;
+    let sideLength = Math.hypot(sx, sy, sz);
+    if (sideLength < 0.001) {
+      rx = 0;
+      ry = 1;
+      rz = 0;
+      sx = dy * rz - dz * ry;
+      sy = dz * rx - dx * rz;
+      sz = dx * ry - dy * rx;
+      sideLength = Math.max(0.001, Math.hypot(sx, sy, sz));
+    }
+    sx /= sideLength;
+    sy /= sideLength;
+    sz /= sideLength;
+    const nx = sy * dz - sz * dy;
+    const ny = sz * dx - sx * dz;
+    const nz = sx * dy - sy * dx;
+    let sideAmount = 0;
+    let normalAmount = 0;
     if (edge.curve === 'arc') {
-      return { x, y: y + edge.arc * envelope, z };
+      normalAmount = edge.arc * envelope;
+      sideAmount = edge.arc * 0.16 * Math.sin(u * MODAL_FLOW_TAU) * envelope;
+    } else if (edge.curve === 'sag') {
+      normalAmount = -edge.arc * envelope;
+      sideAmount = edge.arc * 0.24 * Math.sin(u * MODAL_FLOW_TAU) * envelope;
+    } else if (edge.curve === 'helix') {
+      const angle = u * MODAL_FLOW_TAU * edge.turns + phase;
+      sideAmount = Math.cos(angle) * edge.radius * envelope;
+      normalAmount = (Math.sin(angle) * edge.radius + edge.arc * 0.35) * envelope;
+    } else if (edge.curve === 'weave') {
+      const angle = u * MODAL_FLOW_TAU * Math.max(1, edge.turns) + phase;
+      sideAmount = Math.sin(angle) * (edge.radius + edge.arc * 0.18) * envelope;
+      normalAmount = (Math.cos(angle * 0.5) * edge.radius * 0.68 + edge.arc) * envelope;
     }
-    if (edge.curve === 'sag') {
-      return { x, y: y - edge.arc * envelope, z };
-    }
-    return { x, y, z };
+    return {
+      x: x + sx * sideAmount + nx * normalAmount,
+      y: y + sy * sideAmount + ny * normalAmount,
+      z: z + sz * sideAmount + nz * normalAmount,
+    };
   };
   return {
     sample,
     points: (edge, count = 24) =>
       Array.from({ length: count + 1 }, (_, i) => sample(edge, i / count)),
-    endpoints: (edge) => [
-      positions.get(edge.from) ?? { x: 0, y: 0, z: 0 },
-      positions.get(edge.to) ?? { x: 0, y: 0, z: 0 },
-    ],
+    endpoints,
   };
 }

@@ -90,6 +90,13 @@ export interface ModalFlowEnergyCue {
   subsystem: ImpulseEvent['subsystem'];
   energy: number;
   label: string;
+  /** Sequencer metadata travels through a physical actuator before synthesis. */
+  noteIndex?: number;
+  midiNote?: number;
+  sliceIndex?: number;
+  reverse?: boolean;
+  ratchetStep?: number;
+  ratchetTotal?: number;
 }
 
 const ENERGY_TARGETS: Array<{

@@ -11,6 +11,7 @@ import type {
   PhysicsStudioSnapshot,
   RigJointDescriptor,
   ScoreBindingPatch,
+  SectionDefinition,
   SubsystemId,
   TransportState,
   WorkDefinition,
@@ -26,6 +27,7 @@ import {
 } from '../astrarium-modular-engine/MachineCameraDirector';
 import { ChronoAutomatonWork } from '../chrono-automaton/ChronoAutomatonWork';
 import {
+  createConduitSampler,
   createModalFlowBlueprint,
   DEFAULT_MODAL_FLOW_MODULES,
   MAX_MODAL_FLOW_MODULES,
@@ -37,7 +39,11 @@ import {
   type ModalFlowBlueprint,
   type Vec3,
 } from './ModalFlowBlueprint';
-import { ModalFlowComposer } from './ModalFlowComposer';
+import {
+  ModalFlowComposer,
+  type ModalFlowComposerParams,
+  type ModalFlowComposerState,
+} from './ModalFlowComposer';
 import { ModalFlowMachine } from './ModalFlowMachine';
 import { ModalFlowPhysics, type ModalFlowPhysicsParams } from './ModalFlowPhysics';
 import {
@@ -45,6 +51,7 @@ import {
   MODAL_FLOW_BPM,
   MODAL_FLOW_SECTIONS,
   MODAL_FLOW_TOTAL_BARS,
+  type ModalFlowEnergyCue,
 } from './ModalFlowScore';
 
 const FLOW_PATCHES: PatchRoute[] = [
@@ -98,8 +105,8 @@ const FLOW_PATCHES: PatchRoute[] = [
   },
 ];
 
-const ALL_MACROS = [...ChronoAutomatonWork.macros, ...FLOW_MACROS];
-const ALL_PATCHES = [...ChronoAutomatonWork.defaultPatches, ...FLOW_PATCHES];
+export const MODAL_FLOW_WORK_MACROS = [...ChronoAutomatonWork.macros, ...FLOW_MACROS];
+export const MODAL_FLOW_WORK_PATCHES = [...ChronoAutomatonWork.defaultPatches, ...FLOW_PATCHES];
 
 const CAMERA_LABELS = [
   '[0] AUTO // MARBLE FOLLOW',
@@ -128,17 +135,69 @@ const clamp = (value: number, min: number, max: number): number =>
 
 const tuple = (v: Vec3): Vec3Tuple => [v.x, v.y, v.z];
 
-function sectionIndexFromBar(bar: number): number {
-  const idx = MODAL_FLOW_SECTIONS.findIndex((section) => bar >= section.startBar && bar < section.endBar);
+export interface PhysicsEventComposer {
+  setParams(patch: Partial<ModalFlowComposerParams>): void;
+  reset(): void;
+  getState(now?: number): ModalFlowComposerState;
+  map(event: Parameters<ModalFlowComposer['map']>[0], beat: number, audioTime: number): ImpulseEvent | null;
+}
+
+export interface ModalFlowVariantConfig {
+  name: string;
+  hudTitle: string;
+  configName: string;
+  physicsName: string;
+  version: number;
+  defaultModuleCount: number;
+  minModuleCount: number;
+  maxModuleCount: number;
+  sections: SectionDefinition[];
+  createBlueprint(moduleCount: number): ModalFlowBlueprint;
+  createComposer(): PhysicsEventComposer;
+  evaluateEnergyCues(step64: number, bar: number, sectionIndex: number): ModalFlowEnergyCue[];
+  cameraFocusByMode: Record<number, string>;
+  moduleForSubsystem?: (subsystem: SubsystemId) => string;
+  sectionLook?: (sectionIndex: number) => {
+    neon: number;
+    lightRig: number;
+    palette: number;
+    shadow: number;
+    exposure: number;
+  };
+  locusScale?: number;
+}
+
+const DEFAULT_VARIANT: ModalFlowVariantConfig = {
+  name: 'MODAL FLOW // RESONANT RELAY',
+  hudTitle: 'MODAL FLOW // DRONE PILOT',
+  configName: 'MODAL FLOW CONFIG // RESONANT RELAY',
+  physicsName: 'MODAL FLOW // MARBLES + MUSICAL TRANSMISSION REGISTRY',
+  version: 9,
+  defaultModuleCount: DEFAULT_MODAL_FLOW_MODULES,
+  minModuleCount: 12,
+  maxModuleCount: MAX_MODAL_FLOW_MODULES,
+  sections: MODAL_FLOW_SECTIONS,
+  createBlueprint: createModalFlowBlueprint,
+  createComposer: () => new ModalFlowComposer(),
+  evaluateEnergyCues: (step64, bar, sectionIndex) => {
+    const cue = evaluateModalFlowEnergyCue(step64, bar, sectionIndex);
+    return cue ? [cue] : [];
+  },
+  cameraFocusByMode: CAMERA_FOCUS_BY_MODE,
+  locusScale: 8,
+};
+
+function sectionIndexFromBar(bar: number, sections: SectionDefinition[]): number {
+  const idx = sections.findIndex((section) => bar >= section.startBar && bar < section.endBar);
   return idx < 0 ? 0 : idx;
 }
 
-class ModalFlowSceneInstance implements WorkSceneInstance {
+export class ModalFlowSceneInstance implements WorkSceneInstance {
   private ctx: WorkRuntimeContext | null = null;
   private blueprint: ModalFlowBlueprint;
   private physics: ModalFlowPhysics;
   private machine: ModalFlowMachine;
-  private readonly composer = new ModalFlowComposer();
+  private readonly composer: PhysicsEventComposer;
   private readonly cameraSource: MachineCameraSource;
   private readonly cameraDirector: MachineCameraDirector;
   private freeFly: FreeFlyController | null = null;
@@ -155,10 +214,11 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
   private lastPhysicsEvents = 0;
   private lastAudioEvents = 0;
 
-  constructor() {
-    this.blueprint = createModalFlowBlueprint(DEFAULT_MODAL_FLOW_MODULES);
+  constructor(private readonly variant: ModalFlowVariantConfig = DEFAULT_VARIANT) {
+    this.blueprint = variant.createBlueprint(variant.defaultModuleCount);
     this.physics = new ModalFlowPhysics(this.blueprint);
     this.machine = new ModalFlowMachine(this.blueprint, this.physics);
+    this.composer = variant.createComposer();
     this.bindings = this.blueprint.bindings.map((binding) => ({ ...binding }));
     this.cameraSource = {
       getFocusTargets: () => this.blueprint.focusTargets,
@@ -168,6 +228,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
       },
       getJointWorldPosition: (id) => this.machine.getJointWorldPosition(id),
       getEdgeEndpoints: (edgeId) => this.getEdgeEndpoints(edgeId),
+      getCameraEnvelopeRadius: () => this.blueprint.cameraEnvelopeRadius ?? 8.2,
       getGraphState: (): GraphCameraState => {
         const state = this.physics.getGraphState();
         const composer = this.composer.getState(this.physics.getTime());
@@ -201,27 +262,39 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     audioTime: number,
     ctx: WorkRuntimeContext,
   ): void {
-    const sectionIndex = sectionIndexFromBar(bar);
-    const section = MODAL_FLOW_SECTIONS[sectionIndex] ?? MODAL_FLOW_SECTIONS[0];
+    const sectionIndex = sectionIndexFromBar(bar, this.variant.sections);
+    const section = this.variant.sections[sectionIndex] ?? this.variant.sections[0];
     ctx.matrix.setSource('score.intensity', section.intensity);
-    const cue = evaluateModalFlowEnergyCue(step64, bar, sectionIndex);
-    if (!cue) return;
-    const module = this.blueprint.modules.find((m) => m.id === cue.moduleId);
-    const locus: Vec3Tuple = module
-      ? [clamp(module.position.x / 8, -1, 1), clamp(module.position.y / 6, -1, 1), clamp(module.position.z / 8, -1, 1)]
-      : [0, 0, 0];
-    // Score events are physical energy cues only. They become sound later when
-    // the resulting marble impacts pass through ModalFlowComposer.
-    ctx.clock.queueVisualEvent({
-      subsystem: cue.subsystem,
-      velocity: cue.energy * 0.72,
-      pitchRatio: 1,
-      decay: 0.8,
-      locus,
-      audioTime,
-      beat: bar * 4 + step64 / 16,
-      origin: 'score',
-    });
+    const cues = this.variant.evaluateEnergyCues(step64, bar, sectionIndex);
+    const locusScale = this.variant.locusScale ?? 8;
+    for (const cue of cues) {
+      const module = this.blueprint.modules.find((m) => m.id === cue.moduleId);
+      const locus: Vec3Tuple = module
+        ? [
+            clamp(module.position.x / locusScale, -1, 1),
+            clamp(module.position.y / locusScale, -1, 1),
+            clamp(module.position.z / locusScale, -1, 1),
+          ]
+        : [0, 0, 0];
+      // Score events address physical organs only. The receiving physics event
+      // is what the active composer can eventually turn into sound.
+      ctx.clock.queueVisualEvent({
+        subsystem: cue.subsystem,
+        physicalTarget: cue.moduleId,
+        velocity: cue.energy * 0.72,
+        pitchRatio: 1,
+        midiNote: cue.midiNote,
+        sliceIndex: cue.sliceIndex ?? cue.noteIndex,
+        reverse: cue.reverse,
+        ratchetStep: cue.ratchetStep,
+        ratchetTotal: cue.ratchetTotal,
+        decay: 0.8,
+        locus,
+        audioTime,
+        beat: bar * 4 + step64 / 16,
+        origin: 'score',
+      });
+    }
   }
 
   triggerAnticipation(cue: AnticipationCue, _ctx: WorkRuntimeContext): void {
@@ -231,9 +304,23 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
 
   triggerImpulse(event: ImpulseEvent, ctx: WorkRuntimeContext): void {
     if (event.origin === 'physics') return;
-    const moduleId = this.moduleForSubsystem(event.subsystem);
-    const energy = event.velocity * (event.origin === 'score' ? 0.55 : 0.85);
-    this.physics.injectEnergy(energy, moduleId);
+    const moduleId =
+      event.physicalTarget ??
+      this.variant.moduleForSubsystem?.(event.subsystem) ??
+      this.moduleForSubsystem(event.subsystem);
+    const energy = event.velocity * (event.origin === 'score' ? 0.78 : 0.85);
+    this.physics.injectEnergy(energy, moduleId, {
+      sequenced: event.origin === 'score',
+      voice: event.subsystem,
+      noteIndex: event.sliceIndex,
+      sliceIndex: event.sliceIndex,
+      reverse: event.reverse,
+      ratchetStep: event.ratchetStep,
+      ratchetTotal: event.ratchetTotal,
+      midiNote: event.midiNote,
+      sourceBeat: event.beat,
+      velocity: event.velocity,
+    });
     this.machine.flashModule(moduleId, event.velocity * 0.55);
     // Live actuators get a tiny mechanical click for feedback; the song itself
     // remains exclusively physics-generated.
@@ -259,7 +346,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     transport: TransportState,
     ctx: WorkRuntimeContext,
   ): void {
-    const section = MODAL_FLOW_SECTIONS[transport.sectionIndex] ?? MODAL_FLOW_SECTIONS[0];
+    const section = this.variant.sections[transport.sectionIndex] ?? this.variant.sections[0];
     ctx.matrix.setSource('score.intensity', section.intensity);
     const macros = this.collectMacros(ctx);
     const physicsPatch: Partial<ModalFlowPhysicsParams> = {
@@ -300,7 +387,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
       transport,
       physics: this.physics,
       macros,
-      recentEvents: events.length,
+      recentEvents: audioEvents,
     });
 
     const droneSpeed = macros.droneSpeed ?? 1;
@@ -323,11 +410,19 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const stutter = ctx.matrix.getSource('punch.stutter');
     const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
     const eventFlash = Math.min(0.28, audioEvents * 0.09);
-    const sectionLook = transport.sectionIndex === 4
-      ? { neon: 0.34, lightRig: 2, palette: 1 }
-      : transport.sectionIndex === 0 || transport.sectionIndex === 5
-        ? { neon: 0.04, lightRig: 1, palette: transport.sectionIndex === 5 ? 4 : 0 }
-        : { neon: 0.08, lightRig: 0, palette: 0 };
+    const sectionLook = this.variant.sectionLook?.(transport.sectionIndex) ?? (
+      transport.sectionIndex === 4
+        ? { neon: 0.34, lightRig: 2, palette: 1, shadow: 0.62, exposure: 1.18 }
+        : transport.sectionIndex === 0 || transport.sectionIndex === 5
+          ? {
+              neon: 0.04,
+              lightRig: 1,
+              palette: transport.sectionIndex === 5 ? 4 : 0,
+              shadow: 0.86,
+              exposure: 1.18,
+            }
+          : { neon: 0.08, lightRig: 0, palette: 0, shadow: 0.62, exposure: 1.18 }
+    );
     ctx.setPostFx?.({
       // A glitch now occurs only as an intentional stutter/event accent. The
       // baseline remains clean enough to study the mechanism for long periods.
@@ -341,10 +436,10 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
       linocut: 0,
       neonGlow: sectionLook.neon,
       palette: sectionLook.palette,
-      exposure: 1.18,
+      exposure: sectionLook.exposure,
       lightRig: sectionLook.lightRig,
       lightIntensity: 1,
-      shadowStrength: transport.sectionIndex === 0 || transport.sectionIndex === 5 ? 0.86 : 0.62,
+      shadowStrength: sectionLook.shadow,
     });
 
     // Preserve the Section IV anti-mewing fix: strain is only from intentional
@@ -384,7 +479,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
       this.freeFly.setMode('DRONE');
     } else {
       this.freeFly?.setMode('TIMELINE');
-      const focusId = CAMERA_FOCUS_BY_MODE[next];
+      const focusId = this.variant.cameraFocusByMode[next];
       if (focusId) {
         this.activeFocusId = focusId;
         this.cameraDirector.focusOn(focusId);
@@ -560,13 +655,17 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
   }
 
   rebuildMachine(moduleCount: number): void {
-    const next = clamp(Math.round(moduleCount), 12, MAX_MODAL_FLOW_MODULES);
+    const next = clamp(
+      Math.round(moduleCount),
+      this.variant.minModuleCount,
+      this.variant.maxModuleCount,
+    );
     if (next === this.blueprint.moduleCount) return;
     const program = this.physics.exportProgram();
     const bindings = this.bindings.map((binding) => ({ ...binding }));
     const ctx = this.ctx;
     this.machine.dispose();
-    this.blueprint = createModalFlowBlueprint(next);
+    this.blueprint = this.variant.createBlueprint(next);
     this.physics = new ModalFlowPhysics(this.blueprint);
     this.physics.importProgram(program);
     this.bindings = this.blueprint.bindings.map((binding) => {
@@ -579,7 +678,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     this.composer.reset();
     this.machine = new ModalFlowMachine(this.blueprint, this.physics);
     if (ctx) this.machine.attach(ctx.scene);
-    const focusId = CAMERA_FOCUS_BY_MODE[this.cameraMode];
+    const focusId = this.variant.cameraFocusByMode[this.cameraMode];
     this.activeFocusId = focusId ?? 'focus-macro';
     this.cameraDirector.invalidate();
     if (focusId) this.cameraDirector.focusOn(focusId);
@@ -588,8 +687,8 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
 
   exportGraphConfig(): string {
     return JSON.stringify({
-      version: 9,
-      name: 'MODAL FLOW CONFIG // RESONANT RELAY',
+      version: this.variant.version,
+      name: this.variant.configName,
       moduleCount: this.blueprint.moduleCount,
       focusId: this.activeFocusId,
       program: this.physics.getProgram(),
@@ -632,13 +731,28 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const telemetry = this.physics.getTelemetry();
     const composer = this.composer.getState(this.physics.getTime());
     return {
-      name: 'MODAL FLOW // MARBLES + MUSICAL TRANSMISSION REGISTRY',
-      version: 9,
+      name: this.variant.physicsName,
+      version: this.variant.version,
       laneCount: ROUTING_LANE_COUNT,
       stepCount: MODAL_FLOW_PROGRAM_STEPS,
       laneLabels: this.blueprint.routingLanes.map((lane) => lane.label),
       instrumentLabels: this.blueprint.modules
-        .filter((m) => ['gate', 'tines', 'resonator', 'chime', 'drum', 'satellite'].includes(m.kind))
+        .filter((m) => [
+          'gate',
+          'tines',
+          'resonator',
+          'chime',
+          'drum',
+          'satellite',
+          'ratchet',
+          'bells',
+          'crystal',
+          'percussion',
+          'loom',
+          'pinball',
+          'computer',
+          'neon',
+        ].includes(m.kind))
         .map((m) => m.label),
       pins: this.physics.getProgramPins(),
       macros: this.getPhysicsMacros(),
@@ -799,14 +913,17 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
   private getActiveFocusLabel(): string {
     return (
       this.blueprint.focusTargets.find((focus) => focus.id === this.activeFocusId)?.label ??
-      'WHOLE MODAL FLOW'
+      this.variant.name
     );
   }
 
   private getEdgeEndpoints(edgeId: string): [Vec3Tuple, Vec3Tuple] | null {
-    const edge =
-      this.blueprint.conduits.find((candidate) => candidate.id === edgeId) ??
-      this.blueprint.transmissions.find((candidate) => candidate.id === edgeId);
+    const conduit = this.blueprint.conduits.find((candidate) => candidate.id === edgeId);
+    if (conduit) {
+      const [from, to] = createConduitSampler(this.blueprint).endpoints(conduit);
+      return [tuple(from), tuple(to)];
+    }
+    const edge = this.blueprint.transmissions.find((candidate) => candidate.id === edgeId);
     if (!edge) return null;
     const from = this.blueprint.modules.find((module) => module.id === edge.from);
     const to = this.blueprint.modules.find((module) => module.id === edge.to);
@@ -862,11 +979,14 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const hud = document.createElement('div');
     hud.style.cssText = [
       'position:fixed',
-      'left:18px',
-      'bottom:18px',
-      'z-index:80',
+      'left:50%',
+      'top:78px',
+      'transform:translateX(-50%)',
+      'z-index:28',
       'pointer-events:none',
-      'white-space:pre',
+      'white-space:pre-wrap',
+      'max-width:min(760px,calc(100vw - 620px))',
+      'text-align:center',
       'font:11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace',
       'color:#cfe9ff',
       'background:rgba(5,12,18,0.78)',
@@ -891,7 +1011,7 @@ class ModalFlowSceneInstance implements WorkSceneInstance {
     const song = this.composer.getState(this.physics.getTime());
     this.hud.style.display = 'block';
     this.hud.textContent = [
-      'MODAL FLOW // DRONE PILOT',
+      this.variant.hudTitle,
       'WASD fly · E/Q altitude · Z/X roll · drag look · wheel speed/FOV',
       'F marble lock · V cinematic drift · C follow distance · 0 level horizon',
       `SPEED ${(drone?.speed ?? 1).toFixed(2)}  FOV ${(drone?.fov ?? 47).toFixed(0)}  FOLLOW ${drone?.follow ? 'ON' : 'OFF'}  DRIFT ${drone?.cinematic ? 'ON' : 'OFF'}`,
@@ -910,8 +1030,8 @@ export const ModalFlowWork: WorkDefinition = {
   bpm: MODAL_FLOW_BPM,
   bars: MODAL_FLOW_TOTAL_BARS,
   sections: MODAL_FLOW_SECTIONS,
-  macros: ALL_MACROS,
-  defaultPatches: ALL_PATCHES,
+  macros: MODAL_FLOW_WORK_MACROS,
+  defaultPatches: MODAL_FLOW_WORK_PATCHES,
   cameraModeLabels: CAMERA_LABELS,
   createInstance: () => new ModalFlowSceneInstance(),
 };
