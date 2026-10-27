@@ -1,23 +1,23 @@
 import * as THREE from 'three/webgpu';
 
 /**
- * Stark Brutalist Architectural Test-Cell Environment inspired by Alex Rutterford's
- * cold industrial containment room in Gantz Graf (ribbed concrete walls, recessed
- * xenon ceiling slits, structural steel columns, harsh directional key & rim lighting).
+ * High-Contrast Chiaroscuro Containment Chamber with Overhead Gantry Crane,
+ * Volumetric Xenon Light Cones, Wet Specular Inspection Plinth, and Forge Bounce.
  */
 export class BrutalistChamber {
   public readonly group = new THREE.Group();
-  private readonly keyLight: THREE.DirectionalLight;
-  private readonly rimLightLeft: THREE.SpotLight;
-  private readonly rimLightRight: THREE.SpotLight;
-  private readonly coreBounceLight: THREE.PointLight;
+  private readonly keyLight: THREE.SpotLight;
+  private readonly rimLightCyan: THREE.SpotLight;
+  private readonly forgeBounceLight: THREE.PointLight;
+  private readonly larynxLight: THREE.PointLight;
   private readonly slitMaterials: THREE.MeshBasicMaterial[] = [];
+  private readonly godRayMaterials: THREE.MeshBasicMaterial[] = [];
   private geometries: THREE.BufferGeometry[] = [];
   private materials: THREE.Material[] = [];
 
   constructor(concreteMaterial: THREE.Material) {
-    // Containment shell box (inverted back-side walls)
-    const roomGeo = new THREE.BoxGeometry(19, 11.5, 19);
+    // 1. Dark Shuttered Containment Shell
+    const roomGeo = new THREE.BoxGeometry(20, 12.5, 20);
     this.geometries.push(roomGeo);
 
     const wallMat = concreteMaterial.clone();
@@ -25,109 +25,153 @@ export class BrutalistChamber {
     this.materials.push(wallMat);
 
     const roomMesh = new THREE.Mesh(roomGeo, wallMat);
-    roomMesh.position.set(0, 1.6, -1.2);
+    roomMesh.position.set(0, 2.2, -1.2);
     roomMesh.receiveShadow = true;
     this.group.add(roomMesh);
 
-    // Architectural concrete ribs along left, right, and back walls for stark perspective scale
-    const ribGeo = new THREE.BoxGeometry(0.32, 11.4, 0.55);
-    this.geometries.push(ribGeo);
-    const ribMat = new THREE.MeshStandardMaterial({
-      color: 0x16191f,
-      roughness: 0.78,
-      metalness: 0.25,
+    // 2. Architectural Concrete Buttresses & Overhead Gantry I-Beams
+    const ribGeo = new THREE.BoxGeometry(0.36, 12.4, 0.72);
+    const beamGeo = new THREE.BoxGeometry(18.5, 0.28, 0.34);
+    this.geometries.push(ribGeo, beamGeo);
+
+    const steelMat = new THREE.MeshStandardMaterial({
+      color: 0x12161c,
+      roughness: 0.62,
+      metalness: 0.68,
     });
-    this.materials.push(ribMat);
+    this.materials.push(steelMat);
 
     for (let i = -4; i <= 4; i++) {
-      const backRib = new THREE.Mesh(ribGeo, ribMat);
-      backRib.position.set(i * 2.1, 1.6, -10.4);
+      const backRib = new THREE.Mesh(ribGeo, steelMat);
+      backRib.position.set(i * 2.2, 2.2, -10.8);
       backRib.receiveShadow = true;
       this.group.add(backRib);
-
-      if (i >= -3 && i <= 3) {
-        const leftRib = new THREE.Mesh(ribGeo, ribMat);
-        leftRib.position.set(-9.3, 1.6, i * 2.5 - 1.2);
-        leftRib.rotation.y = Math.PI * 0.5;
-        this.group.add(leftRib);
-
-        const rightRib = new THREE.Mesh(ribGeo, ribMat);
-        rightRib.position.set(9.3, 1.6, i * 2.5 - 1.2);
-        rightRib.rotation.y = Math.PI * 0.5;
-        this.group.add(rightRib);
-      }
     }
 
-    // Recessed industrial overhead xenon light slits
-    const slitGeo = new THREE.PlaneGeometry(11.5, 0.26);
-    this.geometries.push(slitGeo);
+    // Overhead Gantry Beams from which the automaton's tendons hang (y = 3.85)
+    for (const zOff of [-0.9, 0.9]) {
+      const gantry = new THREE.Mesh(beamGeo, steelMat);
+      gantry.position.set(0, 3.85, zOff);
+      gantry.castShadow = true;
+      this.group.add(gantry);
+    }
+
+    // 3. Wet Specular Slate Inspection Plinth on Chamber Floor (y = -2.35)
+    const plinthGeo = new THREE.CylinderGeometry(3.4, 3.65, 0.18, 48);
+    const innerRingGeo = new THREE.RingGeometry(2.15, 2.22, 64);
+    this.geometries.push(plinthGeo, innerRingGeo);
+
+    const wetSlateMat = new THREE.MeshStandardMaterial({
+      color: 0x0b0e13,
+      roughness: 0.14,
+      metalness: 0.78,
+    });
+    const brassInlayMat = new THREE.MeshStandardMaterial({
+      color: 0x9b7234,
+      roughness: 0.28,
+      metalness: 0.9,
+      side: THREE.DoubleSide,
+    });
+    this.materials.push(wetSlateMat, brassInlayMat);
+
+    const plinth = new THREE.Mesh(plinthGeo, wetSlateMat);
+    plinth.position.set(0, -2.44, 0);
+    plinth.receiveShadow = true;
+    this.group.add(plinth);
+
+    const brassRing = new THREE.Mesh(innerRingGeo, brassInlayMat);
+    brassRing.rotation.x = -Math.PI * 0.5;
+    brassRing.position.set(0, -2.345, 0);
+    this.group.add(brassRing);
+
+    // 4. Overhead Xenon Light Slits + Diagonal Volumetric Light Cones
+    const slitGeo = new THREE.PlaneGeometry(8.5, 0.18);
+    const coneGeo = new THREE.ConeGeometry(2.9, 8.8, 32, 1, true);
+    this.geometries.push(slitGeo, coneGeo);
+
     for (let i = -1; i <= 1; i++) {
       const slitMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0xc8dcff),
+        color: new THREE.Color(0xd8ecff),
       });
       this.slitMaterials.push(slitMat);
       this.materials.push(slitMat);
 
       const slit = new THREE.Mesh(slitGeo, slitMat);
       slit.rotation.x = Math.PI * 0.5;
-      slit.position.set(0, 7.25, i * 3.1 - 0.8);
+      slit.position.set(i * 0.4, 6.2, i * 2.2 - 0.4);
       this.group.add(slit);
+
+      const rayMat = new THREE.MeshBasicMaterial({
+        color: i === 0 ? 0x9bc8ff : 0x6ea4e8,
+        transparent: true,
+        opacity: i === 0 ? 0.038 : 0.02,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      this.godRayMaterials.push(rayMat);
+      this.materials.push(rayMat);
+
+      const cone = new THREE.Mesh(coneGeo, rayMat);
+      cone.position.set(i * 1.15, 1.9, i * 0.7 - 0.3);
+      cone.rotation.z = -i * 0.14;
+      this.group.add(cone);
     }
 
-    // Subtle machined test-plinth / floor inspection ring beneath the suspended Sonobjet
-    const ringGeo = new THREE.RingGeometry(1.75, 1.86, 48);
-    this.geometries.push(ringGeo);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x2c3542,
-      side: THREE.DoubleSide,
-    });
-    this.materials.push(ringMat);
-    const floorRing = new THREE.Mesh(ringGeo, ringMat);
-    floorRing.rotation.x = -Math.PI * 0.5;
-    floorRing.position.set(0, -4.12, 0);
-    this.group.add(floorRing);
-
-    // Stark industrial lighting rig
-    const hemi = new THREE.HemisphereLight(0x6f84a6, 0x101318, 0.65);
+    // 5. Dramatic Chiaroscuro Cinema Lighting Rig
+    const hemi = new THREE.HemisphereLight(0x4a6285, 0x090b0f, 0.42);
     this.group.add(hemi);
 
-    this.keyLight = new THREE.DirectionalLight(0xdce8ff, 3.1);
-    this.keyLight.position.set(3.8, 7.2, 4.4);
+    // Focused overhead surgical spotlight
+    this.keyLight = new THREE.SpotLight(0xeaf2ff, 48, 22, 0.58, 0.55, 1.35);
+    this.keyLight.position.set(2.4, 6.5, 3.8);
+    this.keyLight.target.position.set(0, -0.2, 0);
     this.keyLight.castShadow = true;
     this.keyLight.shadow.mapSize.set(1024, 1024);
-    this.keyLight.shadow.camera.near = 1;
-    this.keyLight.shadow.camera.far = 22;
-    const d = 4.2;
-    this.keyLight.shadow.camera.left = -d;
-    this.keyLight.shadow.camera.right = d;
-    this.keyLight.shadow.camera.top = d;
-    this.keyLight.shadow.camera.bottom = -d;
-    this.group.add(this.keyLight);
+    this.keyLight.shadow.camera.near = 1.2;
+    this.keyLight.shadow.camera.far = 16;
+    this.group.add(this.keyLight, this.keyLight.target);
 
-    this.rimLightLeft = new THREE.SpotLight(0x7cb2ff, 22, 22, 0.62, 0.45, 1.3);
-    this.rimLightLeft.position.set(-6.2, 3.6, -3.5);
-    this.group.add(this.rimLightLeft);
+    // Deep cold cyan-steel back-left silhouette rim
+    this.rimLightCyan = new THREE.SpotLight(0x4cb0ff, 34, 20, 0.65, 0.5, 1.3);
+    this.rimLightCyan.position.set(-5.4, 2.8, -4.2);
+    this.group.add(this.rimLightCyan);
 
-    this.rimLightRight = new THREE.SpotLight(0xffb478, 16, 22, 0.58, 0.5, 1.3);
-    this.rimLightRight.position.set(6.4, -1.8, -2.6);
-    this.group.add(this.rimLightRight);
+    // Warm sodium/forge bounce under the right-hand Siege Anvil
+    this.forgeBounceLight = new THREE.PointLight(0xff7724, 2.5, 9, 1.5);
+    this.forgeBounceLight.position.set(1.35, -1.65, 0.6);
+    this.group.add(this.forgeBounceLight);
 
-    this.coreBounceLight = new THREE.PointLight(0xff7728, 0, 8, 1.6);
-    this.coreBounceLight.position.set(0, 0.1, 0);
-    this.group.add(this.coreBounceLight);
+    // Internal crimson/amber Larynx & Bellows glow light
+    this.larynxLight = new THREE.PointLight(0xff591c, 1.8, 6.5, 1.6);
+    this.larynxLight.position.set(0, 0.55, 0.45);
+    this.group.add(this.larynxLight);
   }
 
-  updateLighting(stress: number, arcFlash: number, strobePulse: number): void {
-    const xenon = 2.8 + strobePulse * 3.8 + arcFlash * 2.2;
-    this.keyLight.intensity = xenon;
-    this.coreBounceLight.intensity = Math.max(0, stress * 4.5 + arcFlash * 9.0);
+  updateLighting(
+    stress: number,
+    arcFlash: number,
+    strobePulse: number,
+    harmonyGlow = 0,
+  ): void {
+    this.keyLight.intensity = 42 + strobePulse * 38 + arcFlash * 18;
+    this.forgeBounceLight.intensity = 2.2 + strobePulse * 14 + stress * 5.5;
+    this.larynxLight.intensity = 1.4 + harmonyGlow * 8.5 + stress * 4.0 + arcFlash * 6.0;
 
     this.slitMaterials.forEach((mat, i) => {
-      const b = 0.65 + strobePulse * (i === 1 ? 1.4 : 0.7) + arcFlash * 0.9;
+      const b = 0.8 + strobePulse * (i === 1 ? 1.8 : 0.9) + harmonyGlow * 0.6;
       mat.color.setRGB(
-        Math.min(1, 0.68 * b),
-        Math.min(1, 0.78 * b),
-        Math.min(1, 0.95 * b),
+        Math.min(2.2, 0.78 * b),
+        Math.min(2.2, 0.88 * b),
+        Math.min(2.4, 1.05 * b),
+      );
+    });
+
+    this.godRayMaterials.forEach((mat, i) => {
+      const base = i === 1 ? 0.036 : 0.018;
+      mat.opacity = Math.min(
+        0.11,
+        base + harmonyGlow * 0.038 + strobePulse * 0.032,
       );
     });
   }

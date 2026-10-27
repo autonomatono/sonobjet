@@ -1,4 +1,9 @@
-import type { ImpulseEvent, SectionDefinition, TransportState } from './types';
+import type {
+  AnticipationCue,
+  ImpulseEvent,
+  SectionDefinition,
+  TransportState,
+} from './types';
 
 export type StepScheduleCallback = (
   step64: number,
@@ -7,32 +12,28 @@ export type StepScheduleCallback = (
 ) => void;
 
 /**
- * Dual-Domain Sample-Accurate Audiovisual Transport & Scheduler.
+ * Dual-Domain Sample-Accurate Audiovisual Transport & Scheduler
+ * with Biomechanical Anticipation Queue.
  *
- * Audio events are scheduled ahead into the WebAudio graph (`lookaheadSec = 0.085s`)
- * at 1/64-note resolution so rapid breakcore/IDM micro-percussion never jitters,
- * while coupled visual kinematics are queued with their exact `audioTime` and
- * released on the exact animation frame when that audio sample reaches the DAC.
+ * Schedules audio events in a 95ms WebAudio lookahead window while releasing
+ * both pre-strike AnticipationCues and DAC-locked ImpulseEvents to the 3D organs.
  */
 export class Clock {
-  private bpm = 168;
-  private totalBars = 64;
+  private bpm = 164;
+  private totalBars = 80;
   private sections: SectionDefinition[] = [];
   private playing = false;
   private mode: 'hybrid' | 'live-only' = 'hybrid';
   private loop = true;
 
-  /** Elapsed transport position in seconds */
   private transportSec = 0;
-  /** Last AudioContext timestamp observed during update */
   private lastAudioNow = 0;
-  /** Next 1/64th-note index to schedule in lookahead window */
   private nextStep64 = 0;
-  /** AudioContext timestamp corresponding to nextStep64 */
   private nextStepAudioTime = 0;
 
-  private readonly lookaheadSec = 0.085;
+  private readonly lookaheadSec = 0.095;
   private visualQueue: ImpulseEvent[] = [];
+  private anticipationQueue: AnticipationCue[] = [];
 
   configure(bpm: number, bars: number, sections: SectionDefinition[]): void {
     this.bpm = Math.max(40, Math.min(300, bpm));
@@ -67,7 +68,6 @@ export class Clock {
 
   getStep64DurationSec(timeStretch = 1): number {
     const effectiveBpm = Math.max(25, this.bpm * timeStretch);
-    // 1 beat = 60 / bpm; 1 bar = 4 beats = 64 step64s => 16 step64s per beat
     return 60 / effectiveBpm / 16;
   }
 
@@ -89,6 +89,7 @@ export class Clock {
   pause(): void {
     this.playing = false;
     this.visualQueue = [];
+    this.anticipationQueue = [];
   }
 
   toggle(audioNow: number): boolean {
@@ -104,6 +105,7 @@ export class Clock {
     const duration = this.getDurationSec();
     this.transportSec = Math.max(0, Math.min(duration, seconds));
     this.visualQueue = [];
+    this.anticipationQueue = [];
     const stepFloat = this.secondsToStep64(this.transportSec);
     this.nextStep64 = Math.floor(stepFloat);
     this.lastAudioNow = audioNow;
@@ -120,16 +122,20 @@ export class Clock {
     this.visualQueue.push(event);
   }
 
-  /**
-   * Advances transport, runs lookahead step scheduler, and pops visual events
-   * whose scheduled audio playback time has arrived.
-   */
+  queueAnticipationCue(cue: AnticipationCue): void {
+    this.anticipationQueue.push(cue);
+  }
+
   tick(
     audioNow: number,
     fallbackDt: number,
     timeStretch: number,
     onScheduleStep?: StepScheduleCallback,
-  ): { state: TransportState; dueEvents: ImpulseEvent[] } {
+  ): {
+    state: TransportState;
+    dueEvents: ImpulseEvent[];
+    dueAnticipations: AnticipationCue[];
+  } {
     const maxStep64 = this.totalBars * 64;
 
     if (this.playing) {
@@ -159,7 +165,8 @@ export class Clock {
           this.nextStepAudioTime < audioNow + this.lookaheadSec &&
           guard < 32
         ) {
-          const wrappedStep = ((this.nextStep64 % maxStep64) + maxStep64) % maxStep64;
+          const wrappedStep =
+            ((this.nextStep64 % maxStep64) + maxStep64) % maxStep64;
           const bar = Math.floor(wrappedStep / 64);
           const stepInBar = wrappedStep % 64;
           onScheduleStep(stepInBar, bar, this.nextStepAudioTime);
@@ -172,7 +179,6 @@ export class Clock {
       this.lastAudioNow = audioNow;
     }
 
-    // Drain due visual events synced to audio DAC clock (with tiny 4ms anticipation for photon-to-ear lock)
     const dueEvents: ImpulseEvent[] = [];
     if (this.visualQueue.length > 0) {
       const remaining: ImpulseEvent[] = [];
@@ -186,9 +192,23 @@ export class Clock {
       this.visualQueue = remaining;
     }
 
+    const dueAnticipations: AnticipationCue[] = [];
+    if (this.anticipationQueue.length > 0) {
+      const remCues: AnticipationCue[] = [];
+      for (const cue of this.anticipationQueue) {
+        if (cue.audioTime <= audioNow + 0.004) {
+          dueAnticipations.push(cue);
+        } else {
+          remCues.push(cue);
+        }
+      }
+      this.anticipationQueue = remCues;
+    }
+
     return {
       state: this.getState(),
       dueEvents,
+      dueAnticipations,
     };
   }
 
@@ -211,7 +231,10 @@ export class Clock {
         const barFloat = beat / 4;
         sectionProgress = Math.max(
           0,
-          Math.min(1, (barFloat - s.startBar) / Math.max(1, s.endBar - s.startBar)),
+          Math.min(
+            1,
+            (barFloat - s.startBar) / Math.max(1, s.endBar - s.startBar),
+          ),
         );
         break;
       }

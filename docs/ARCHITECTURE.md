@@ -2,65 +2,60 @@
 
 ## 1. System Overview
 
-`sonobjet` is structured like a modular audiovisual game engine where each **Work** (`WorkDefinition`) is a self-contained performance scene composed from four decoupled layers:
+`sonobjet` is structured as a modular audiovisual game engine where each **Work** (`WorkDefinition`) is a self-contained performance scene composed from four decoupled layers:
 
 ```text
 src/
 ├── engine/
-│   ├── core/        # Clock, SonobjetCore, ModulationMatrix, SeededRandom, WorkRegistry
-│   ├── audio/       # AudioEngine, SynthRack, BreakBufferLab, FractureWorklet (AudioWorklet)
-│   └── render/      # WebGPUStage (Three.js r186 WebGPU + WebGL2 fallback), TSLMaterials
+│   ├── core/        # Clock (with AnticipationQueue), SonobjetCore, ModulationMatrix, WorkRegistry
+│   ├── audio/       # AudioEngine, SynthRack (11 biomechanical/tonal/percussive voices), FractureWorklet
+│   └── render/      # WebGPUStage (WebGPURenderer + TSL HDR Bloom & Vignette), TSLMaterials (5-material palette)
 ├── kit/
 │   ├── kinematics/  # ScalarSpring, CAD detent quantization
-│   ├── sequencer/   # Bjorklund Euclidean generator, exponential ratchet bursts, break chopper
-│   ├── camera/      # KineticCameraRig (5 Gantz-style camera presets + seismic recoil trauma)
-│   └── environment/ # BrutalistChamber (architectural concrete cell + xenon slit lighting)
+│   ├── sequencer/   # Bjorklund Euclidean generator, exponential/decelerating ratchet bursts, break chopper
+│   ├── camera/      # KineticCameraRig (5 cinema presets + seismic anvil recoil trauma)
+│   └── environment/ # BrutalistChamber (gantry crane, volumetric light cones, wet slate plinth, forge bounce)
 ├── studio/
-│   ├── input/       # KeyboardMouseRig (8 pads, 7 punch FX, raycasted strain/slam)
+│   ├── input/       # KeyboardMouseRig (F-Phrygian modal performance pads, vowel/pitch X/Y, strain/slam)
 │   ├── sensors/     # MediaPipeSensor (2-hand 3D + optical fallback), MicSensor, MidiGamepadSensor
 │   ├── recorder/    # TakeRecorder (multi-pass JSON overdub), VideoExporter (60fps WebM + Opus)
-│   └── ui/          # StudioShell + industrial telemetry HUD
+│   └── ui/          # StudioShell + Behavioral State & Signal Telemetry HUD
 └── works/
-    ├── gantz-tecton/      # POC 01: 717-body hyper-articulated IDM/breakcore construct
-    └── lattice-pendulum/  # Etude 02: 48-pendulum coprime polyrhythmic modal steel array
+    ├── gantz-tecton/      # POC 01: GANTZ // AUTOMATON (7-organ creature + 80-bar 6-Act F-Phrygian score)
+    └── lattice-pendulum/  # Etude 02: PHASE // LATTICE (48-pendulum coprime polyrhythmic modal steel array)
 ```
 
 ---
 
-## 2. Dual-Domain Sample-Accurate Synchronization (`Clock.ts`)
+## 2. Dual-Domain Clock & Biomechanical Anticipation (`Clock.ts`)
 
-At 172 BPM, a 1/64th-note breakcore micro-step is ~21.8 ms—meaning naive `requestAnimationFrame` (~16.6 ms) audio triggering produces audible rhythmic jitter.
+Real machines and living creatures never teleport instantaneously on an acoustic transient—they **inhale, coil, and cock a limb before striking**.
 
-`Clock.ts` solves this with a **Dual-Domain Lookahead Architecture**:
-1. **Audio Lookahead Window (`85 ms`):** On each tick, upcoming 1/64th-note steps within `audioContext.currentTime + 0.085` are evaluated ahead of time and scheduled with sample-accurate timestamps (`osc.start(t)`, `gain.exponentialRampToValueAtTime(..., t)`).
-2. **Visual Presentation Queue:** Scheduled `ImpulseEvent`s are simultaneously pushed into a timestamped visual queue and drained on the exact animation frame when `ev.audioTime <= audioNow + 0.004`, locking photon emission to acoustic transient arrival.
-3. **Zero-Latency Live Bypass:** Live impulses (`audioTime === 0`) from keyboard, mouse, MediaPipe pinch-snaps, or microphone transients bypass lookahead and actuate both domains immediately.
-
----
-
-## 3. Custom WebAudio + AudioWorklet Synthesis (`src/engine/audio/`)
-
-Zero external audio samples are required. All sound is generated in real time:
-- **`BreakBufferLab.ts`:** Synthesizes a 2-channel, 16-slice vintage breakbeat buffer (saturated kick, dual-mode snare + wire rattle, ghost notes, metallic ride shimmer, 12-bit crunch) plus a slice-accurate reversed twin buffer at startup.
-- **`SynthRack.ts`:** Provides 8 physical/IDM synthesis voices (`sub-rupture`, `spine-shear`, `break-shred`, `fin-cascade`, `piston-snap`, `modal-clang`, `core-implode`, `arc-discharge`) plus a continuous FM/bandpass **Strain Servo Voice** driven by physical construct tension. Each impulse is panned in stereo according to its 3D `locus[0]`.
-- **`FractureWorklet.ts`:** Inline `AudioWorkletProcessor` running on the audio rendering thread providing:
-  - Lockable stereo circular-buffer micro-stutter (`1.8 ms` audio-rate buzz up to `120 ms` break repeats) with de-clicked grain edges,
-  - Tuned stereo waveguide comb resonator with internal `tanh` saturation,
-  - Sample-hold decimation + West-Coast sine wavefolding + DC blocking.
+`Clock.ts` coordinates three synchronized timelines:
+1. **WebAudio Lookahead (`95 ms` window, `1/64`-note resolution):** Schedules sample-accurate synthesis events ahead on `AudioContext` so rapid breakcore ratchets never jitter.
+2. **Pre-Strike `AnticipationCue` Queue:** Score steps emit `AnticipationCue`s (`leadTimeSec = 0.25..0.55 s` ahead of major impacts) paired optionally with reverse-envelope `windup-inhale` audio events, allowing `GantzAutomaton` to arch its 14-vertebra spine, glance at its anvil, and raise its Siege-Hammer overhead before `t = 0`.
+3. **DAC-Locked Visual Presentation Queue:** Releases impact `ImpulseEvent`s on the exact animation frame when `ev.audioTime <= audioNow + 0.004`.
 
 ---
 
-## 4. Three.js WebGPU & TSL Pipeline (`src/engine/render/`)
+## 3. Tonal, Vocal-Formant & Mechanical Synthesis (`SynthRack.ts`)
 
-- **`WebGPUStage.ts`:** Initializes `THREE.WebGPURenderer` (`three/webgpu`), using native **WebGPU** when supported by the browser/GPU and seamlessly falling back to Three's **WebGL 2** node backend otherwise. Reports active backend (`WebGPU` / `WebGL2` / `Headless`) in live telemetry.
-- **`TSLMaterials.ts`:** Uses **Three Shading Language (`three/tsl`)** to author GPU-compiled procedural CNC micro-striations, edge-bevel sheen, per-instance xenon impact flashes (`instanceColor`), and stress-coupled molten core seams (`uniform`s `stress`, `arcFlash`, `time`).
+All 11 synthesis subsystems are 100% procedural (zero external audio files):
+- **`larynx-lead` (Glottal Formant Synth):** Sawtooth + sub-octave glottal source with delayed vibrato routed through 3 parallel resonant formant bandpass filters (`F1, F2, F3`) morphing continuously across `/AH/ – /EH/ – /EE/ – /OH/ – /OO/`.
+- **`bellows-choir` (Modal Polychordal Organ/Pad):** Voices 4-to-6-note detuned modal voicings (`Fm(add9)`, `Dbmaj7#11`, `Bbm9`, `C7b9`) through swept lowpass + brutalist chamber convolution.
+- **`modal-clang` (Tuned 16-Rod Steel Harp):** Exact MIDI-tuned fundamental + harmonic/steel partials (`[1, 2, 3+s, 4.02+s, 5.41+s]`) for crystalline melodic motifs.
+- **`core-implode` (Wavefolded Monolith Bass):** Sub-octave sine + 2-op FM West-Coast wavefolder for pitched basslines.
+- **`windup-inhale`:** Reverse-envelope bandpass pneumatic intake & rising servo whine.
+- **Percussive & Sliced Organs:** `sub-rupture` (F1 Siege-Anvil kick), `spine-shear` (F3 dual-mode snare), `break-shred` (16-slice forward/reverse procedural breakbeat chopper), `fin-cascade` (raker comb micro-tick), `piston-snap`, and `arc-discharge`—all routed through **`FractureWorklet.ts`** (sample-level buffer freeze, F-tuned stereo waveguide comb, wavefold decimation).
 
 ---
 
-## 5. Authoring a New Work
+## 4. 5-Material TSL Shader Palette & WebGPU Post-Processing (`src/engine/render/`)
 
-To add a new music video or live performance instrument:
-1. Create `src/works/<your-work>/YourWork.ts` implementing `WorkDefinition` and `WorkSceneInstance`.
-2. Define its `bpm`, `bars`, `sections`, expressive `macros`, and `defaultPatches` (connecting `mediapipe.*`, `mouse.*`, `mic.*`, or `chaos.*` to your macros).
-3. Implement `init(ctx)`, `scheduleStep(step64, bar, audioTime, ctx)`, `triggerImpulse(event, ctx)`, `update(dt, elapsed, transport, ctx)`, and `dispose()`.
-4. Register it in `src/main.ts` via `registry.register(YourWork)`—it immediately gains full Studio HUD controls, MediaPipe/Mic/MIDI sensing, Overdub Take recording, `.webm` video export, and `?work=<id>` URL routing.
+- **`TSLMaterials.ts`:** Compiles 5 contrasting tactile materials natively to WGSL (WebGPU) / GLSL (WebGL2):
+  1. `boneCarapace` — Warm weathered porcelain-ivory (`0xd6cfc0`) with dark crevice shading & subsurface glow bleed,
+  2. `forgedIron` — Oiled charcoal cast-iron (`0x1b1e23`) with hammered grain & hot anvil ember emission,
+  3. `surgicalChrome` — Mirror-bright lathe-turned chrome (`roughness: 0.09, metalness: 0.98`),
+  4. `agedBrass` — Oxidized industrial bronze/brass (`0xc28a3a`),
+  5. `visceralFilament` — HDR-blooming crimson-to-tungsten filament (`> 2.5` linear luminance).
+- **`WebGPUStage.ts`:** Runs `THREE.PostProcessing` combining `pass(scene, camera)` + TSL `bloom()` + radial chiaroscuro vignette.

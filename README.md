@@ -1,34 +1,43 @@
 # SONOBJET
 
-**Living Audiovisual Objects, Custom WebGPU + WebAudio Synth/Composition Engine, and Live Performance Studio**
+**Living Biomechanical Audiovisual Objects, Custom WebGPU + WebAudio Synth/Composition Engine, and Live Performance Studio**
 
 - **Live Deployment (GitHub Pages):** [https://autonomatono.github.io/sonobjet/](https://autonomatono.github.io/sonobjet/)
 - **Direct Scene Deep-Links:**
-  - Proof-of-Concept 01 (`GANTZ // TECTON`): [`?work=gantz-tecton`](https://autonomatono.github.io/sonobjet/?work=gantz-tecton)
+  - Proof-of-Concept 01 (`GANTZ // AUTOMATON`): [`?work=gantz-tecton`](https://autonomatono.github.io/sonobjet/?work=gantz-tecton)
   - Etude 02 (`PHASE // LATTICE`): [`?work=phase-lattice`](https://autonomatono.github.io/sonobjet/?work=phase-lattice)
 
 ---
 
-## Vision: Beyond "Visualization" — The Living *Sonobjet*
+## Vision: Living Sound-Machines & True Musical Composition
 
-Traditional music visualizers treat visuals as a passive, frame-delayed ornament derived from FFT frequency bins of a pre-rendered audio stream. **SONOBJET** inverts that paradigm:
+Rather than modulating uniform symmetric geometry with an FFT analyzer, **SONOBJET** constructs **asymmetric, hierarchical biomechanical sound-creatures and automatons** whose specialized organs *are* their instruments—paired with **through-composed experimental scores** featuring recurring motifs, modal harmony, call-and-response, anticipation wind-ups, stark silences, and climaxes.
 
-1. **Unified Causal Spine:** Every entity (`SonobjetCore`) possesses physical Degrees of Freedom (DOFs), spring-damper inertia, machined CAD mechanical detents, tensile stress, and viscoelastic fracture thresholds. A single `ImpulseEvent` simultaneously actuates a subsystem's 3D mechanical anatomy **and** its spatialized synthesis voice.
-2. **Bidirectional Physical Coupling:** Pulling a construct apart (via Mouse Drag or **MediaPipe Two-Hand 3D Vision**) accumulates structural stress that continuously drives FM/waveguide servo tension and molten TSL shader seams; exceeding critical yield spontaneously discharges physical/acoustic ruptures, and releasing slams all machined components back into lock.
-3. **Game-Engine Scene Architecture:** Works are self-contained, hot-swappable `WorkDefinition` scenes built from reusable kit primitives (`src/kit/`), custom synthesis voices (`src/engine/audio/`), TSL WebGPU materials (`src/engine/render/`), and composable signal routes (`ModulationMatrix`).
+1. **Biomechanical Anatomy & Anticipation (`Clock` + `GantzAutomaton`):** Heavy limbs do not teleport on a transient—`Clock.ts` dispatches pre-strike `AnticipationCue`s (`250–450 ms` ahead of downbeats) alongside audible pneumatic inhales so the creature physically **coils its S-curve spine, glances down at its anvil, and cocks its Siege-Hammer overhead** *before* slamming down in a spray of floor-bouncing sparks.
+2. **Emergent Autonomous Life:** Even at rest or in `PURE LIVE` mode, the automaton breathes with exertion-coupled respiration, executes curious saccadic head/eye darts toward its own limbs or the user's cursor/hands, conserves Newtonian angular momentum with its 10-segment counter-tail, and vents heat through porcelain ribs when fatigued.
+3. **5-Material Chiaroscuro & WebGPU HDR Bloom (`TSLMaterials` + `WebGPUStage`):** Contrasts weathered **Bone-Porcelain Carapace**, oiled **Forged Cast-Iron**, mirror **Surgical Chrome**, oxidized **Aged Brass**, and HDR-blooming **Tungsten Visceral Filaments** inside volumetric overhead gantry light shafts.
 
 ---
 
-## Proof of Concept 01: `GANTZ // TECTON`
+## Proof of Concept 01: `GANTZ // AUTOMATON`
 
-Inspired by **Autechre** and **Alex Rutterford's *Gantz Graf* (2002)**, `GANTZ // TECTON` suspends a **717-body CNC-machined mechanical agglomerate** (180 armor tectonic plates, 240 helical titanium cooling fins, 260 splinter caliper shards, 36 cardinal hydraulic rams, and an incandescent inner reactor spine) inside a stark brutalist concrete containment chamber.
+### 7 Specialized Biomechanical Organs
+1. **14-Vertebra S-Curve Spine & 8-Pair Porcelain Rib Bellows:** Peristaltic coiling, metabolic breathing, and harmonic polychord expansion (`bellows-choir`).
+2. **Asymmetric Cranial Sensorium, Saccadic Iris & 5-Reed Vocal Mandibles:** Tracks cursor/hands, glances at active limbs, and articulates vowel shapes (`AH/EH/EE/OH/OO`) as its glottal formant synth (`larynx-lead`) sings.
+3. **Heavy Right 3-DOF Siege-Hammer & Spring-Mounted Floor Anvil:** Winds up ahead of downbeats and slams onto the brass-inlaid cast-iron anvil (`sub-rupture`, `spine-shear`), spraying 160 ballistic sparks that bounce off the wet slate plinth.
+4. **Dual Left 3-Jointed Mantis Raker Limbs & 16-Rod Harp-Comb:** Darts across 16 graduated tensioned steel rods to pluck melodic **Seed Motifs** (`modal-clang`) and 16-slice breakcore chops (`break-shred`).
+5. **Ventral Eccentric Brass Flywheel Governor & Brake Caliper:** Spins with musical momentum; mechanically clamps shut with friction sparks on `stutter` freezes and dead-stops.
+6. **10-Segment Whipping Counter-Tail & Arc Stinger:** Balances Siege-Hammer torque and fires `arc-discharge` bursts.
+7. **6 Catenary Steel Suspension Tendons:** Anchor the creature to overhead gantry I-beams and floor tensioners, vibrating with transverse waves under load.
 
-Its 64-bar (172 BPM) composed IDM/breakcore score unfolds across five movements:
-1. **`I. PNEUMATIC IGNITION` (Bars 1–8):** Isolated hydraulic snaps, cold chamber silence, and accelerating bouncing-ball steel pawls.
-2. **`II. FRACTURE BREAK` (Bars 9–24):** Chopped 16-slice procedural breakbeats interlocked with tectonic spine shears (each break slice maps 1:1 to a physical angular sector of the construct).
-3. **`III. HYPER-DRILL AGGLOMERATE` (Bars 25–40):** Exponential 12x micro-ratchet drills, West-Coast wavefolded monolith bass, and high-voltage arc discharges.
-4. **`IV. SUSPENDED DISASSEMBLY` (Bars 41–52):** Exploded-CAD levitation, reversed break ghosts, and Euclidean modal steel partials.
-5. **`V. TERMINAL TECTONIC LOCK` (Bars 53–64):** Polyrhythmic overload converging on bar 64's razor-sharp mechanical dead-stop lock.
+### Through-Composed 6-Act Score (80 Bars, 164 BPM, F Phrygian)
+Built around the recurring 5-note **Seed Motif (`C5 – Db5 – Ab4 – G4 – F4`)**, an asymmetric `3+3+4+3+3` rhythmic spine, and an 8-bar modal progression (`Fm(add9) -> Db Lydian #11 -> Bbm9 -> C7b9`):
+- **Act I (`Bars 1–12`) — `LATENT BREATH & SEED MOTIF`:** Chamber silence, subterranean breath, naked plucked harp Seed Motif, pneumatic wind-up into a single devastating Anvil Slam + decelerating steel pawl, and quiet Larynx awakening.
+- **Act II (`Bars 13–28`) — `ASYMMETRIC LOOM (CALL / RESPONSE)`:** Strict 2-bar dialogue between Right Siege-Hammer Calls and Left Mantis-Harp/Break Responses; folded F-Phrygian bassline enters at Bar 21.
+- **Act III (`Bars 29–48`) — `LARYNX ARIA OVER BREAKCORE`:** Soaring vocal-formant melody & bellows polychords over structured breakcore, featuring a 2-bar drumless vocal suspension at Bars 45–46.
+- **Act IV (`Bars 49–60`) — `FLYWHEEL CADENZA & RISER`:** Stop-start Autechre *Gantz Graf* mechanical cadenza (3 beats hyper-ratchet vs 1 beat dead-locked silence), 4-bar 2-octave pitch/density riser, and **2 full beats of breathless silence** before the drop.
+- **Act V (`Bars 61–72`) — `APEX CONVERGENCE`:** Full climax uniting octave-doubled Seed Motif, polychords, monolith bass, and relentless breakcore/anvil fury.
+- **Act VI (`Bars 73–80`) — `EXHAUSTION & STILLNESS`:** Coasting flywheel, panting rib-vents, and a solitary farewell Seed Motif fading into a final latch click.
 
 ---
 
@@ -36,18 +45,17 @@ Its 64-bar (172 BPM) composed IDM/breakcore score unfolds across five movements:
 
 | Input | Action |
 | :--- | :--- |
-| **`Space`** | Play / Pause sample-accurate score transport |
-| **`Tab` / `H`** | Toggle pure borderless **Cinema Mode** vs **Performance Studio HUD** |
-| **Mouse Left-Drag** | Physically pull & strain tectonic plates apart; **release slams construct shut** |
-| **Mouse Right-Drag / `Shift`+Drag** | Orbit camera around construct (`Wheel` zooms) |
-| **`Z X C V B N M ,`** | Fire the 8 physical/acoustic subsystems live (`SUB RUPTURE`, `SPINE SHEAR`, `BREAK SHRED`, `FIN CASCADE`, `PISTON SNAP`, `MODAL CLANG`, `CORE IMPLODE`, `ARC SPARK`) |
-| **`A S D F G J K`** | Momentary breakcore & CAD fracture FX (`STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `CAD EXPLODE`, `HARD LOCK`) |
-| **`1 2 3 4 5`** | Instant camera cuts (`5` = Autonomous Cut Director) |
-| **`Q W E R T`** | Cue / jump directly to Movements I–V |
-| **`[` / `]`** | Nudge tempo `-4` / `+4` BPM |
+| **`Space`** | Play / Pause 6-Act Composition |
+| **`Tab` / `H`** | Toggle borderless **Cinema Mode** vs **Performance Studio HUD** |
+| **Mouse Hover (`X / Y`)** | Guides creature's **Saccadic Gaze**; sets **Vowel Formant (`X`)** & **F-Phrygian Pitch (`Y`)** for live pads |
+| **Mouse Left-Click / Drag** | Left half plucks tuned Harp rod; Drag coils spine & flares ribs; **Release fires C5 Larynx cry / Anvil slam** |
+| **Mouse Right-Drag / `Shift`+Drag** | Orbit camera (`Wheel` zooms) |
+| **`Z X C V B N M ,`** | Play Biomechanical Organs live (`ANVIL KICK`, `SPINE SNARE`, `BREAK CHOP`, `MANTIS HARP`, `LARYNX VOICE`, `BELLOWS CHORD`, `MONOLITH BASS`, `TAIL STINGER`) |
+| **`A S D F G J K`** | Momentary FX (`BRAKE STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `RIB FLARE`, `HARD LOCK`) |
+| **`1 2 3 4 5`** | Camera Cuts (`1` 3/4 Anvil, `2` Larynx/Harp Portrait, `3` Low Forge, `4` Wide Gantry, `5` Auto Cinema Director) |
+| **`Q W E R T Y`** | Cue / jump directly to **Acts I–VI** |
 | **`Shift + R`** | Toggle Multi-Pass Overdub Gesture Recording |
-| **MediaPipe Hands** | Two-hand span controls CAD spread; left/right thumb-index pinches modulate drill/alloy & snap-strike subsystems |
-| **Mic Exciter** | Claps, snaps, or beatboxing inject live physical impulses |
+| **MediaPipe Hands / Mic** | 2-Hand span flares ribs; pinches control Raker Density & Larynx Tension + snap strikes; Mic claps excite organs |
 
 ---
 
@@ -57,13 +65,13 @@ Its 64-bar (172 BPM) composed IDM/breakcore score unfolds across five movements:
 npm install
 npm run dev        # Launch live studio on http://0.0.0.0:5173
 npm run typecheck  # Strict TypeScript check
-npm test           # Run Vitest engine, sequencer, recorder & WebGPU scene tests
+npm test           # Run Vitest suite (Clock, Anticipation, 6-Act Score, 7-Organ Automaton, Recorder)
 npm run build      # Production build into ./dist (with self-hosted MediaPipe WASM)
 ```
 
 ## Documentation & Continuity
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine ontology, WebGPU/TSL pipeline, WebAudio + AudioWorklet DSP, and authoring new Works.
-- [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Live improvisation, MediaPipe/Mic/MIDI sensing, Overdub Take composition, and `.webm` video export.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Biomechanical ontology, Anticipation Queue, Formant/Polychord DSP, TSL materials & HDR Bloom.
+- [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Playing the Automaton live, F-Phrygian modal keyboard/mouse mapping, sensors & recording.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI pipeline & turn-end workflow.
-- [`HANDOFF.md`](HANDOFF.md) — Up-to-date session state, commit log, file map, and roadmap for seamless session recovery.
+- [`HANDOFF.md`](HANDOFF.md) — Session state, commit history, architectural log, and next milestones.

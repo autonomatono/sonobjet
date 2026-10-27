@@ -213,7 +213,7 @@ export class StudioShell {
     leftPanel.className = 'side-panel';
 
     const scopeBlock = document.createElement('div');
-    scopeBlock.innerHTML = `<div class="panel-section-title"><span>CAUSAL TELEMETRY</span><span>SIGNAL / STRESS</span></div>`;
+    scopeBlock.innerHTML = `<div class="panel-section-title"><span>BIOMECHANICAL STATE</span><span id="behavior-state-lbl" style="color:var(--accent-amber)">DORMANT_BREATH</span></div>`;
     this.scopeCanvas = document.createElement('canvas');
     this.scopeCanvas.className = 'scope-canvas';
     this.scopeCanvas.width = 246;
@@ -294,11 +294,11 @@ export class StudioShell {
     const camGrid = document.createElement('div');
     camGrid.className = 'cam-grid';
     const camNames = [
-      '1 // CHAMBER 3/4 [GANTZ]',
-      '2 // MACRO PISTON CORE',
-      '3 // BRUTAL LOW LOOM',
-      '4 // AXIAL ORTHO TELE',
-      '5 // AUTO CUT DIRECTOR',
+      '1 // AUTOMATON & ANVIL [3/4]',
+      '2 // PORTRAIT: LARYNX & HARP',
+      '3 // LOW FORGE: SIEGE ANVIL',
+      '4 // WIDE CONTAINMENT GANTRY',
+      '5 // AUTO CINEMA DIRECTOR',
     ];
     camNames.forEach((label, idx) => {
       const b = document.createElement('button');
@@ -430,23 +430,22 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU + WEBAUDIO CAUSAL SYNTHESIS</div>
-        <h1 class="ignition-title">GANTZ // TECTON</h1>
+        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU + WEBAUDIO BIOMECHANICAL SYNTHESIS</div>
+        <h1 class="ignition-title">GANTZ // AUTOMATON</h1>
         <p class="ignition-desc">
-          A 717-body living visceral media object inspired by Autechre &amp; Alex Rutterford.
-          Every micro-percussive fracture, chopped breakcore slice, and titanium plate shear
-          originates from a single physical/acoustic impulse spine.
+          A 7-organ living biomechanical sound-automaton suspended by catenary steel tendons.
+          Through-composed in 6 Acts (F Phrygian, 164 BPM): its Siege-Hammer winds up before striking the spark-anvil, Mantis Claws pluck a 16-rod steel harp, and its 5-reed Mandible-Larynx sings haunting modal melodies over structured breakcore.
         </p>
         <div class="ignition-shortcuts">
-          <b>SPACE</b> Play / Pause Music Video &nbsp;|&nbsp;
-          <b>L-DRAG</b> Strain &amp; Slam Construct &nbsp;|&nbsp;
-          <b>Z–M ,</b> Trigger Subsystems<br/>
-          <b>A S D F G J K</b> Breakcore Stutter / 64th Drill / CAD Explode &nbsp;|&nbsp;
-          <b>MEDIAPIPE</b> 2-Hand Vision Control
+          <b>SPACE</b> Play / Pause 6-Act Composition &nbsp;|&nbsp;
+          <b>L-DRAG</b> Coil Spine &amp; Release Cry &nbsp;|&nbsp;
+          <b>Z–M ,</b> Play Organs (Harp / Larynx / Anvil)<br/>
+          <b>A S D F G J K</b> Flywheel Brake / 64th Drill / Rib Flare &nbsp;|&nbsp;
+          <b>Q W E R T Y</b> Cue Acts I–VI
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE MUSIC VIDEO [SPACE]</button>
-          <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE SANDBOX</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 6-ACT COMPOSITION [SPACE]</button>
+          <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>
     `;
@@ -484,7 +483,7 @@ export class StudioShell {
     // Rebuild section segments
     this.timelineStrip.innerHTML = '';
     this.sectionEls = [];
-    const keyHints = ['Q', 'W', 'E', 'R', 'T'];
+    const keyHints = ['Q', 'W', 'E', 'R', 'T', 'Y'];
     work.sections.forEach((sec, idx) => {
       const seg = document.createElement('div');
       seg.className = 'timeline-sec';
@@ -606,7 +605,12 @@ export class StudioShell {
     this.clockReadout.textContent = `BAR ${barStr}.${beatInBar}.${sub16}`;
 
     this.gpuBadge.textContent = `${telemetry.gpuBackend} // ${Math.round(telemetry.fps)} FPS`;
-    this.bodyBadge.textContent = `${telemetry.activeInstances} BODIES`;
+    this.bodyBadge.textContent = `${telemetry.activeInstances} ORGANS/LINKS`;
+
+    const behEl = document.getElementById('behavior-state-lbl');
+    if (behEl && telemetry.behavioralState) {
+      behEl.textContent = telemetry.behavioralState;
+    }
 
     const pct =
       transport.duration > 0

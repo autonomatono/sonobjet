@@ -15,24 +15,34 @@ export interface PunchBinding {
 }
 
 export const KEY_IMPULSE_PADS: KeyPadBinding[] = [
-  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'SUB RUPTURE' },
-  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'SPINE SHEAR' },
-  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'BREAK SHRED' },
-  { key: 'v', label: 'V', subsystem: 'fin-cascade', shortName: 'FIN CASCADE' },
-  { key: 'b', label: 'B', subsystem: 'piston-snap', shortName: 'PISTON SNAP' },
-  { key: 'n', label: 'N', subsystem: 'modal-clang', shortName: 'MODAL CLANG' },
-  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'CORE IMPLODE' },
-  { key: ',', label: ',', subsystem: 'arc-discharge', shortName: 'ARC SPARK' },
+  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'ANVIL KICK' },
+  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'SPINE SNARE' },
+  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'BREAK CHOP' },
+  { key: 'v', label: 'V', subsystem: 'modal-clang', shortName: 'MANTIS HARP' },
+  { key: 'b', label: 'B', subsystem: 'larynx-lead', shortName: 'LARYNX VOICE' },
+  { key: 'n', label: 'N', subsystem: 'bellows-choir', shortName: 'BELLOWS CHORD' },
+  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'MONOLITH BASS' },
+  { key: ',', label: ',', subsystem: 'arc-discharge', shortName: 'TAIL STINGER' },
 ];
 
 export const KEY_PUNCH_FX: PunchBinding[] = [
-  { key: 'a', id: 'stutter', label: 'STUTTER' },
+  { key: 'a', id: 'stutter', label: 'BRAKE STUTTER' },
   { key: 's', id: 'ratchet', label: '64TH DRILL' },
   { key: 'd', id: 'halftime', label: 'HALFTIME' },
   { key: 'f', id: 'comb-scream', label: 'COMB SCREAM' },
   { key: 'g', id: 'reverse-slice', label: 'REV SLICE' },
-  { key: 'j', id: 'tectonic-explode', label: 'CAD EXPLODE' },
+  { key: 'j', id: 'tectonic-explode', label: 'RIB FLARE' },
   { key: 'k', id: 'hard-lock', label: 'HARD LOCK' },
+];
+
+// F-Phrygian scale notes across 2 octaves so live keyboard/mouse play is always deeply musical!
+const F_PHRYGIAN_MELODY = [65, 66, 68, 70, 72, 73, 75, 77, 78, 80];
+const F_PHRYGIAN_BASS = [29, 30, 32, 34, 36, 37, 24, 25];
+const F_PHRYGIAN_CHORDS: number[][] = [
+  [53, 56, 60, 65, 67], // Fm(add9)
+  [49, 56, 60, 65, 67], // Dbmaj7#11
+  [46, 53, 58, 60, 65], // Bbm9
+  [48, 52, 58, 61, 63], // C7b9
 ];
 
 export interface InputRigCallbacks {
@@ -52,15 +62,16 @@ export interface InputRigCallbacks {
 /**
  * Tactile Keyboard & Mouse Live Performance Instrument.
  *
- * - Bottom row (`Z..M ,`) fires physical/acoustic subsystems directly
- * - Home row (`A S D F G J K`) engages momentary breakcore / CAD fracture FX
- * - Left-drag strains & pulls apart the Sonobjet (slamming shut on release!)
- * - Right-drag or Shift/Alt-drag orbits the camera; Scroll zooms
+ * Maps Mouse X/Y to F-Phrygian scale degree + Larynx Vowel Formant so tapping
+ * `V` (Mantis Harp), `B` (Larynx Voice), `N` (Bellows Chord), or `M` (Monolith Bass)
+ * lets performers improvise genuinely expressive modal melodies & chords live!
  */
 export class KeyboardMouseRig {
   private readonly heldKeys = new Set<string>();
   private readonly activePunches = new Set<PunchFxId>();
   private sliceCounter = 0;
+  private chordCursor = 0;
+  private motifCursor = 0;
 
   private isLeftDragging = false;
   private isOrbitDragging = false;
@@ -94,15 +105,44 @@ export class KeyboardMouseRig {
   triggerPad(subsystem: SubsystemId, velocity = 1.0): void {
     const mx = this.matrix.getSource('mouse.x');
     const my = this.matrix.getSource('mouse.y');
-    const pitchRatio = Math.pow(2, my * 0.45);
+    const normY = Math.max(0, Math.min(0.999, (my + 1) * 0.5));
+    const normX = Math.max(0, Math.min(1, (mx + 1) * 0.5));
+    const pitchRatio = Math.pow(2, my * 0.35);
     const slice = this.sliceCounter++ % 16;
+
+    // Choose musical F-Phrygian pitches for tonal organs!
+    let midiNote: number | undefined;
+    let chordNotes: number[] | undefined;
+    let durationSec: number | undefined;
+
+    if (subsystem === 'modal-clang' || subsystem === 'larynx-lead') {
+      // Blend user vertical cursor position with Seed Motif intervals
+      const scaleIdx =
+        Math.abs(my) > 0.08
+          ? Math.floor(normY * F_PHRYGIAN_MELODY.length)
+          : [4, 5, 2, 1, 0][this.motifCursor++ % 5]; // Seed Motif C5-Db5-Ab4-G4-F4 when centered!
+      midiNote = F_PHRYGIAN_MELODY[scaleIdx];
+      durationSec = subsystem === 'larynx-lead' ? 0.62 : 0.9;
+    } else if (subsystem === 'core-implode') {
+      midiNote =
+        F_PHRYGIAN_BASS[Math.floor(normY * F_PHRYGIAN_BASS.length)];
+      durationSec = 0.45;
+    } else if (subsystem === 'bellows-choir') {
+      chordNotes =
+        F_PHRYGIAN_CHORDS[this.chordCursor++ % F_PHRYGIAN_CHORDS.length];
+      durationSec = 2.6;
+    }
 
     this.cb.onImpulse({
       subsystem,
       velocity,
       pitchRatio,
+      midiNote,
+      chordNotes,
+      vowel: normX,
+      durationSec,
       decay: 0.95,
-      sliceIndex: slice,
+      sliceIndex: midiNote ? midiNote - 60 : slice,
       reverse: this.activePunches.has('reverse-slice'),
       locus: [mx, my, 0.35],
       audioTime: 0,
@@ -139,7 +179,10 @@ export class KeyboardMouseRig {
       this.cb.onPlayToggle();
       return;
     }
-    if (e.code === 'Tab' || (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)) {
+    if (
+      e.code === 'Tab' ||
+      (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)
+    ) {
       e.preventDefault();
       this.cb.onToggleHud();
       return;
@@ -153,14 +196,13 @@ export class KeyboardMouseRig {
     if (this.heldKeys.has(key)) return;
     this.heldKeys.add(key);
 
-    // Camera cuts 1..5
     if (['1', '2', '3', '4', '5'].includes(key)) {
       this.cb.onCameraSelect(Number(key));
       return;
     }
 
-    // Section cues Q W E R T
-    const secKeys = ['q', 'w', 'e', 'r', 't'];
+    // 6 Act Cues: Q W E R T Y
+    const secKeys = ['q', 'w', 'e', 'r', 't', 'y'];
     const secIdx = secKeys.indexOf(key);
     if (secIdx >= 0 && !e.metaKey && !e.ctrlKey) {
       this.cb.onSectionJump(secIdx);
@@ -218,17 +260,37 @@ export class KeyboardMouseRig {
       this.isLeftDragging = true;
       this.matrix.setSource('mouse.strain', 0.15);
       this.cb.onPointerStrain(nx, ny, 0.15, true);
-      // Tactile tap impulse at locus
-      this.cb.onImpulse({
-        subsystem: 'piston-snap',
-        velocity: 0.72,
-        pitchRatio: 0.9 + (ny + 1) * 0.35,
-        decay: 0.7,
-        locus: [nx, ny, 0.6],
-        audioTime: 0,
-        beat: 0,
-        origin: 'mouse',
-      });
+
+      // Left-side click plucks a tuned F-Phrygian Harp rod; Right-side cocks/taps hydraulic piston!
+      const normY = Math.max(0, Math.min(0.999, (ny + 1) * 0.5));
+      if (nx < 0) {
+        const midi =
+          F_PHRYGIAN_MELODY[Math.floor(normY * F_PHRYGIAN_MELODY.length)];
+        this.cb.onImpulse({
+          subsystem: 'modal-clang',
+          velocity: 0.82,
+          pitchRatio: 1,
+          midiNote: midi,
+          durationSec: 0.9,
+          decay: 1.0,
+          sliceIndex: midi - 60,
+          locus: [nx, ny, 0.4],
+          audioTime: 0,
+          beat: 0,
+          origin: 'mouse',
+        });
+      } else {
+        this.cb.onImpulse({
+          subsystem: 'piston-snap',
+          velocity: 0.76,
+          pitchRatio: 0.85 + normY * 0.5,
+          decay: 0.75,
+          locus: [nx, ny, 0.5],
+          audioTime: 0,
+          beat: 0,
+          origin: 'mouse',
+        });
+      }
     }
   };
 
@@ -264,12 +326,14 @@ export class KeyboardMouseRig {
       this.cb.onPointerStrain(0, 0, 0, false);
 
       if (releaseStrain > 0.35) {
-        // Pneumatic slam-shut acoustic discharge proportional to how far user stretched the object!
         this.cb.onImpulse({
-          subsystem: releaseStrain > 0.8 ? 'sub-rupture' : 'modal-clang',
-          velocity: Math.min(1.3, 0.6 + releaseStrain * 0.55),
-          pitchRatio: 0.82 + releaseStrain * 0.3,
-          decay: 0.9,
+          subsystem: releaseStrain > 0.72 ? 'sub-rupture' : 'larynx-lead',
+          velocity: Math.min(1.3, 0.65 + releaseStrain * 0.5),
+          pitchRatio: 1.0,
+          midiNote: 72, // C5 Seed Motif root cry on release!
+          vowel: 0.15,
+          durationSec: 0.7,
+          decay: 1.0,
           locus: [this.lastPointer.x, this.lastPointer.y, 0.5],
           audioTime: 0,
           beat: 0,
@@ -294,8 +358,8 @@ export class KeyboardMouseRig {
     window.removeEventListener('keyup', this.onKeyUp);
     window.removeEventListener('blur', this.onBlur);
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
-    window.removeEventListener('pointermove', this.onPointerMove);
-    window.removeEventListener('pointerup', this.onPointerUp);
+    this.canvas.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas.removeEventListener('pointerup', this.onPointerUp);
     this.canvas.removeEventListener('wheel', this.onWheel);
     this.canvas.removeEventListener('contextmenu', this.onContextMenu);
   }

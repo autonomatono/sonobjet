@@ -351,10 +351,14 @@ async function bootstrap(): Promise<void> {
     // 3. Step modulation matrix (Lorenz chaos + slewed gesture patch routes)
     matrix.step(rawDt);
 
-    // 4. Tick sample-accurate transport + drain due visual impulses synced to DAC clock
+    // 4. Tick sample-accurate transport + drain pre-strike anticipations & DAC-locked visual impulses
     const halftime = matrix.getSource('punch.halftime') > 0.5 ? 0.5 : 1.0;
     const ctx = getRuntimeCtx();
-    const { state: transportState, dueEvents } = clock.tick(
+    const {
+      state: transportState,
+      dueEvents,
+      dueAnticipations,
+    } = clock.tick(
       audio.getCurrentTime(),
       rawDt,
       halftime,
@@ -362,6 +366,10 @@ async function bootstrap(): Promise<void> {
         activeInstance?.scheduleStep?.(step64, bar, audioTime, ctx);
       },
     );
+
+    for (const cue of dueAnticipations) {
+      activeInstance?.triggerAnticipation?.(cue, ctx);
+    }
 
     for (const ev of dueEvents) {
       lastImpulse = ev;
@@ -395,6 +403,7 @@ async function bootstrap(): Promise<void> {
         activeInstances: metrics.activeInstances,
         structuralStress: metrics.structuralStress,
         kineticEnergy: metrics.kineticEnergy,
+        behavioralState: metrics.behavioralState,
         lastImpulse,
         impulseCount,
       },

@@ -1,10 +1,13 @@
 import * as THREE from 'three/webgpu';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { clamp, float, length, pass, screenUV, sub, vec2 } from 'three/tsl';
 
 export class WebGPUStage {
   public readonly canvas: HTMLCanvasElement;
   public readonly scene: THREE.Scene;
   public readonly camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGPURenderer | null = null;
+  private postProcessing: THREE.PostProcessing | null = null;
   private backendLabel: 'WebGPU' | 'WebGL2' | 'Headless' = 'Headless';
   private ready = false;
   private resizeObserver: ResizeObserver | null = null;
@@ -15,14 +18,14 @@ export class WebGPUStage {
     container.appendChild(this.canvas);
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x090b0e);
-    this.scene.fog = new THREE.FogExp2(0x090b0e, 0.048);
+    this.scene.background = new THREE.Color(0x05070a);
+    this.scene.fog = new THREE.FogExp2(0x05070a, 0.052);
 
     const width = Math.max(1, container.clientWidth || window.innerWidth);
     const height = Math.max(1, container.clientHeight || window.innerHeight);
 
-    this.camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 120);
-    this.camera.position.set(0, 0.65, 6.4);
+    this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 120);
+    this.camera.position.set(0, 0.55, 6.2);
   }
 
   async init(): Promise<void> {
@@ -33,7 +36,7 @@ export class WebGPUStage {
         powerPreference: 'high-performance',
       });
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.18;
+      renderer.toneMappingExposure = 1.24;
       renderer.shadowMap.enabled = true;
 
       await renderer.init();
@@ -43,6 +46,29 @@ export class WebGPUStage {
         renderer as unknown as { backend?: { isWebGPUBackend?: boolean } }
       ).backend;
       this.backendLabel = backend?.isWebGPUBackend ? 'WebGPU' : 'WebGL2';
+
+      // Build TSL HDR Bloom + Chiaroscuro Cinema Vignette Post-Processing
+      try {
+        const scenePass = pass(this.scene, this.camera);
+        const sceneColor = scenePass.getTextureNode('output');
+        const bloomPass = bloom(sceneColor, 0.42, 0.38, 0.82);
+
+        const centeredUv = sub(screenUV, vec2(0.5, 0.5));
+        const dist = length(centeredUv);
+        const vignette = clamp(
+          sub(float(1.12), dist.mul(dist).mul(1.05)),
+          0.38,
+          1.0,
+        );
+
+        const post = new THREE.PostProcessing(renderer);
+        post.outputNode = sceneColor.add(bloomPass).mul(vignette);
+        this.postProcessing = post;
+      } catch (postErr) {
+        console.warn('[Sonobjet] PostProcessing fallback to direct render:', postErr);
+        this.postProcessing = null;
+      }
+
       this.ready = true;
       this.handleResize();
 
@@ -71,7 +97,11 @@ export class WebGPUStage {
 
   render(): void {
     if (!this.ready || !this.renderer) return;
-    this.renderer.render(this.scene, this.camera);
+    if (this.postProcessing) {
+      this.postProcessing.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   private onWindowResize = (): void => {
@@ -93,6 +123,7 @@ export class WebGPUStage {
   dispose(): void {
     window.removeEventListener('resize', this.onWindowResize);
     this.resizeObserver?.disconnect();
+    this.postProcessing?.dispose();
     this.renderer?.dispose();
   }
 }

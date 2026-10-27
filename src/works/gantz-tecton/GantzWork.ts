@@ -1,4 +1,5 @@
 import type {
+  AnticipationCue,
   ImpulseEvent,
   TransportState,
   WorkDefinition,
@@ -11,25 +12,25 @@ import {
 } from '../../engine/render/TSLMaterials';
 import { KineticCameraRig } from '../../kit/camera/KineticCameraRig';
 import { BrutalistChamber } from '../../kit/environment/BrutalistChamber';
-import { GantzAgglomerate } from './GantzAgglomerate';
-import { evaluateGantzStep, GANTZ_SECTIONS } from './GantzScore';
+import { GantzAutomaton } from './GantzAutomaton';
+import { evaluateGantzStepBundle, GANTZ_SECTIONS } from './GantzScore';
 
 class GantzSceneInstance implements WorkSceneInstance {
   private materials: SonobjetMaterialRig | null = null;
   private chamber: BrutalistChamber | null = null;
-  private construct: GantzAgglomerate | null = null;
+  private automaton: GantzAutomaton | null = null;
   private readonly cameraRig = new KineticCameraRig();
   private lastSectionIdx = -1;
 
   init(ctx: WorkRuntimeContext): void {
     this.materials = createSonobjetMaterials();
     this.chamber = new BrutalistChamber(this.materials.chamberConcrete);
-    this.construct = new GantzAgglomerate(this.materials);
+    this.automaton = new GantzAutomaton(this.materials);
 
     ctx.scene.add(this.chamber.group);
-    ctx.scene.add(this.construct.root);
+    ctx.scene.add(this.automaton.worldGroup);
 
-    // Default to Autonomous Cut Director so the music video cuts dynamically like Rutterford's film!
+    // Start in Autonomous Cut Director so camera framing responds cinematically to the 6 Acts
     this.cameraRig.setMode(5);
   }
 
@@ -39,17 +40,17 @@ class GantzSceneInstance implements WorkSceneInstance {
     audioTime: number,
     ctx: WorkRuntimeContext,
   ): void {
-    const chaos = ctx.matrix.getTarget('fractureChaos', 0.45);
-    const drillDensity = ctx.matrix.getTarget('drillDensity', 0.58);
-    const metallicTension = ctx.matrix.getTarget('metallicTension', 0.52);
-    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.48);
+    const chaos = ctx.matrix.getTarget('fractureChaos', 0.38);
+    const drillDensity = ctx.matrix.getTarget('drillDensity', 0.56);
+    const metallicTension = ctx.matrix.getTarget('metallicTension', 0.48);
+    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.34);
     const decayScale = ctx.matrix.getTarget('decayScale', 1.0);
 
     const forceRatchet = ctx.matrix.getSource('punch.ratchet') > 0.5;
     const forceReverse = ctx.matrix.getSource('punch.reverse-slice') > 0.5;
     const halftime = ctx.matrix.getSource('punch.halftime') > 0.5;
 
-    const events = evaluateGantzStep(step64, bar, audioTime, {
+    const bundle = evaluateGantzStepBundle(step64, bar, audioTime, {
       chaos,
       drillDensity,
       forceRatchet,
@@ -61,20 +62,28 @@ class GantzSceneInstance implements WorkSceneInstance {
       metallicTension,
       brutalDrive,
       decayScale,
-      strain: this.construct?.core.getStructuralStress() ?? 0,
+      strain: this.automaton?.core.getStructuralStress() ?? 0,
     };
 
-    for (const ev of events) {
+    for (const cue of bundle.anticipations) {
+      ctx.clock.queueAnticipationCue(cue);
+    }
+
+    for (const ev of bundle.events) {
       ctx.audio.triggerImpulse(ev, synthMacros);
       ctx.clock.queueVisualEvent(ev);
     }
   }
 
-  triggerImpulse(event: ImpulseEvent, ctx: WorkRuntimeContext): void {
-    if (!this.construct) return;
-    this.construct.applyImpulse(event);
+  triggerAnticipation(cue: AnticipationCue): void {
+    this.automaton?.applyAnticipation(cue);
+  }
 
-    // Transfer heavy seismic shock to camera mount
+  triggerImpulse(event: ImpulseEvent, ctx: WorkRuntimeContext): void {
+    if (!this.automaton) return;
+    this.automaton.applyImpulse(event);
+
+    // Transfer heavy Siege-Anvil shock to camera mount
     if (
       event.subsystem === 'sub-rupture' ||
       event.subsystem === 'spine-shear' ||
@@ -84,23 +93,24 @@ class GantzSceneInstance implements WorkSceneInstance {
       this.cameraRig.addShock(event.velocity * traumaMacro, event.locus);
     }
 
-    // Autonomous director cuts on major structural fractures
-    if (
-      event.origin === 'score' &&
-      event.subsystem === 'arc-discharge' &&
-      event.velocity > 0.85
-    ) {
-      const cutIdx = Math.floor(Math.abs(event.beat * 3)) % 4;
-      this.cameraRig.triggerDirectorCut(cutIdx);
+    // Intentional Cinema Director Cuts on dramatic musical events
+    if (event.origin === 'score') {
+      if (event.subsystem === 'larynx-lead' && event.velocity > 0.9) {
+        // Intimate portrait framing when the Larynx sings primary phrases
+        this.cameraRig.triggerDirectorCut(1);
+      } else if (event.subsystem === 'arc-discharge' && event.velocity > 0.9) {
+        this.cameraRig.triggerDirectorCut(2);
+      } else if (event.subsystem === 'sub-rupture' && event.velocity > 1.2) {
+        this.cameraRig.triggerDirectorCut(0);
+      }
     }
 
-    // If live impulse (audioTime === 0), fire sound immediately too!
     if (event.audioTime === 0) {
       ctx.audio.triggerImpulse(event, {
-        metallicTension: ctx.matrix.getTarget('metallicTension', 0.52),
-        brutalDrive: ctx.matrix.getTarget('brutalDrive', 0.48),
+        metallicTension: ctx.matrix.getTarget('metallicTension', 0.48),
+        brutalDrive: ctx.matrix.getTarget('brutalDrive', 0.34),
         decayScale: ctx.matrix.getTarget('decayScale', 1.0),
-        strain: this.construct.core.getStructuralStress(),
+        strain: this.automaton.core.getStructuralStress(),
       });
     }
   }
@@ -111,28 +121,30 @@ class GantzSceneInstance implements WorkSceneInstance {
     transport: TransportState,
     ctx: WorkRuntimeContext,
   ): void {
-    if (!this.construct || !this.chamber || !this.materials) return;
+    if (!this.automaton || !this.chamber || !this.materials) return;
 
-    const section = GANTZ_SECTIONS[transport.sectionIndex];
-    if (section) {
-      ctx.matrix.setSource('score.intensity', section.intensity);
-      if (transport.sectionIndex !== this.lastSectionIdx) {
-        this.lastSectionIdx = transport.sectionIndex;
-        this.cameraRig.triggerDirectorCut(transport.sectionIndex % 4);
-      }
+    const section = GANTZ_SECTIONS[transport.sectionIndex] ?? GANTZ_SECTIONS[0];
+    ctx.matrix.setSource('score.intensity', section.intensity);
+    if (transport.sectionIndex !== this.lastSectionIdx) {
+      this.lastSectionIdx = transport.sectionIndex;
+      this.cameraRig.triggerDirectorCut(transport.sectionIndex % 4);
     }
 
-    const sectionExplode =
-      transport.playing && section?.id === 'cad-disassembly' ? 0.58 : 0;
-    const punchExplode = ctx.matrix.getSource('punch.tectonic-explode');
-    const macroExplode = ctx.matrix.getTarget('tectonicSpread', 0.08);
-    const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
-    const chaos = ctx.matrix.getTarget('fractureChaos', 0.45);
+    // Track user cursor or MediaPipe hands with the creature's saccadic gaze!
+    const mx = ctx.matrix.getSource('mouse.x');
+    const my = ctx.matrix.getSource('mouse.y');
+    this.automaton.setGazeTarget(mx, my);
 
-    const spontaneous = this.construct.update(dt, elapsed, {
-      explodeAmount: Math.min(1.6, macroExplode + sectionExplode + punchExplode * 0.95),
+    const punchExplode = ctx.matrix.getSource('punch.tectonic-explode');
+    const macroExplode = ctx.matrix.getTarget('tectonicSpread', 0.06);
+    const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
+    const stutter = ctx.matrix.getSource('punch.stutter');
+
+    const spontaneous = this.automaton.update(dt, elapsed, {
+      explodeAmount: Math.min(1.5, macroExplode + punchExplode * 0.95),
       hardLock,
-      geometryChaos: chaos,
+      stutterFreeze: stutter > 0.5,
+      sectionId: section.id,
       materials: this.materials,
     });
 
@@ -140,36 +152,35 @@ class GantzSceneInstance implements WorkSceneInstance {
       this.triggerImpulse(spontaneous, ctx);
     }
 
-    const stress = this.construct.core.getStructuralStress();
+    const stress = this.automaton.core.getStructuralStress();
     this.chamber.updateLighting(
       stress,
-      this.construct.getArcFlash(),
-      this.construct.getStrobePulse(),
+      this.automaton.getArcFlash(),
+      this.automaton.getStrobePulse(),
+      this.automaton.getHarmonyGlow(),
     );
 
     const traumaScale = ctx.matrix.getTarget('cameraTrauma', 0.75);
     this.cameraRig.update(ctx.camera, dt, elapsed, traumaScale);
 
-    // Update continuous audio strain & AudioWorklet fracture bus
-    const stutter = ctx.matrix.getSource('punch.stutter');
     const combScream = ctx.matrix.getSource('punch.comb-scream');
-    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.48);
-    const metallic = ctx.matrix.getTarget('metallicTension', 0.52);
+    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.34);
+    const metallic = ctx.matrix.getTarget('metallicTension', 0.48);
 
     ctx.audio.updateContinuous(
       {
         metallicTension: metallic,
         brutalDrive,
         decayScale: ctx.matrix.getTarget('decayScale', 1.0),
-        strain: Math.max(0, stress - 0.18),
+        strain: Math.max(0, stress - 0.16),
       },
       {
         stutterGate: stutter,
-        grainMs: 9 + (1 - ctx.matrix.getTarget('drillDensity', 0.58)) * 42,
-        combMix: Math.min(0.82, combScream * 0.72 + stress * 0.22),
-        combFreq: 110 + metallic * 580 + stress * 240,
+        grainMs: 9 + (1 - ctx.matrix.getTarget('drillDensity', 0.56)) * 42,
+        combMix: Math.min(0.82, combScream * 0.72 + stress * 0.2),
+        combFreq: 174.61 + metallic * 523.25, // Tuned to F3..C5 harmonic series!
         combFeedback: 0.68 + combScream * 0.23,
-        crush: brutalDrive * 0.45,
+        crush: brutalDrive * 0.4,
       },
     );
   }
@@ -190,15 +201,21 @@ class GantzSceneInstance implements WorkSceneInstance {
     this.cameraRig.zoom(delta);
   }
 
-  setPointerStrain(x: number, y: number, tension: number, active: boolean): void {
-    this.construct?.setPointerStrain(x, y, tension, active);
+  setPointerStrain(
+    x: number,
+    y: number,
+    tension: number,
+    active: boolean,
+  ): void {
+    this.automaton?.setPointerStrain(x, y, tension, active);
   }
 
   getMetrics() {
     return {
-      activeInstances: this.construct?.getActiveInstanceCount() ?? 0,
-      structuralStress: this.construct?.core.getStructuralStress() ?? 0,
-      kineticEnergy: this.construct?.core.getKineticEnergy() ?? 0,
+      activeInstances: this.automaton?.getActiveInstanceCount() ?? 0,
+      structuralStress: this.automaton?.core.getStructuralStress() ?? 0,
+      kineticEnergy: this.automaton?.core.getKineticEnergy() ?? 0,
+      behavioralState: this.automaton?.getBehavioralState(),
     };
   }
 
@@ -207,9 +224,9 @@ class GantzSceneInstance implements WorkSceneInstance {
       this.chamber.group.removeFromParent();
       this.chamber.dispose();
     }
-    if (this.construct) {
-      this.construct.root.removeFromParent();
-      this.construct.dispose();
+    if (this.automaton) {
+      this.automaton.worldGroup.removeFromParent();
+      this.automaton.dispose();
     }
     this.materials?.dispose();
   }
@@ -217,60 +234,60 @@ class GantzSceneInstance implements WorkSceneInstance {
 
 export const GantzWork: WorkDefinition = {
   id: 'gantz-tecton',
-  title: 'GANTZ // TECTON',
-  subtitle: '717-Part Hyper-Articulated IDM/Breakcore Visceral Construct',
+  title: 'GANTZ // AUTOMATON',
+  subtitle: '7-Organ Biomechanical Sound-Creature // 6-Act F-Phrygian Score',
   author: 'SONOBJET ENGINE // POC 01',
-  bpm: 172,
-  bars: 64,
+  bpm: 164,
+  bars: 80,
   sections: GANTZ_SECTIONS,
   macros: [
     {
       id: 'fractureChaos',
-      label: 'FRACTURE CHAOS',
-      min: 0,
-      max: 1,
-      defaultValue: 0.46,
-      description: 'Break-slice mutation probability & mechanical tremor',
-    },
-    {
-      id: 'drillDensity',
-      label: 'DRILL DENSITY',
-      min: 0,
-      max: 1,
-      defaultValue: 0.58,
-      description: '64th/128th bouncing-ball ratchet multiplier & stutter grain',
-    },
-    {
-      id: 'metallicTension',
-      label: 'ALLOY TENSION',
-      min: 0,
-      max: 1,
-      defaultValue: 0.52,
-      description: 'Modal plate tuning, comb resonator frequency & filter Q',
-    },
-    {
-      id: 'tectonicSpread',
-      label: 'TECTONIC SPREAD',
-      min: 0,
-      max: 1.2,
-      defaultValue: 0.06,
-      description: 'Exploded-CAD radial shell separation',
-    },
-    {
-      id: 'brutalDrive',
-      label: 'WAVEFOLD CRUSH',
+      label: 'BREAK MUTATION',
       min: 0,
       max: 1,
       defaultValue: 0.36,
-      description: 'AudioWorklet sine wavefolder & sample decimation grit',
+      description: 'Breakcore turnaround variation & micro-slice probability',
+    },
+    {
+      id: 'drillDensity',
+      label: 'RAKER DENSITY',
+      min: 0,
+      max: 1,
+      defaultValue: 0.56,
+      description: 'Mantis-claw ratchet multiplier & stutter grain speed',
+    },
+    {
+      id: 'metallicTension',
+      label: 'LARYNX / HARP TENSION',
+      min: 0,
+      max: 1,
+      defaultValue: 0.48,
+      description: 'Formant Q, steel harp upper partials & F-series comb resonance',
+    },
+    {
+      id: 'tectonicSpread',
+      label: 'RIB-BELLOWS FLARE',
+      min: 0,
+      max: 1.2,
+      defaultValue: 0.06,
+      description: 'Porcelain rib-cage valve expansion & limb abduction',
+    },
+    {
+      id: 'brutalDrive',
+      label: 'WAVEFOLD GRIT',
+      min: 0,
+      max: 1,
+      defaultValue: 0.3,
+      description: 'AudioWorklet West-Coast wavefolder & bass saturation',
     },
     {
       id: 'cameraTrauma',
-      label: 'SEISMIC TRAUMA',
+      label: 'ANVIL RECOIL',
       min: 0,
       max: 1.4,
-      defaultValue: 0.78,
-      description: 'Anisotropic camera mount recoil on sub-ruptures',
+      defaultValue: 0.76,
+      description: 'Seismic camera mount shock when Siege-Hammer strikes Anvil',
     },
   ],
   defaultPatches: [
@@ -318,8 +335,8 @@ export const GantzWork: WorkDefinition = {
       id: 'chaos-subtle-alloy',
       source: 'chaos.x',
       target: 'metallicTension',
-      amount: 0.14,
-      slew: 0.12,
+      amount: 0.12,
+      slew: 0.14,
       enabled: true,
     },
   ],
