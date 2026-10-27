@@ -1,5 +1,7 @@
 # V7 — `PENDULUM // MARBLE ENGINE`
 
+> **Reference work.** V7 is no longer the default flagship; V8 `MODAL FLOW // PHYSICS SONG` expands the gate bank into one module of a 3D physics-generated composition. V7 remains registered at `?work=marble-pendulum` and is the immediate physical predecessor of V8. See [`V8_MODAL_FLOW.md`](V8_MODAL_FLOW.md).
+
 **A blank-slate gravity instrument with a custom steel-marble physics engine.**
 
 V7 is a deliberate reset. The V6 graph framework remains valuable as a record of machine relationships, but the new default work starts from an empty scene and rebuilds the spirit of the first pendulum demo: a simple visible cause, a simple visible effect, and a mechanism you can follow with your eyes. Wintergatan's marble machines are the primary external reference — not as a replica, but as proof that literal falling marbles, gates, funnels and lifts can be more compelling than an abstract network of modules.

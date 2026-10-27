@@ -93,7 +93,7 @@ export interface ImpulseEvent {
   /** Transport beat position at emission */
   beat: number;
   /** Origin of impulse for telemetry & recording */
-  origin: 'score' | 'keyboard' | 'mouse' | 'sensor' | 'take';
+  origin: 'score' | 'keyboard' | 'mouse' | 'sensor' | 'take' | 'physics';
 }
 
 export interface TransportState {
@@ -143,6 +143,8 @@ export interface PatchRoute {
 export interface WorkRuntimeContext {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
+  /** Browser canvas for works that install their own camera/pointer controllers. */
+  canvas?: HTMLCanvasElement;
   audio: AudioEngine;
   clock: Clock;
   matrix: ModulationMatrix;
@@ -320,6 +322,8 @@ export interface DirectorWorkHooks {
   exportGraphConfig?(): string;
   importGraphConfig?(raw: string): void;
   getPhysicsSnapshot?(): PhysicsStudioSnapshot;
+  /** World-space target a drone camera can lock onto (usually a moving marble). */
+  getCameraFollowTarget?(): [number, number, number] | null;
   setPhysicsMacro?(id: string, value: number): void;
   toggleProgrammingPin?(lane: number, step: number, enabled?: boolean): void;
   resetPhysics?(): void;
@@ -369,6 +373,8 @@ export interface WorkSceneInstance extends DirectorWorkHooks {
   setPointerStrain?(x: number, y: number, tension: number, active: boolean): void;
   /** Update continuous gaze target from mouse hover or MediaPipe hand position */
   setGazeTarget?(x: number, y: number): void;
+  /** Suspend a work-owned camera controller while Director Studio owns the viewport. */
+  setDirectorEnabled?(active: boolean): void;
   /** Snapshot physical state metrics for Studio HUD */
   getMetrics(): {
     activeInstances: number;
@@ -390,5 +396,7 @@ export interface WorkDefinition {
   sections: SectionDefinition[];
   macros: MacroDefinition[];
   defaultPatches: PatchRoute[];
+  /** Optional per-work labels for the nine HUD camera-mode buttons. */
+  cameraModeLabels?: string[];
   createInstance(): WorkSceneInstance;
 }

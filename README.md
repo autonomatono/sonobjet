@@ -4,24 +4,24 @@
 
 **Live Deployment (GitHub Pages):** [`https://autonomatono.github.io/sonobjet/`](https://autonomatono.github.io/sonobjet/)
 
-`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V7 flagship starts from a blank slate: a hand-cranked **marble music machine** with its own deterministic steel-marble physics engine, pinned programming wheel, twelve gates, physical instrument impacts, and a bucket-lift recycling loop. The V6 graph kit, V5 automaton, V4 work, and the original pendulum study all remain selectable references. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, Wintergatan, Animusic, Central European clockwork organs, celestial orreries, and the human–robotic ballet of *Sans Objet*.
+`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V8 flagship is a **spatial modular marble instrument**: a deterministic 3D physics network of reservoirs, flywheels, helix lifts, aqueducts, diverters, gates, tine banks, resonator bowls, chime orchards, drum rings and satellite pods. Marbles are the visible flow of energy and sound; physical releases, lifts, collisions, routing decisions and strikes generate a sparse new D-Lydian composition instead of a score playing along. V7's 2.5D gate bank, V6 graph kit, V5 automaton, V4 work, and the original pendulum study all remain selectable references. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, Wintergatan, Animusic, Central European clockwork organs, celestial orreries, and the human–robotic ballet of *Sans Objet*.
 
 ---
 
-## Current Flagship (`01`): `PENDULUM // MARBLE ENGINE`
+## Current Flagship (`01`): `MODAL FLOW // PHYSICS SONG`
 
-A **blank-slate gravity instrument** inspired by the mechanism that made the first simple pendulum demo compelling: one visible cause, one visible effect, repeated until it becomes music. A flywheel turns a pinned programming wheel; pins trip twelve gates; steel marbles free-fall under custom physics onto vibraphone bars and percussion; a collector funnel and bucket lift return them to the top.
+A **physics-generated 48-bar film** for a growing 3D installation. The old twelve-lane gate bank is now one module inside twenty depth-layered units connected by transparent conduits. A fixed-step solver conserves gravitational potential on curved chutes, drives motorized helix lifts, resolves same-path marble collisions, queues marbles behind a rotating escapement, and routes them through many-to-many diverters. Every audible note is a rationed physical event; the transport only supplies sparse governor energy cues and section shape.
 
-### V7 Systems
+### V8 Systems
 
-1. **Custom Fixed-Step Physics** — deterministic semi-implicit sphere integration, capsule-segment contacts, sphere-sphere collisions, restitution, tangential friction, gate obstacles, stuck-marble recovery, and impact telemetry.
-2. **Pinned Programming Wheel** — 12 lanes × 64 eighth-note steps with an editable F-Phrygian pattern. Gate cues are sampled from actual wheel angle, not a beat-to-mesh mapping.
-3. **Physical Machine** — plywood A-frame, hand-crank flywheel, 1:32 gear reduction, pendulum governor with a real ODE, transparent feeder tubes, twelve gate levers, vibraphone/percussion bank, collector trough, and animated bucket lift.
-4. **Causal Audio** — physical marble/instrument collisions trigger the 14-voice procedural synth; the preserved 96-bar score remains available underneath via `SCORE ENGINE BLEND`.
-5. **Physics Lab Tab** — clickable pin grid, ten solver macros, live part registry, focus selector, marble drop/reset controls, program JSON I/O, and free/queued/lifting/impact/jam telemetry.
-6. **Preserved Studio Tools** — Director Studio, free-fly/joint-lock camera, 96-bar keyframe timeline, looks/effects, configs/presets, behavior maps, patchbay, articulation DOFs, recording and video export.
+1. **3D Modular Physics Network** — deterministic curved-conduit integration with energy conservation, lift torque, restitution, queueing, gate duty and program-controlled routing. The blueprint grows from 12 to 96 modules with repeatable satellite resonator pods.
+2. **Physics-Generated Composition** — `ModalFlowComposer` turns real solver events into a new D-Lydian melody using phrase rests, global event budgets, per-module cooldowns, elevation-derived registers, impact-derived velocity and module-derived timbre. No `larynx-lead` or `bellows-choir` humming voices are used.
+3. **Parented Mechanical Installation** — one `KinematicRig` owns chassis, conduit frame, marble frame, module joints, port joints, flywheel/auger/escapement transmission, and instrument hammers. All visible meshes are parented to named joints.
+4. **Drone + Cinematic Camera** — `0` is auto multi-scale marble-follow; `1` is a full inertial drone pilot with banked turns, cinematic drift, marble lock (`F`), follow distance (`C`), wheel speed/FOV, and pointer look. `2–8` remain multi-scale focus shots. Director Studio also gains a `DRONE PILOT` mode.
+5. **Strategic Event Rationing** — an 8×32 routing wheel controls flow rather than a dense note grid; a phrase gate limits audible events to roughly 2 notes/second with rests, cooldowns and register/timbre organization.
+6. **Preserved Studio Tools** — Director Studio, free-fly/joint-lock, 384-beat keyframe timeline, looks/effects, configs/presets, behavior maps, patchbay, articulation DOFs, recording and video export. The `MACHINE` and `PHYSICS` tabs expose the new graph, macros, routing pins, part registry and telemetry.
 
-See [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) for the Wintergatan research, physics architecture, and authoring workflow.
+See [`docs/V8_MODAL_FLOW.md`](docs/V8_MODAL_FLOW.md) for the full physics, composition, camera and authoring architecture. The prior [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) remains the reference for the preserved 2.5D gate-bank work.
 
 ---
 
@@ -78,8 +78,9 @@ Also includes **`05: PHASE // LATTICE`**, the original simple pendulum/polyrhyth
 
 | Input | Action |
 | :--- | :--- |
-| **`SPACE`** | Play / Pause 96-bar algorithmic score |
-| **`0` / `1`–`8`** | `[0]` Morph-Follow Auto-Director, or lock `[1]` Morph Orbit, `[2]` Shell Flight, `[3]` Fault Macro, `[4]` Corkscrew, `[5]` Boom Track, `[6]` Mercury Low, `[7]` Striker Wrist SnorriCam, `[8]` Polar Mandala |
+| **`SPACE`** | Play / Pause the 48-bar physics film (V8) or the preserved 96-bar score on legacy works |
+| **`0` / `1`–`8` on V8** | `[0]` Auto multi-scale marble-follow, `[1]` Drone Pilot, `[2]` Upper Cluster, `[3]` Gate Bank, `[4]` Resonator Field, `[5]` Helix Lift, `[6]` Chime Orchard, `[7]` Conduit Track, `[8]` Return Spiral |
+| **`0` / `1`–`8` on V4–V7** | Legacy Morph-Follow Auto-Director or eight named rig perspectives |
 | **`Z X C V B N M , . /`** | Live play all 10 pads (`SHOCK ANVIL`, `FAULT SHEAR`, `BREAK CHOP`, `CHIME LATTICE`, `FORMANT REED`, `PLASMA CHOIR`, `MONOLITH SUB`, `ACID SQUELCH`, `GLASS HALO`, `GLITCH CHIRP`) — **Mouse X/Y** controls F-Phrygian pitch & vowel formant |
 | **`A S D F G J K`** | Momentary performance bus FX (`GLITCH STUTTER`, `64TH DRILL`, `HALFTIME`, `COMB SCREAM`, `REV SLICE`, `HYPER DILATE`, `SHATTER LOCK`) |
 | **`Q W E R T Y`** | Cue Acts I–VI on next bar boundary |
@@ -89,6 +90,7 @@ Also includes **`05: PHASE // LATTICE`**, the original simple pendulum/polyrhyth
 | **`MIC: ENV` / MIDI / Gamepad** | Live audio envelope follower + auto-bound WebMIDI CCs/notes & Gamepad |
 | **Backquote (`` ` ``)** | Toggle **Director Studio** (free-flight, keyframes, looks, configurations, maps, physics lab, graph) |
 | **`W A S D` / `E Q` / `Z X` / `0`** | Director free-flight move / rise-fall / Dutch roll / level horizon |
+| **V8 `1` Drone Pilot** | `WASD` fly, `E/Q` altitude, `Z/X` roll, pointer drag look, wheel speed/FOV, `Shift` boost, `Alt` precision, `F` marble lock, `V` cinematic drift, `C` follow distance, `0` level horizon |
 | **`K` / `L` / `M`** | In Director Mode: add camera key / look key / machine milestone at playhead |
 | **Director `PHYSICS` tab** | Click programming-wheel pins, edit gravity/restitution/friction/gate/lift macros, inspect the part registry, drop/reset marbles, import/export the program |
 | **Director `MACHINE` tab** | Edit graph macros and many-to-many bindings; pick macro/cluster/module/port/conduit focus; grow or rebuild the installation; export/import machine graph JSON |
@@ -111,10 +113,11 @@ npm run build      # Production bundle into dist/ (with offline MediaPipe WASM)
 
 ## Documentation
 
+- [`docs/V8_MODAL_FLOW.md`](docs/V8_MODAL_FLOW.md) — V8 3D modular physics network, D-Lydian event-composer, drone camera, strategic event rationing, graph/physics authoring, and verification.
 - [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) — V7 Wintergatan research, custom physics engine, programming wheel, machine anatomy, Physics Lab workflow, and verification.
 - [`docs/V6_MACHINE_BUILDING_KIT.md`](docs/V6_MACHINE_BUILDING_KIT.md) — V6 graph schema, module/port/conduit architecture, many-to-many bindings, multi-scale focus, live growth, and Machine tab workflow.
 - [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md) — V5 clockwork automaton, kinematic rig, ecological behavior, 96-bar Director Studio and JSON workflows.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6/V7 module maps, TSL vertex/post-FX shaders, and the 96-bar score.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6/V7/V8 module maps, physics-generated composition, drone camera, TSL vertex/post-FX shaders, and the preserved 96-bar score.
 - [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Keyboard/mouse rig, MediaPipe optical tracking, overdub take recorder, and `.webm` master export.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI/CD pipeline.
 - [`HANDOFF.md`](HANDOFF.md) — Session state, V4 upgrades, verification status, and next extension vectors.

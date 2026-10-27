@@ -199,7 +199,7 @@ export class DirectorSystem {
   setCameraMode(mode: DirectorCameraMode): void {
     this.cameraMode = mode;
     if (
-      (mode === 'FREE' || mode === 'JOINT') &&
+      (mode === 'FREE' || mode === 'JOINT' || mode === 'DRONE') &&
       this.lastPose &&
       !this.freeFly.isEnabled()
     ) {
@@ -235,6 +235,9 @@ export class DirectorSystem {
     if (this.cameraMode === 'TIMELINE') {
       this.applyCameraPose(pose);
     } else {
+      if (this.cameraMode === 'DRONE') {
+        this.freeFly.setFollowTarget(this.work?.getCameraFollowTarget?.() ?? null);
+      }
       this.freeFly.update(dt);
     }
 

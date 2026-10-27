@@ -217,6 +217,7 @@ export class DirectorStudioUI {
     const modes: Array<[DirectorCameraMode, string]> = [
       ['TIMELINE', 'TIMELINE'],
       ['FREE', 'FREE FLY'],
+      ['DRONE', 'DRONE PILOT'],
       ['JOINT', 'JOINT LOCK'],
     ];
     for (const [mode, label] of modes) {
@@ -881,7 +882,7 @@ export class DirectorStudioUI {
         el(
           'div',
           'director-help',
-          'This work does not expose a machine graph. Load ASTRARIUM // MODULAR ENGINE to author modules, ports, energy sources, conduits, bindings and focus scales.',
+          'This work does not expose a machine graph. Load MODAL FLOW // PHYSICS SONG or ASTRARIUM // MODULAR ENGINE to author modules, ports, energy sources, conduits, bindings and focus scales.',
         ),
       );
       this.tabContent.appendChild(header);
@@ -1141,7 +1142,7 @@ export class DirectorStudioUI {
         el(
           'div',
           'director-help',
-          'This work does not expose a custom physics machine. Load PENDULUM // MARBLE ENGINE to edit gravity, gate timing, programming pins and the part registry.',
+          'This work does not expose a custom physics machine. Load MODAL FLOW // PHYSICS SONG or PENDULUM // MARBLE ENGINE to edit flow, gravity, gate timing, routing pins and the part registry.',
         ),
       );
       this.tabContent.appendChild(header);
@@ -1265,7 +1266,7 @@ export class DirectorStudioUI {
       ['jamCount', 20, 'JAMS'],
       ['lostCount', 10, 'LOST'],
       ['releaseJitterMs', 10, 'JITTER ms'],
-      ['governorEnergy', 3, 'PENDULUM ENERGY'],
+      ['governorEnergy', 3, 'GOVERNOR ENERGY'],
     ];
     for (const [key, max, label] of metersA) {
       this.appendMeter(columnA, label, snapshot.telemetry[key] ?? 0, max);
@@ -1393,7 +1394,7 @@ export class DirectorStudioUI {
       el(
         'div',
         'director-help',
-        'FREE FLY: W/A/S/D move, E/Q rise/fall, Z/X roll, 0 or double-click levels horizon, mouse drag looks, wheel adjusts FOV. Shift = 3× speed, Alt = 0.2× macro precision. JOINT LOCK orbits a named rig bearing. [`] toggles Director Mode; performance pad keys are suspended while the drawer is open.',
+        'FREE FLY: W/A/S/D move, E/Q rise/fall, Z/X roll, 0 or double-click levels horizon, mouse drag looks, wheel adjusts FOV. Shift = 3× speed, Alt = 0.2× macro precision. DRONE PILOT adds inertial banked flight: F locks the lead marble, V toggles cinematic drift, C cycles follow distance, wheel trims speed and FOV. JOINT LOCK orbits a named rig bearing. [`] toggles Director Mode; performance pad keys are suspended while the drawer is open.',
       ),
     );
     this.tabContent.appendChild(help);

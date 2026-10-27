@@ -20,6 +20,7 @@ import { MicSensor } from './studio/sensors/MicSensor';
 import { MidiGamepadSensor } from './studio/sensors/MidiGamepadSensor';
 import { DirectorSystem } from './studio/director/DirectorSystem';
 import { StudioShell } from './studio/ui/StudioShell';
+import { ModalFlowWork } from './works/modal-flow/ModalFlowWork';
 import { MarblePendulumWork } from './works/marble-pendulum/MarblePendulumWork';
 import { OrreryCommonsWork } from './works/astrarium-modular-engine/OrreryCommonsWork';
 import { ChronoAutomatonWork } from './works/chrono-automaton/ChronoAutomatonWork';
@@ -31,7 +32,8 @@ async function bootstrap(): Promise<void> {
   if (!mount) throw new Error('Missing #app container');
 
   const registry = new WorkRegistry();
-  registry.register(MarblePendulumWork, true);
+  registry.register(ModalFlowWork, true);
+  registry.register(MarblePendulumWork);
   registry.register(OrreryCommonsWork);
   registry.register(ChronoAutomatonWork);
   registry.register(GantzWork);
@@ -55,7 +57,7 @@ async function bootstrap(): Promise<void> {
   let activeInstance: WorkSceneInstance | null = null;
   let director: DirectorSystem | null = null;
   let stage: WebGPUStage;
-  let inputRig: KeyboardMouseRig;
+  let inputRig: KeyboardMouseRig | null = null;
   let lastImpulse: ImpulseEvent | null = null;
   let impulseCount = 0;
   let ignited = false;
@@ -63,6 +65,7 @@ async function bootstrap(): Promise<void> {
   const getRuntimeCtx = (): WorkRuntimeContext => ({
     scene: stage.scene,
     camera: stage.camera,
+    canvas: stage.canvas,
     audio,
     clock,
     matrix,
@@ -106,7 +109,10 @@ async function bootstrap(): Promise<void> {
     activeInstance = work.createInstance();
     activeInstance.init(getRuntimeCtx());
     shell.bindWorkSchema(work, matrix);
-    shell.setCameraActive(activeInstance.getCameraMode?.() ?? 0);
+    const initialCameraMode = activeInstance.getCameraMode?.() ?? 0;
+    shell.setCameraActive(initialCameraMode);
+    inputRig?.setDroneMode(initialCameraMode === 1 && work.id === 'modal-flow');
+    activeInstance.setDirectorEnabled?.(director?.isEnabled() ?? false);
     director?.setWork(activeInstance);
 
     const url = new URL(window.location.href);
@@ -178,6 +184,7 @@ async function bootstrap(): Promise<void> {
       onToggleMic: () => mic.toggle(),
       onSelectCamera: (mode) => {
         activeInstance?.setCameraMode?.(mode);
+        inputRig?.setDroneMode(mode === 1 && activeWorkDef.id === 'modal-flow');
         shell.setCameraActive(mode);
         takeRecorder.record(performance.now() * 0.001, {
           kind: 'camera',
@@ -189,10 +196,10 @@ async function bootstrap(): Promise<void> {
           ignited = true;
           shell.dismissIgnition();
         }
-        inputRig.triggerPad(subsystem, 1.0);
+        inputRig?.triggerPad(subsystem, 1.0);
       },
       onSetPunch: (id, active) => {
-        inputRig.setPunch(id, active);
+        inputRig?.setPunch(id, active);
       },
       onToggleTakeRec: () => {
         const nowSec = performance.now() * 0.001;
@@ -273,6 +280,7 @@ async function bootstrap(): Promise<void> {
     onToggleHud: () => shell.toggleCinemaMode(),
     onCameraSelect: (mode) => {
       activeInstance?.setCameraMode?.(mode);
+      inputRig?.setDroneMode(mode === 1 && activeWorkDef.id === 'modal-flow');
       shell.setCameraActive(mode);
       takeRecorder.record(performance.now() * 0.001, { kind: 'camera', mode });
     },
@@ -327,7 +335,8 @@ async function bootstrap(): Promise<void> {
     matrix,
     setPostFx: (fx) => stage.setPostFx(fx),
     onEnabledChange: (enabled) => {
-      inputRig.setDirectorMode(enabled);
+      inputRig?.setDirectorMode(enabled);
+      activeInstance?.setDirectorEnabled?.(enabled);
       shell.setDirectorMode(enabled);
     },
   });

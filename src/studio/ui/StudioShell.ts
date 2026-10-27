@@ -9,6 +9,18 @@ import type {
 } from '../../engine/core/types';
 import { KEY_IMPULSE_PADS, KEY_PUNCH_FX } from '../input/KeyboardMouseRig';
 
+const DEFAULT_CAMERA_LABELS: string[] = [
+  '[0] MORPH-FOLLOW AUTO-DIRECTOR',
+  '1 // MORPH ORBIT',
+  '2 // SHELL FLIGHT',
+  '3 // FAULT MACRO',
+  '4 // CORKSCREW',
+  '5 // BOOM TRACK',
+  '6 // MERCURY LOW',
+  '7 // WRIST POV',
+  '8 // POLAR MANDALA',
+];
+
 export interface StudioActions {
   onStartExperience(mode: 'hybrid' | 'live-only'): void;
   onTogglePlay(): void;
@@ -313,21 +325,14 @@ export class StudioShell {
     autoBtn.className = 'btn active';
     autoBtn.style.gridColumn = 'span 2';
     autoBtn.style.textAlign = 'center';
-    autoBtn.textContent = '[0] MORPH-FOLLOW AUTO-DIRECTOR';
+    autoBtn.textContent = DEFAULT_CAMERA_LABELS[0];
     autoBtn.onclick = () => actions.onSelectCamera(0);
     this.camButtonMap.set(0, autoBtn);
     camGrid.appendChild(autoBtn);
 
-    const camSpecs: Array<[number, string]> = [
-      [1, '1 // MORPH ORBIT'],
-      [2, '2 // SHELL FLIGHT'],
-      [3, '3 // FAULT MACRO'],
-      [4, '4 // CORKSCREW'],
-      [5, '5 // BOOM TRACK'],
-      [6, '6 // MERCURY LOW'],
-      [7, '7 // WRIST POV'],
-      [8, '8 // POLAR MANDALA'],
-    ];
+    const camSpecs: Array<[number, string]> = DEFAULT_CAMERA_LABELS.slice(1).map(
+      (label, index) => [index + 1, label] as [number, string],
+    );
     for (const [modeNum, label] of camSpecs) {
       const b = document.createElement('button');
       b.className = 'btn';
@@ -460,23 +465,25 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET V7 // CUSTOM MARBLE PHYSICS + PINNED PROGRAMMING WHEEL + 14-VOICE SYNTH</div>
+        <div class="ignition-kicker">SONOBJET V8 // 3D MODULAR MARBLES + PHYSICS-GENERATED SONG + DRONE CAMERA</div>
         <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          ${initialWork.subtitle}. A blank-slate gravity instrument: a hand-cranked flywheel turns a pinned
-          programming wheel, twelve gates release simulated steel marbles onto vibraphone bars and percussion,
-          and a bucket lift recycles every marble. The original pendulum spirit, rebuilt with a real solver.
+          ${initialWork.subtitle}. A 48-bar D-Lydian composition emerges from real 3D marble flow:
+          gravity, helix lifts, collisions, diverters, gates, resonators and chimes generate sparse
+          phrases. The old twelve-lane gate bank is now one module inside a growing spatial instrument.
         </p>
         <div class="ignition-shortcuts">
-          <b>SPACE</b> Play / Pause 96-Bar Film &amp; Score &nbsp;|&nbsp;
-          <b>[\`]</b> Director Studio / Physics Lab / Graph / Free-Flight / Keyframes &nbsp;|&nbsp;
+          <b>SPACE</b> Play / Pause Physics Film &nbsp;|&nbsp;
+          <b>[\`]</b> Director Studio / Physics / Graph / Drone / Keyframes &nbsp;|&nbsp;
           <b>K / L / M</b> Add Camera / Look / Milestone<br/>
-          <b>0, 1–8</b> Procedural Camera / 8 Perspectives &nbsp;|&nbsp;
-          <b>Z–M , . /</b> Play 10 Voices &nbsp;|&nbsp;
-          <b>Q W E R T Y</b> Cue Acts I–VI
+          <b>0</b> Auto marble-follow &nbsp;|&nbsp; <b>1</b> Drone pilot &nbsp;|&nbsp;
+          <b>F</b> lock marble &nbsp;|&nbsp; <b>V</b> drift &nbsp;|&nbsp; <b>C</b> follow distance<br/>
+          <b>2–8</b> Cinematic focus shots &nbsp;|&nbsp;
+          <b>Z–M , . /</b> Physical actuators &nbsp;|&nbsp;
+          <b>Q W E R T Y</b> Cue six sections
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 96-BAR FILM &amp; SCORE [SPACE]</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 48-BAR PHYSICS FILM [SPACE]</button>
           <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>
@@ -516,7 +523,15 @@ export class StudioShell {
     this.hudLayer.classList.toggle('director-active', active);
   }
 
+  private applyCameraModeLabels(labels?: string[]): void {
+    for (let mode = 0; mode <= 8; mode++) {
+      const button = this.camButtonMap.get(mode);
+      if (button) button.textContent = labels?.[mode] ?? DEFAULT_CAMERA_LABELS[mode];
+    }
+  }
+
   bindWorkSchema(work: WorkDefinition, matrix: ModulationMatrix | null): void {
+    this.applyCameraModeLabels(work.cameraModeLabels);
     // Rebuild section segments
     this.timelineStrip.innerHTML = '';
     this.sectionEls = [];

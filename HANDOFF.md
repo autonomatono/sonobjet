@@ -1,12 +1,60 @@
 # Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5/V6 reference works, and the current V7 blank-slate marble physics machine.
+> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5/V6/V7 reference works, and the current V8 3D modular physics-generated composition.
 
 ---
 
-## 0. Latest Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
+## 0. Latest Update — V8 MODAL FLOW // PHYSICS SONG Implemented & Deployed (2026-10-27)
 
-**Current default flagship:** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
+**Current default flagship:** `MODAL FLOW // PHYSICS SONG` (`src/works/modal-flow/`). V7 `PENDULUM // MARBLE ENGINE`, V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and `PHASE // LATTICE` remain registered and selectable.
+
+### Why this turn changed direction
+
+The user found V7 underwhelming: too 2D, too many events, and essentially a twelve-lane gate sheet. They asked for free drone/cinematic camera flight, a new melody, realistic physical events that actually generate the song, strategic event rationing, and a network of richer modular 3D machines connected by marbles as energy/sound flow. V8 is a new default work rather than an incremental expansion of the V7 lane bank.
+
+### What changed
+
+- Added `src/works/modal-flow/ModalFlowScore.ts`: a new **48-bar, 132 BPM, six-section D-Lydian composition**. The transport supplies section shape and only two sparse governor energy cues per bar; it no longer schedules melody notes.
+- Added `src/works/modal-flow/ModalFlowBlueprint.ts`: a depth-layered **12–96 module** blueprint with 12 fixed core units, repeatable satellite resonators, curved 3D conduits, eight energy sources, sixteen many-to-many bindings, an 8×32 routing wheel and focus targets at all five scales. The V7 twelve-lane gate bank is now one module.
+- Added `src/works/modal-flow/ModalFlowPhysics.ts`: deterministic fixed-step 3D solver with gravitational potential conservation, motorized helix lifts, same-path marble collisions, escapement queueing, program-controlled diverter routing, module energy, edge flow, recycling and telemetry.
+- Added `src/works/modal-flow/ModalFlowComposer.ts`: turns real solver events into a rationed D-Lydian melody using phrase rests, global event budgets, module cooldowns, elevation-based registers, impact-based velocity/decay and module-based timbres. No humming/mewing voices are used.
+- Added `src/works/modal-flow/ModalFlowMachine.ts`: one parented `KinematicRig` installation with chassis/conduit/marble frames, module and port joints, flywheel/auger/diverter/escapement transmission, instrument hammers, transparent curved tubes and instanced marbles. Every visible mesh has a `rig:` ancestor.
+- Added `src/works/modal-flow/ModalFlowWork.ts`: audio/camera/Director integration, graph and physics snapshots, program/config JSON I/O, live growth/rebuild, drone mode HUD and all generic director hooks.
+- Extended `FreeFlyController` with a `DRONE` mode: inertial velocity, banked turns, cinematic drift, marble lock, follow distance, wheel speed/FOV and pointer look. Director Studio gains a fourth camera mode button, `DRONE PILOT`.
+- Added generic engine hooks: `WorkRuntimeContext.canvas`, `ImpulseEvent.origin: 'physics'`, `DirectorWorkHooks.getCameraFollowTarget()`, `WorkSceneInstance.setDirectorEnabled()`, and `WorkDefinition.cameraModeLabels`.
+- Added `KeyboardMouseRig.setDroneMode()` to suspend live pads/punches while drone flight owns the keyboard. `main.ts` registers V8 as default, passes the stage canvas into the work runtime, and coordinates drone/director input modes.
+- Updated `StudioShell` ignition copy and per-work camera labels, `index.html` metadata, README, `docs/ARCHITECTURE.md`, V5/V6/V7 reference notes, and added `docs/V8_MODAL_FLOW.md`.
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **35 / 35 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8)
+- `npm run build`: **clean production bundle**
+- `git diff --check`: **clean**
+- V8 tests enforce: new 48-bar D-Lydian composition, 32-module blueprint, all five focus scales, deterministic 15-second 3D physics, zero lost marbles, strike/gate/lift/collision/recycle events, sparse audible phrase rationing, D-Lydian scale membership, no humming voices, zero unparented meshes before/after live growth, graph/physics snapshots, routing/program/config round-trips, drone mode toggles and clean disposal.
+- Local Vite preview restarted/verified on `0.0.0.0:5173`.
+
+### Deployment
+
+- **Branch:** `arena/23eed999-sonobjet`
+- **Live URL:** `https://autonomatono.github.io/sonobjet/`
+- **Implementation commit / Pages run:** recorded below after the final push and CI watch.
+
+### Next extension vectors
+
+- Add true sphere-vs-tube contacts and multi-marble jams inside lifts.
+- Add raycast picking for 3D modules, ports and conduits.
+- Add user-defined module templates, inter-module resonant coupling and failure modes.
+- Add timeline lanes that rewrite routing-wheel pins per section.
+- Add audio-domain ports that modulate live synth buses from graph energy.
+- Add multi-drone camera choreography and keyframes that interpolate drone state.
+- Export the full 3D blueprint as a portable machine file.
+
+---
+
+## 0.1 Prior Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
+
+**Then-current default flagship (now a preserved reference):** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
 
 ### Why this turn changed direction
 
@@ -59,7 +107,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.1 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+## 0.2 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
 
 **V6 reference work:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
 
@@ -102,7 +150,7 @@ Research findings that shaped V7:
 
 ---
 
-## 0.1 Prior Update — V5 Blueprint Implemented (2026-10-27)
+## 0.3 Prior Update — V5 Blueprint Implemented (2026-10-27)
 
 The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
 
@@ -126,12 +174,12 @@ Implemented:
 - **Historical Session Branch:** `arena/86769aaf-sonobjet` *(original V4 handoff; its history has been merged into the active `arena/23eed999-sonobjet` branch)*
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Current Verification Status (V7):**
+- **Current Verification Status (V8):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **29 / 29 passing** (12 engine + 10 V5 + 3 V6 + 4 V7)
+  - `npm test` (`vitest run`): **35 / 35 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8)
   - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
-  - Last implementation commit: `090cbf2`; last green Pages run: `40555766238` (`https://autonomatono.github.io/sonobjet/`)
+  - Last V7 implementation commit: `090cbf2`; last V7 green Pages run: `40555766238`. V8 implementation commit and green Pages run are recorded in section 0 after deployment.
 
 ---
 
@@ -304,3 +352,19 @@ Turn `sonobjet` into a true **Interactive Music-Video Director's Tool**:
 | `src/kit/environment/SurrealCyberVault.ts` | **REFINE IN V5** — Ground the automaton with a physical horological mounting plinth / gimbal cradle / optical observatory stage instead of floating peripheral shards. |
 | `src/kit/camera/CinemaDirector.ts` | **UPGRADE IN V5** into `DirectorSystem` combining `FreeFlyController` + `KeyframeTimeline` spline/cut evaluator + joint-attached cameras. |
 | `src/studio/ui/StudioShell.ts` | **EXTEND IN V5** with **Director Mode Toggle**, **96-Bar Scrubber + Keyframe/Milestone Track**, and **Mechanism Articulation & Preset Drawer**. |
+
+### V8 current files
+
+| File | Role |
+| :--- | :--- |
+| `src/works/modal-flow/ModalFlowScore.ts` | 48-bar D-Lydian sections, sparse physical energy cues and scale helpers. |
+| `src/works/modal-flow/ModalFlowBlueprint.ts` | 12–96 3D modules, conduits, energy sources, bindings, focus targets and routing wheel. |
+| `src/works/modal-flow/ModalFlowPhysics.ts` | deterministic 3D gravity/lift/collision/queue/routing solver. |
+| `src/works/modal-flow/ModalFlowComposer.ts` | physical event → rationed melodic `ImpulseEvent('physics')`. |
+| `src/works/modal-flow/ModalFlowMachine.ts` | parented `KinematicRig` installation, tubes and instanced marbles. |
+| `src/works/modal-flow/ModalFlowWork.ts` | audio/camera/Director integration, snapshots, growth and drone HUD. |
+| `src/studio/director/FreeFlyController.ts` | `TIMELINE / FREE / DRONE / JOINT` camera with marble-following drone mode. |
+| `src/studio/input/KeyboardMouseRig.ts` | live pads/punches plus `setDroneMode()` input isolation. |
+| `src/main.ts` | registers V8 default, passes canvas, coordinates drone/director input. |
+| `tests/v8.test.ts` | six V8 architecture, physics, composition, camera and integration tests. |
+| `docs/V8_MODAL_FLOW.md` | full V8 design and authoring guide. |
