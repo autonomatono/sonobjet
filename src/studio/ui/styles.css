@@ -68,6 +68,12 @@ body,
   pointer-events: none;
 }
 
+.hud-layer.director-active .hud-mid,
+.hud-layer.director-active .hud-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .hud-topbar {
   pointer-events: auto;
   display: flex;

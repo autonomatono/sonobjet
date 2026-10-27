@@ -291,7 +291,7 @@ export class StudioShell {
     rightPanel.className = 'side-panel';
 
     const camBlock = document.createElement('div');
-    camBlock.innerHTML = `<div class="panel-section-title"><span>MORPH-FOLLOW CAMERA</span><span>KEYS 0, 1–8</span></div>`;
+    camBlock.innerHTML = `<div class="panel-section-title"><span>PROCEDURAL CAMERA</span><span>KEYS 0, 1–8</span></div>`;
 
     this.shotBadgeEl = document.createElement('div');
     this.shotBadgeEl.style.fontSize = '9.5px';
@@ -460,17 +460,19 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU NON-EUCLIDEAN MORPHOLOGY + 14-VOICE SYNTH</div>
-        <h1 class="ignition-title">HYPER // TECTON</h1>
+        <div class="ignition-kicker">SONOBJET V5 // PARENTED CLOCKWORK + ECOLOGICAL BEHAVIOR + 14-VOICE SYNTH</div>
+        <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          A surreal 4,348-element metamorphic sound megastructure governed by coupled state machines, GPU non-Euclidean vertex torsion, and Cunningham robotic striker booms.
-          Through-composed across 96 Bars (F Phrygian, 164 BPM) with 303 Acid, Glass-Armonica &amp; Glitch-Chirp voices, morph-following camera flights, and TSL optical glitch/bleach-bypass post-FX.
+          ${initialWork.subtitle}. A physically parented, articulated automaton driven by analytical gears,
+          cam-followers, four-bar strikers, Geneva indexing and a coupled organ ecology — performed through
+          the same 96-bar F-Phrygian score and zero-sample procedural synth.
         </p>
         <div class="ignition-shortcuts">
           <b>SPACE</b> Play / Pause 96-Bar Film &amp; Score &nbsp;|&nbsp;
-          <b>0, 1–8</b> Morph-Follow Camera / 8 Perspectives &nbsp;|&nbsp;
-          <b>Z–M , . /</b> Play 10 Voices (Acid / Glass / Glitch / Chime)<br/>
-          <b>A S D F G J K</b> Glitch Stutter / 64th Drill / Shatter Lock &nbsp;|&nbsp;
+          <b>[\`]</b> Director Studio / Free-Flight / Keyframes &nbsp;|&nbsp;
+          <b>K / L / M</b> Add Camera / Look / Milestone<br/>
+          <b>0, 1–8</b> Procedural Camera / 8 Perspectives &nbsp;|&nbsp;
+          <b>Z–M , . /</b> Play 10 Voices &nbsp;|&nbsp;
           <b>Q W E R T Y</b> Cue Acts I–VI
         </div>
         <div class="ignition-actions">
@@ -507,6 +509,11 @@ export class StudioShell {
   toggleCinemaMode(): void {
     this.cinemaHidden = !this.cinemaHidden;
     this.hudLayer.classList.toggle('cinema-hidden', this.cinemaHidden);
+  }
+
+  /** Fade the performance decks while the Director Studio owns the screen. */
+  setDirectorMode(active: boolean): void {
+    this.hudLayer.classList.toggle('director-active', active);
   }
 
   bindWorkSchema(work: WorkDefinition, matrix: ModulationMatrix | null): void {

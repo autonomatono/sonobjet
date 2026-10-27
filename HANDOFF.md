@@ -4,10 +4,28 @@
 
 ---
 
+## 0. Update — V5 Blueprint Implemented (2026-10-27)
+
+The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
+
+**New current flagship:** `CHRONO // AUTOMATON` (`src/works/chrono-automaton/`). V4 `HYPER // TECTON` and `PHASE // LATTICE` remain registered in the work selector.
+
+Implemented:
+
+- `src/kit/mechanism/KinematicRig.ts` + `HorologicalMeshKit.ts` — named joints, gear ratios, cam followers, exact four-bar/crank-slider solvers, Geneva indexer, magnetic slip rails with plasma axles, toothed gears, bridges, combs, bellows, irises and ceramic shells.
+- `src/studio/articulation/` — 12 articulation DOFs, six behaviors, eight milestone presets, A/B crossfade, JSON preset bank, and a coupled eight-organ ecological simulation with arousal/cohesion/fatigue/curiosity.
+- `src/studio/director/` — 6-DOF free-flight/joint-lock camera, 96-bar camera/look/milestone keyframe timeline with four interpolation modes, live look and articulation editors, behavior maps, patchbay, project import/export, and a dockable Director Studio UI.
+- `src/main.ts` — V5 default work registration, global Director System integration and keyboard-mode isolation.
+- `docs/V5_DIRECTOR_STUDIO.md` — full V5 architecture and operating guide.
+
+**Verification:** `npm run typecheck`, `npm test` (22 passing), and `npm run build` are clean. The V5 tests enforce the golden rule that every visible mesh has a `RigJoint` ancestor.
+
+---
+
 ## 1. Repository, Branch & Deployment Status
 
 - **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
-- **Fixed Session Branch:** `arena/86769aaf-sonobjet` *(if continuing in a new session on a new Arena branch, branch from the latest commit on `arena/86769aaf-sonobjet` or merge it forward)*
+- **Historical Session Branch:** `arena/86769aaf-sonobjet` *(original V4 handoff; its history has been merged into the active `arena/23eed999-sonobjet` branch)*
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
 - **Verification Status:**

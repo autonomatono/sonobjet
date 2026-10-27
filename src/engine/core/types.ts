@@ -149,6 +149,40 @@ export interface WorkRuntimeContext {
   setPostFx?: (fx: Partial<PostFxState>) => void;
 }
 
+/** A named, inspectable kinematic attachment point for director shots. */
+export interface RigJointDescriptor {
+  id: string;
+  label: string;
+  type: 'root' | 'revolute' | 'prismatic';
+  category?: string;
+  parentId?: string;
+}
+
+/** Editable score-event → mechanical-organ response mapping. */
+export interface BehaviorMapEntry {
+  id: string;
+  source: string;
+  target: string;
+  gain: number;
+  enabled: boolean;
+}
+
+/**
+ * Optional adapter implemented by articulated works. Keeping these hooks on the
+ * generic WorkSceneInstance lets the Director Studio author any work that can
+ * expose a rig, without leaking work-specific classes into engine bootstrap.
+ */
+export interface DirectorWorkHooks {
+  getArticulationState?(): Record<string, number>;
+  setArticulationState?(state: Record<string, number>): void;
+  getBehaviorId?(): string;
+  setBehaviorId?(id: string): void;
+  getJointDescriptors?(): RigJointDescriptor[];
+  getJointWorldPosition?(id: string): [number, number, number] | null;
+  getEcologySnapshot?(): Record<string, number>;
+  setBehaviorMaps?(maps: BehaviorMapEntry[]): void;
+}
+
 export interface TelemetrySnapshot {
   gpuBackend: 'WebGPU' | 'WebGL2' | 'Headless';
   fps: number;
@@ -161,7 +195,7 @@ export interface TelemetrySnapshot {
   impulseCount: number;
 }
 
-export interface WorkSceneInstance {
+export interface WorkSceneInstance extends DirectorWorkHooks {
   init(ctx: WorkRuntimeContext): void;
   /** Invoked at sample-accurate lookahead window to schedule score events */
   scheduleStep?(

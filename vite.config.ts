@@ -44,7 +44,7 @@ export default defineConfig({
   define: {
     __BUILD_SHA__: JSON.stringify(process.env.VITE_GIT_SHA ?? 'dev-local'),
     __BUILD_BRANCH__: JSON.stringify(
-      process.env.VITE_GIT_BRANCH ?? 'arena/86769aaf-sonobjet',
+      process.env.VITE_GIT_BRANCH ?? 'arena/23eed999-sonobjet',
     ),
     __BUILD_TIME__: JSON.stringify(
       process.env.VITE_BUILD_TIME ?? new Date().toISOString(),

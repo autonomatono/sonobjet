@@ -1,14 +1,29 @@
 # SONOBJET
 
-**WebGPU + WebAudio Engine & Live Performance Studio for Non-Euclidean Audiovisual Megastructures**
+**WebGPU + WebAudio Engine & Interactive Director Studio for Articulated Audiovisual Automata**
 
 **Live Deployment (GitHub Pages):** [`https://autonomatono.github.io/sonobjet/`](https://autonomatono.github.io/sonobjet/)
 
-`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. Rather than rendering uniform audio-reactive visualizers or literal simulations of historic machines, `sonobjet` constructs **surreal, futuristic, metamorphic sound-objects** inspired by *Gantz Graf* and Chris Cunningham — governed by coupled morphology state machines, non-Euclidean GPU vertex deformation, morph-following camera choreography, and stylized optical post-processing.
+`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V5 flagship is a fully parented, articulated clockwork automaton driven by an ecological behavior system and a fine-grained 96-bar Director Studio. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, and the human–robotic ballet of *Sans Objet*.
 
 ---
 
-## Flagship Work (`01`): `HYPER // TECTON`
+## Current Flagship (`01`): `CHRONO // AUTOMATON`
+
+A **time-traveled self-playing clockwork automaton** with zero unparented parts. A skeletonized brass/gunmetal movement chassis carries a pinned programme barrel, meshing escapement gears, balance wheel, Geneva indexer, tuned comb banks, exact four-bar striker linkages, crank-driven bellows, iris resonator pipes, hinged ceramic carapace shells, and magnetic flux rails with taut plasma torque-axles.
+
+### V5 Systems
+
+1. **Hierarchical Kinematic Rig & Horological Mesh Kit** — named revolute/prismatic joints, gear ratios, cam-followers, analytical four-bar linkages, crank-sliders, Geneva indexing, magnetic slip-rails, and cached CAD-like toothed gear/bridge/comb/bellows geometry.
+2. **Ecological Behavior & Preset Lab** — 12 scrubbable mechanical DOFs, 8 organ agents with coupled phase oscillators, arousal/cohesion/fatigue/curiosity, 6 behavior generators, 8 milestone presets, live A/B crossfade and JSON preset I/O.
+3. **Director Free-Flight & 96-Bar Keyframe Timeline** — 6-DOF camera, joint-attached shots, editable camera/look/milestone tracks, `CUT`/`SMOOTH_SPLINE`/`ORBIT_ARC`/`VERTIGO` interpolation, live post-FX editing, behavior maps, patchbay editing, and full project export/import.
+4. **Preserved 96-Bar Score & Synth** — the existing 6-Act F-Phrygian composition, 14 procedural voices, stereo ping-pong delay, `FractureWorklet`, and the Section IV “mewing/humming” audio fix remain intact.
+
+See [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md) for the complete architecture and director workflow.
+
+---
+
+## Legacy Work (`02`): `HYPER // TECTON`
 
 A surreal **4,348-element** (`4,092` machine elements + `256` vault monoliths) metamorphic sound megastructure suspended inside a reflective obsidian-mercury cyber-vault:
 
@@ -41,7 +56,7 @@ A surreal **4,348-element** (`4,092` machine elements + `256` vault monoliths) m
 - **Morph-Following Camera Choreography (`CinemaDirector.ts`)**: Couples camera trajectories directly to `HyperTectonMachine.getCameraAnchors()` (`envelopeRadius`, `interiorRadius`, `verticalSpan`, `primaryBoomTip`), combining continuous **`morph-follow`**, **`vertigo` (dolly-zoom)**, and **`epic-pullback`** flights with selective rhythmic **`hard`** and **`whip`** cuts across 8 perspectives (`[0]` Auto-Director, `[1–8]` manual rigs including `SHELL FLIGHT`, `CORKSCREW`, `BOOM TRACK`, and `WRIST POV`).
 - **Stylized Optical & Glitch Post-Processing (`WebGPUStage.ts`)**: Custom `THREE.PostProcessing` TSL shader pipeline featuring **Anamorphic Barrel Lens Distortion**, **Quantized Scan-Band & Block Glitch Tears**, **Radial RGB Chromatic Dispersion**, **HDR Bloom**, **Cunningham Silver-Halide Bleach-Bypass Color Grading**, **Stark Graphic Stencil Thresholding**, and **35mm Film Grain**.
 
-Also includes **`02: PHASE // LATTICE`**, a minimal polyrhythmic tensegrity work demonstrating multi-scene modularity via `WorkRegistry`.
+Also includes **`03: PHASE // LATTICE`**, a minimal polyrhythmic tensegrity work demonstrating multi-scene modularity via `WorkRegistry`.
 
 ---
 
@@ -58,7 +73,12 @@ Also includes **`02: PHASE // LATTICE`**, a minimal polyrhythmic tensegrity work
 | **Right-Drag / `Shift`+Drag / Wheel** | Manual camera orbit & zoom offset on any rig |
 | **`CAM: HAND`** | MediaPipe Vision 2-hand 21-landmark optical tracking (span → dilation, pinches → ratchet/acid Q, wrist velocity → mid-air shear strikes) |
 | **`MIC: ENV` / MIDI / Gamepad** | Live audio envelope follower + auto-bound WebMIDI CCs/notes & Gamepad |
+| **Backquote (`` ` ``)** | Toggle **Director Studio** (free-flight, keyframes, looks, configurations, maps) |
+| **`W A S D` / `E Q` / `Z X` / `0`** | Director free-flight move / rise-fall / Dutch roll / level horizon |
+| **`K` / `L` / `M`** | In Director Mode: add camera key / look key / machine milestone at playhead |
 | **`TAB`** | Cinema HUD toggle (pure full-bleed 60fps view) |
+
+While Director Studio is open, live performance pad keys are suspended so free-flight keys never trigger synth voices. `SPACE` and `TAB` remain available.
 
 ---
 
@@ -74,7 +94,8 @@ npm run build      # Production bundle into dist/ (with offline MediaPipe WASM)
 
 ## Documentation
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, coupled state machines, TSL vertex/post-FX shaders, 96-bar score, and morph-following camera director.
+- [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md) — V5 clockwork automaton, kinematic rig, ecological behavior, 96-bar Director Studio and JSON workflows.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5 module map, TSL vertex/post-FX shaders, and the 96-bar score.
 - [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Keyboard/mouse rig, MediaPipe optical tracking, overdub take recorder, and `.webm` master export.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI/CD pipeline.
 - [`HANDOFF.md`](HANDOFF.md) — Session state, V4 upgrades, verification status, and next extension vectors.

@@ -90,3 +90,57 @@ src/
 | **IV. SHATTER CADENZA** | `52–63` (`12`) | `QUANTIZED_SHATTER` | Stop-start 64th drill cadenza with Beat-4 dead-stops (`52–59`) + 4-bar snare/acid riser & 2-beat silence lock (`60–63`). |
 | **V. SINGULARITY CROWN** | `64–79` (`16 = 2×8`) | `SINGULARITY_CROWN` | Full 2-pass polyrhythmic & harmonic convergence through `Bar 79` + grand cadential roll into Act VI. |
 | **VI. ENTROPIC DISSOLVE** | `80–95` (`16 = 2×8`) | `INVERTED` → `FOLDED` | Cathartic `Fm9` resolution at `Bar 80`, Glass-Armonica & Chime recall of Seed Motif, final lock at `Bar 95`. |
+
+---
+
+## 5. V5 Additions — Articulated Automaton & Director Studio
+
+The legacy V4 sections above remain valid for the registered `HYPER // TECTON` work. The current default work is `CHRONO // AUTOMATON`, which reuses the same 96-bar score and audio engine but replaces particle-cloud morphology with a mechanical hierarchy.
+
+```text
+src/
+├── kit/mechanism/
+│   ├── KinematicRig.ts          # Named revolute/prismatic joints + analytical drivers
+│   └── HorologicalMeshKit.ts    # Cached CAD-like gears, bridges, combs, bellows, irises
+├── studio/articulation/
+│   ├── ArticulationRig.ts       # 12 mechanical DOFs + 6 behavior profiles
+│   ├── MechanismEcology.ts      # Coupled organ agents, fatigue, arousal, cohesion
+│   └── BehaviorPresetBank.ts    # 8 milestone presets + A/B blend + JSON bank
+├── studio/director/
+│   ├── KeyframeTimeline.ts      # Camera/look/milestone project & interpolation
+│   ├── FreeFlyController.ts     # 6-DOF / joint-lock camera input
+│   ├── DirectorStudioUI.ts      # Shots, looks, config, maps, project tabs
+│   ├── DirectorSystem.ts        # Runtime coordinator and work-hook adapter
+│   └── director.css             # Dockable director cockpit styling
+└── works/chrono-automaton/
+    ├── ChronoAutomaton.ts       # Fully parented machine construction & simulation
+    ├── ClockworkCameraDirector.ts
+    └── ChronoAutomatonWork.ts   # WorkDefinition + score/audio/director integration
+```
+
+### 5.1 Kinematic invariants
+
+- Every visible mesh has a `RigJoint` ancestor; this is enforced by `tests/v5.test.ts`.
+- Gear teeth are connected by `GearRatioDriver`; cam followers lift before strikes via `CamFollowerDriver`.
+- Four-bar striker rods close exactly because `solveFourBar` uses circle intersection; coupler and rocker pin distances are unit-tested.
+- `GenevaIndexerDriver` locks 16th-note indexing to transport beats.
+- `MagneticSlipRail` keeps a visible plasma axle stretched between fixed and moving bearings.
+
+### 5.2 Behavioral ecology
+
+`MechanismEcology` is not a bank of independent LFOs. It is a coupled system of eight organ agents with phase coherence, neighbor coupling, arousal, fatigue, curiosity, cohesion and editable `BehaviorMapEntry` routes from score subsystems to mechanical organs. Behavior presets bias precision, coupling, noise, fatigue and recovery rather than hard-coding one monolithic animation curve.
+
+### 5.3 Director data flow
+
+```text
+Clock/Transport → DirectorSystem.update()
+  ├─ KeyframeTimeline.evaluateCamera() → camera pose / free-fly seed
+  ├─ KeyframeTimeline.evaluateLook()  → WebGPUStage.setPostFx()
+  ├─ KeyframeTimeline.evaluateMilestone() → Work.setArticulationState() + setBehaviorId()
+  ├─ Behavior maps / patchbay        → MechanismEcology + ModulationMatrix
+  └─ DirectorStudioUI                → playhead, editors, telemetry, JSON I/O
+```
+
+`DirectorSystem` runs after `activeInstance.update()` in `main.ts`, so an enabled director always has final authority over camera, looks and machine pose. Disabling Director Mode immediately returns camera and post-FX control to the work's procedural director.
+
+For controls and authoring details, see [`V5_DIRECTOR_STUDIO.md`](V5_DIRECTOR_STUDIO.md).

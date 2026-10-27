@@ -77,6 +77,7 @@ export class KeyboardMouseRig {
 
   private isLeftDragging = false;
   private isOrbitDragging = false;
+  private directorMode = false;
   private dragStart = { x: 0, y: 0 };
   private lastPointer = { x: 0, y: 0 };
 
@@ -177,6 +178,24 @@ export class KeyboardMouseRig {
     this.cb.onPunchChange(id, active);
   }
 
+  /**
+   * Suspends the live performance instrument while Director Studio is open.
+   * Space (transport) and Tab (cinema HUD) remain available.
+   */
+  setDirectorMode(active: boolean): void {
+    this.directorMode = active;
+    if (active) {
+      this.heldKeys.clear();
+      for (const id of Array.from(this.activePunches)) {
+        this.matrix.setSource(`punch.${id}`, 0);
+      }
+      this.activePunches.clear();
+      this.isLeftDragging = false;
+      this.isOrbitDragging = false;
+      this.matrix.setSource('mouse.strain', 0);
+    }
+  }
+
   isPunchActive(id: PunchFxId): boolean {
     return this.activePunches.has(id);
   }
@@ -193,6 +212,19 @@ export class KeyboardMouseRig {
     }
 
     const key = e.key.toLowerCase();
+    if (this.directorMode) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.cb.onPlayToggle();
+      } else if (
+        e.code === 'Tab' ||
+        (key === 'h' && !e.shiftKey && !e.metaKey && !e.ctrlKey)
+      ) {
+        e.preventDefault();
+        this.cb.onToggleHud();
+      }
+      return;
+    }
     if (e.code === 'Space') {
       e.preventDefault();
       this.cb.onPlayToggle();
@@ -252,6 +284,7 @@ export class KeyboardMouseRig {
   private onKeyUp = (e: KeyboardEvent): void => {
     const key = e.key.toLowerCase();
     this.heldKeys.delete(key);
+    if (this.directorMode) return;
     const punch = KEY_PUNCH_FX.find((p) => p.key === key);
     if (punch) {
       this.setPunch(punch.id, false);
@@ -266,6 +299,7 @@ export class KeyboardMouseRig {
   };
 
   private onPointerDown = (e: PointerEvent): void => {
+    if (this.directorMode) return;
     const rect = this.canvas.getBoundingClientRect();
     const nx = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
     const ny = -(((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
@@ -326,6 +360,7 @@ export class KeyboardMouseRig {
     this.matrix.setSource('mouse.x', Math.max(-1, Math.min(1, nx)));
     this.matrix.setSource('mouse.y', Math.max(-1, Math.min(1, ny)));
     this.matrix.setSource('mouse.velocity', vel);
+    if (this.directorMode) return;
 
     if (this.isOrbitDragging) {
       this.cb.onOrbit(-dx, dy);
@@ -338,6 +373,11 @@ export class KeyboardMouseRig {
   };
 
   private onPointerUp = (): void => {
+    if (this.directorMode) {
+      this.isLeftDragging = false;
+      this.isOrbitDragging = false;
+      return;
+    }
     if (this.isLeftDragging) {
       const releaseStrain = this.matrix.getSource('mouse.strain');
       this.isLeftDragging = false;
@@ -364,6 +404,7 @@ export class KeyboardMouseRig {
   };
 
   private onWheel = (e: WheelEvent): void => {
+    if (this.directorMode) return;
     e.preventDefault();
     this.cb.onZoom(e.deltaY);
   };

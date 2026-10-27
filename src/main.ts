@@ -1,4 +1,5 @@
 import './studio/ui/styles.css';
+import './studio/director/director.css';
 import { AudioEngine } from './engine/audio/AudioEngine';
 import { Clock } from './engine/core/Clock';
 import { ModulationMatrix } from './engine/core/ModulationMatrix';
@@ -17,7 +18,9 @@ import { VideoExporter } from './studio/recorder/VideoExporter';
 import { MediaPipeSensor } from './studio/sensors/MediaPipeSensor';
 import { MicSensor } from './studio/sensors/MicSensor';
 import { MidiGamepadSensor } from './studio/sensors/MidiGamepadSensor';
+import { DirectorSystem } from './studio/director/DirectorSystem';
 import { StudioShell } from './studio/ui/StudioShell';
+import { ChronoAutomatonWork } from './works/chrono-automaton/ChronoAutomatonWork';
 import { GantzWork } from './works/gantz-tecton/GantzWork';
 import { LatticeWork } from './works/lattice-pendulum/LatticeWork';
 
@@ -26,7 +29,8 @@ async function bootstrap(): Promise<void> {
   if (!mount) throw new Error('Missing #app container');
 
   const registry = new WorkRegistry();
-  registry.register(GantzWork, true);
+  registry.register(ChronoAutomatonWork, true);
+  registry.register(GantzWork);
   registry.register(LatticeWork);
 
   const params = new URLSearchParams(window.location.search);
@@ -45,6 +49,7 @@ async function bootstrap(): Promise<void> {
   const videoExporter = new VideoExporter();
 
   let activeInstance: WorkSceneInstance | null = null;
+  let director: DirectorSystem | null = null;
   let stage: WebGPUStage;
   let inputRig: KeyboardMouseRig;
   let lastImpulse: ImpulseEvent | null = null;
@@ -98,6 +103,7 @@ async function bootstrap(): Promise<void> {
     activeInstance.init(getRuntimeCtx());
     shell.bindWorkSchema(work, matrix);
     shell.setCameraActive(activeInstance.getCameraMode?.() ?? 0);
+    director?.setWork(activeInstance);
 
     const url = new URL(window.location.href);
     url.searchParams.set('work', work.id);
@@ -308,6 +314,20 @@ async function bootstrap(): Promise<void> {
     onZoom: (delta) => activeInstance?.zoomCamera?.(delta),
   });
 
+  director = new DirectorSystem({
+    mount: document.body,
+    canvas: stage.canvas,
+    camera: stage.camera,
+    clock,
+    audio,
+    matrix,
+    setPostFx: (fx) => stage.setPostFx(fx),
+    onEnabledChange: (enabled) => {
+      inputRig.setDirectorMode(enabled);
+      shell.setDirectorMode(enabled);
+    },
+  });
+
   void midiGamepad.initMidi(matrix, dispatchLiveImpulse);
   loadWork(activeWorkDef);
 
@@ -389,8 +409,9 @@ async function bootstrap(): Promise<void> {
       shell.flashImpulsePad(ev);
     }
 
-    // 5. Step Sonobjet physics, TSL uniforms, camera trauma, and render WebGPU frame
+    // 5. Step Sonobjet physics, then let Director Studio override camera/looks/pose.
     activeInstance?.update(rawDt, elapsedSec, transportState, ctx);
+    director?.update(rawDt, transportState);
     stage.render();
 
     // 6. Update Studio HUD telemetry
@@ -406,19 +427,24 @@ async function bootstrap(): Promise<void> {
         ? 'MIC TRANSIENT ACTIVE'
         : 'MOUSE + KEYBOARD READY';
 
+    const telemetry = {
+      gpuBackend: stage.getBackendLabel(),
+      fps: smoothedFps,
+      activeInstances: metrics.activeInstances,
+      structuralStress: metrics.structuralStress,
+      kineticEnergy: metrics.kineticEnergy,
+      behavioralState: metrics.behavioralState,
+      activeShotBadge: metrics.activeShotBadge,
+      lastImpulse,
+      impulseCount,
+    };
+    if (director?.isEnabled()) {
+      telemetry.activeShotBadge = director.getBadge();
+    }
+
     shell.updateFrame(
       transportState,
-      {
-        gpuBackend: stage.getBackendLabel(),
-        fps: smoothedFps,
-        activeInstances: metrics.activeInstances,
-        structuralStress: metrics.structuralStress,
-        kineticEnergy: metrics.kineticEnergy,
-        behavioralState: metrics.behavioralState,
-        activeShotBadge: metrics.activeShotBadge,
-        lastImpulse,
-        impulseCount,
-      },
+      telemetry,
       matrix,
       audio.getWaveformSnapshot(),
       sensorLabel,
