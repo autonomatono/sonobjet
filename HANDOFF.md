@@ -1,57 +1,41 @@
-# SONOBJET — Session Handoff & Continuity State
+# Session Handoff — `sonobjet`
 
-> **Purpose:** Updated at the end of **every turn** so that if a session is interrupted or handed off, work can resume immediately with complete architectural, musical, and operational context.
+> **Continuity Protocol:** Updated at the conclusion of every turn so work can resume seamlessly if interrupted.
 
----
-
-## 1. Current Deployment & Git State
-
-- **Active Working Branch:** `arena/86769aaf-sonobjet`
+## 1. Current Repository & Deployment Status
+- **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
+- **Active Working Branch:** `arena/86769aaf-sonobjet` (fixed session branch — never switch or rename)
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
-- **CI Workflow:** `.github/workflows/deploy.yml` (`CI & Deploy GitHub Pages` — triggers on `push` to `**`, runs typecheck + Vitest + Vite production build + MediaPipe WASM copy, deploys `./dist` to `github-pages`)
-- **Local Dev Server:** `npm run dev` (`0.0.0.0:5173`, `allowedHosts: true` for Arena live preview)
+- **Local Dev Preview Server:** Running via `start_process` (`Website` / `sonobjet-studio-e141a86a`, `npm run dev` bound to `0.0.0.0:5173`)
 
----
+## 2. Completed Architecture & V4 Overhaul (`HYPER // TECTON`)
 
-## 2. Evolution Log
+### A. Complete 96-Bar Hypermetric Phrase Resolutions & Expanded 14-Voice Synth
+- **Fixed Both Premature Section Transitions (`src/works/gantz-tecton/GantzScore.ts`, `GANTZ_TOTAL_BARS = 96`)**:
+  - **Act III → Act IV (`Bars 28–51` → `Bar 52`)**: Expanded Act III to `24` bars (`3 × 8` complete cycles of `CHORD_CYCLE_8BAR` & `ARIA_MELODY_8BAR`). `Bars 44–47` suspend the drums in celestial harmonic bloom, while `Bars 48–51` finish the second half of the 3rd 8-bar cycle (`Bbm9 → C7b9`, hitting the `E4` leading tone in `Bar 51`) with gated glitch-stutter polychords, rising 303 acid, and a `Bar 51` mechanical wind-up/ratchet handoff into Act IV.
+  - **Act V → Act VI (`Bars 64–79` → `Bar 80`)**: Expanded Act V (`64–79`) and Act VI (`80–95`) to `16` bars (`2 × 8`) each so Act V's second thematic pass (`Bars 72–79`) plays out its entire 8-bar progression and `Bar 79` grand cadential drum/glitch roll before resolving cathartically onto tonic `Fm9` at `Bar 80`.
+- **3 New Voices + Stereo Ping-Pong Delay (`src/engine/audio/SynthRack.ts`)**:
+  - **`acid-squelch` (`playAcidSquelch`)**: Resonant dual-cascaded 303 diode-ladder bass/arp synth with fast accent filter sweep and wavefolded bite.
+  - **`glass-armonica` (`playGlassArmonica`)**: High-register inharmonic FM (`1 : 2.998`) crystalline halo voice routed into dotted-16th ping-pong delay and chamber reverb.
+  - **`glitch-chirp` (`playGlitchChirp`)**: Quantized sample-and-hold stepped FM micro-chirp & digital click bursts scattered across transitions and off-beats.
+  - **`initPingPongDelay(bpm)`**: Tempo-synced stereo ping-pong delay (`3 × step16` left, `2 × step16` right, bandpass-filtered feedback loop).
 
-### Turn 3 — Non-Anthropomorphic Architectural Overhaul & Spectacular Music-Synced Cinematography (`BABBAGE // CLAVILUX`)
-Addressed user direction to eliminate all anthropomorphism (no skull, eyes, jaw, arms, or spine) in favor of a **Moving-Castle / Acoustic Drop-Forge Factory / Babbage Light-Organ**, paired with a **monumental Piranesian cathedral set** and **music-synced multi-perspective montage cinematography**:
+### B. Orders-of-Magnitude Visual Complexity, Non-Euclidean Shaders & Coupled State Machines
+- **`HyperTectonMachine.ts` (`4,092` Dynamic Parts) + `SurrealCyberVault.ts` (`256` Morphing Monoliths + `12` Laser Curtains) = `4,348` Elements**:
+  - Non-anthropomorphic, non-historic futuristic sound megastructure inspired by *Gantz Graf* and Chris Cunningham (`1,536` glossy ceramic/obsidian tectonic carapace lamellae, `1,024` surgical-chrome micro-needles, `768` photonic capillary filaments, `512` nested gyro-blades, `192` orbiting shards, geodesic singularity core, and `6` 2-link analytical-IK Cunningham robotic striker booms).
+  - **Two-Tier State Machines**: 6-state Macro-Morphology machine (`FOLDED_MONOLITH`, `CANTILEVER_STRIKER`, `INVERTED_CATHEDRAL`, `NON_EUCLIDEAN_HELIX`, `QUANTIZED_SHATTER`, `SINGULARITY_CROWN`) coupled with 16 independent Fault-Cluster sub-state machines (`DORMANT`, `WINDUP`, `EXTRUDE`, `INVERT_FLIP`, `SHATTER_JITTER`, `HARMONIC_BLOOM`).
+  - **GPU TSL Non-Euclidean Vertex Shaders (`src/engine/render/TSLMaterials.ts`)**: Real-time `positionNode` spatial helix torsion (`nonEuclideanTwist`), quantized 3D block shear (`spatialGlitch`), and radial shockwaves (`acousticRipple`).
 
-1. **Non-Anthropomorphic 6-District Architectural Sound-Machine (`src/works/gantz-tecton/BabbageLightOrgan.ts`, removed `GantzAutomaton.ts`):**
-   - **District 1 (Locomotive Undercarriage & 3 Drop-Forge Trip-Hammers):** Asymmetric cast-iron bogie rolling/heaving on 4 flanged chrome rail wheels, rotating brass cam-barrel, and 3 staggered drop-forge trip-hammers that wind up on `AnticipationCue` and slam brass-capped anvils (`sub-rupture`, `spine-shear`), spraying **220 ballistic floor-bouncing sparks**.
-   - **District 2 (Twin Babbage Analytical Cipher Towers):** Framing an open `3.2m` central flythrough atrium ("Nave") with 6 chrome shafts, **48 engraved decagonal brass cipher wheels** (`brassInstanced`), and **48 surgical-chrome carry-levers** stepping by exact `36°` decimal increments (`modal-clang`, `fin-cascade`, `piston-snap`).
-   - **District 3 (Overhead Jacquard Punched-Card Loom & Shuttle Carriage):** Reciprocating cast-iron/brass carriage (`shuttleCarriage`, doubling as the rigid **SnorriCam POV mount**) sliding across twin chrome rails, flipping a hexagonal ivory card-prism by `60°`, and firing 16 chrome sensing needles on chopped breakbeat slices (`break-shred`).
-   - **District 4 (24-Pipe Asymmetric Chromatic Quartz Light-Organ Crown):** Towering left-battlement bass pipes (`y = +6.9m`) and stepped right-terrace reed pipes (`lightOrganPipeInstanced`) igniting with Scriabin pitch-class HDR plasma and opening hinged brass louvers on every `larynx-lead` solo note and `bellows-choir` polychord.
-   - **District 5 (Central 3-Ring Counter-Rotating Dichroic Astrolabe & Brake Shoes):** Suspended inside the central atrium; clamped dead still with friction sparks during `stutter` freezes and Act IV dead-stops.
-   - **District 6 (Lateral Accordion Bellows Lung-Vats, Boiler Stack & 8 Catenary Gantry Cables):** `510` total instanced dynamic elements.
+### C. State-Tracking Camera Choreography & Stylized TSL Post-Processing
+- **Morph-Following Camera Director (`src/kit/camera/CinemaDirector.ts`)**: Reads live `HyperTectonAnchors` (`envelopeRadius`, `interiorRadius`, `verticalSpan`, `primaryBoomTip`) every frame so orbital, interior-flight, boom-tracking, and Wrist-SnorriCam rigs physically glide alongside the machine as it changes topology (`morph-follow`, `vertigo`, `epic-pullback`, `whip`, `hard`).
+- **Stylized TSL Post-Processing (`src/engine/render/WebGPUStage.ts`)**: `convertToTexture` + `Fn` shader pass implementing barrel lens distortion, quantized scan-band glitch displacement, radial RGB chromatic aberration, HDR bloom, silver-halide bleach-bypass grading, stark stencil thresholding, and 35mm film grain — controllable live via the `OPTICAL GLITCH & GRADE` macro and audio/score events.
 
-2. **Monumental Piranesian Industrial Cathedral (`src/kit/environment/PiranesiFoundry.ts`):**
-   - `46m x 32m x 56m` containment cathedral (`far = 160m`) with 9 receding concrete/steel portal arches, two-tier mezzanine catwalk galleries (`y = +2.6m`, `+8.4m`), overhead suspension gantry trusses (`y = +9.2m`), steel rail tracks & wet specular floor mirror channel, and **8 articulated chromatic Light-Organ projection cones** sweeping the cathedral vault in sync with chords & melodies.
+## 3. Verification Status
+- `npm run typecheck` (`tsc --noEmit`): **0 errors**.
+- `npm test` (`vitest run`): **12 / 12 tests passing** (covering 96-bar Act III & Act V phrase completions, 3 new voices, 4,348-part morphology state transitions, envelope-tracking camera + Vertigo Zolly + Wrist SnorriCam, and PostFX uniforms).
+- `npm run build` (`vite build`): Clean production bundle in `dist/` with offline MediaPipe WASM assets.
 
-3. **Music-Synced Multi-Perspective Montage & Camera Rig (`src/kit/camera/CinemaDirector.ts` + `evaluateGantzMontageCut` in `GantzScore.ts`):**
-   - **Mode `0` (`EPIC AUTO-EDIT DIRECTOR`, default) + Keys `1–8` Direct Perspectives:**
-     1. `CATHEDRAL WIDE [24mm]`, 2. `INTERIOR NAVE FLYTHROUGH [28mm]`, 3. `MACRO: BABBAGE CIPHER WHEELS [85mm Tele]`, 4. `MACRO: JACQUARD PUNCH-LOOM [50mm]`, 5. `LIGHT-ORGAN QUARTZ CROWN [24mm Low]`, 6. `LOW FORGE: DROP-HAMMERS [18mm Dutch]`, 7. `SHUTTLE POV [SNORRICAM]`, 8. `OVERHEAD ASTROLABE PLAN [70mm]`.
-   - **80-Bar Editorial Montage Grammar:** Act I `85mm` cipher-wheel macro -> **Bar 6 Hard Smash-Cut** out to `cathedral-wide` on first Drop-Forge slam -> Nave flythrough; Act II Call/Response cross-cutting; Act III Aria sweeps + Bar 44 Nave Levitation + Bars 46–47 quarter-note smash-cuts; Act IV 64th macro jump-cuts + Beat 4 dead-stop wide cuts + **Bars 56–59 4-Bar Hitchcock Vertigo Dolly-Zoom (`dist * tan(fov/2) = 1.85m`)** + Bar 59 pre-drop silence; Act V overdrive montage; Act VI **6-Bar `1.15m -> 22m` Epic Cathedral Pull-Back**.
-
-### Earlier Foundations (Turns 1–2)
-- Custom WebAudio + `FractureWorklet` 11-voice procedural synth & 6-Act F-Phrygian composition (`164 BPM`, Seed Motif `C5–Db5–Ab4–G4–F4`, `Fm(add9) -> Dbmaj7#11 -> Bbm9 -> C7b9`).
-- `WebGPUStage` with `THREE.PostProcessing` TSL `bloom()` + vignette, MediaPipe 2-Hand 3D vision (self-hosted WASM + optical fallback), Mic Exciter, WebMIDI/Gamepad, `TakeRecorder` JSON overdubbing, and 60fps `.webm` + Opus `VideoExporter`.
-
----
-
-## 3. Verification Commands
-
-```bash
-npm run typecheck   # 0 errors
-npm test            # 11/11 Vitest suites passing (Clock, 6-Act Score & Montage, CinemaDirector Vertigo Zolly & SnorriCam, BabbageLightOrgan 510-element lifecycle, LatticeWork, Recorder)
-npm run build       # Builds ./dist + ./dist/mediapipe-wasm cleanly
-```
-
----
-
-## 4. Next Milestones / Potential Directions
-
-1. **Interactive Montage & Score Timeline Editor:** Allow users to sequence custom camera-cut tracks (`1–8`, `vertigo`, `whip`, `hard`) and mutate the F-Phrygian Seed Motif / Jacquard punched-card patterns visually in a collapsible timeline drawer.
-2. **Ray-Picked District Inspection & Direct Mechanical Crank:** Click directly on any Babbage Cipher Column, Light-Organ Pipe, or Drop-Forge Trip-Hammer in 3D space to solo/audition that mechanism and lock a custom tracking camera onto it.
-3. **Second Monumental Architectural Work:** Author a contrasting acoustic architecture (e.g., an underwater glass-and-mercury Fresnel Lighthouse Harmonium or a brutalist hydroelectric turbine carillon).
+## 4. Next Potential Directions
+1. **Per-Section Custom TSL Color Palettes & Negative-Inversion Flash Frames**: Add sub-frame negative-inversion flashes on major structural state flips and optional user-selectable grading presets (e.g., *Cunningham Silver*, *Cobalt Xerox*, *Stark Stencil*).
+2. **Visual Timeline Scrubbing & Loop-Region Bracket**: Click-to-scrub and loop-region selection directly on the 96-bar Act transport strip for rapid composition iteration.
+3. **Third Experimental Work (`03`)**: Add a fluid-ferrofluid / cybernetic string-quartet chamber work utilizing the shared `MorphState` + `TSLMaterials` vertex-torsion toolkit.

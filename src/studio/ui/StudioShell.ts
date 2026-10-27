@@ -291,7 +291,7 @@ export class StudioShell {
     rightPanel.className = 'side-panel';
 
     const camBlock = document.createElement('div');
-    camBlock.innerHTML = `<div class="panel-section-title"><span>CINEMA MONTAGE RIG</span><span>KEYS 0, 1–8</span></div>`;
+    camBlock.innerHTML = `<div class="panel-section-title"><span>MORPH-FOLLOW CAMERA</span><span>KEYS 0, 1–8</span></div>`;
 
     this.shotBadgeEl = document.createElement('div');
     this.shotBadgeEl.style.fontSize = '9.5px';
@@ -301,7 +301,7 @@ export class StudioShell {
     this.shotBadgeEl.style.background = 'rgba(120, 190, 255, 0.08)';
     this.shotBadgeEl.style.border = '1px solid rgba(120, 190, 255, 0.24)';
     this.shotBadgeEl.style.letterSpacing = '0.04em';
-    this.shotBadgeEl.textContent = 'AUTO-EDIT // MACRO: BABBAGE CIPHER WHEELS [85mm]';
+    this.shotBadgeEl.textContent = 'AUTO-MORPH // MACRO: TECTONIC LAMELLAE [85mm]';
     camBlock.appendChild(this.shotBadgeEl);
 
     const camGrid = document.createElement('div');
@@ -313,20 +313,20 @@ export class StudioShell {
     autoBtn.className = 'btn active';
     autoBtn.style.gridColumn = 'span 2';
     autoBtn.style.textAlign = 'center';
-    autoBtn.textContent = '[0] EPIC AUTO-EDIT DIRECTOR';
+    autoBtn.textContent = '[0] MORPH-FOLLOW AUTO-DIRECTOR';
     autoBtn.onclick = () => actions.onSelectCamera(0);
     this.camButtonMap.set(0, autoBtn);
     camGrid.appendChild(autoBtn);
 
     const camSpecs: Array<[number, string]> = [
-      [1, '1 // CATHEDRAL [24mm]'],
-      [2, '2 // NAVE FLY [28mm]'],
-      [3, '3 // BABBAGE [85mm]'],
-      [4, '4 // JACQUARD [50mm]'],
-      [5, '5 // QUARTZ [24mm]'],
-      [6, '6 // FORGE LOW [18mm]'],
-      [7, '7 // SHUTTLE POV'],
-      [8, '8 // ASTROLABE PLAN'],
+      [1, '1 // MORPH ORBIT'],
+      [2, '2 // SHELL FLIGHT'],
+      [3, '3 // FAULT MACRO'],
+      [4, '4 // CORKSCREW'],
+      [5, '5 // BOOM TRACK'],
+      [6, '6 // MERCURY LOW'],
+      [7, '7 // WRIST POV'],
+      [8, '8 // POLAR MANDALA'],
     ];
     for (const [modeNum, label] of camSpecs) {
       const b = document.createElement('button');
@@ -410,9 +410,9 @@ export class StudioShell {
     helpBlock.style.color = 'var(--text-dim)';
     helpBlock.innerHTML = `
       <div class="panel-section-title"><span>DIRECT MANIPULATION</span></div>
-      <div><b>L-DRAG</b> DRIVE SHUTTLE &amp; STRAIN (RELEASE = SLAM)</div>
+      <div><b>L-DRAG</b> TWIST &amp; DILATE GEOMETRY (RELEASE = SLAM)</div>
       <div><b>R-DRAG / SHIFT</b> ORBIT // <b>WHEEL</b> ZOOM // <b>0, 1–8</b> CAMS</div>
-      <div><b>Z..M ,</b> FIRE DISTRICTS // <b>A..K</b> BREAK FX</div>
+      <div><b>Z..M , . /</b> 10 SYNTH/GLITCH PADS // <b>A..K</b> BUS FX</div>
       <div><b>Q W E R T Y</b> CUE ACTS I–VI // <b>TAB</b> CINEMA</div>
       <div class="footer-meta">
         <span>BRANCH: ${__BUILD_BRANCH__}</span>
@@ -460,21 +460,21 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU + WEBAUDIO ARCHITECTURAL SYNTHESIS</div>
-        <h1 class="ignition-title">BABBAGE // CLAVILUX</h1>
+        <div class="ignition-kicker">SONOBJET ENGINE // WEBGPU NON-EUCLIDEAN MORPHOLOGY + 14-VOICE SYNTH</div>
+        <h1 class="ignition-title">HYPER // TECTON</h1>
         <p class="ignition-desc">
-          A monumental Moving-Castle Acoustic Factory, Babbage Cipher-Tower &amp; 24-Pipe Chromatic Light Organ inside a 56-meter Piranesian Foundry.
-          Through-composed in 6 Acts (F Phrygian, 164 BPM) with music-synced epic montage editing: flying through the interior nave, 85mm cipher-wheel macros, Shuttle SnorriCam POV, and Hitchcock Vertigo dolly-zoom.
+          A surreal 4,348-element metamorphic sound megastructure governed by coupled state machines, GPU non-Euclidean vertex torsion, and Cunningham robotic striker booms.
+          Through-composed across 96 Bars (F Phrygian, 164 BPM) with 303 Acid, Glass-Armonica &amp; Glitch-Chirp voices, morph-following camera flights, and TSL optical glitch/bleach-bypass post-FX.
         </p>
         <div class="ignition-shortcuts">
-          <b>SPACE</b> Play / Pause 6-Act Film &amp; Score &nbsp;|&nbsp;
-          <b>0, 1–8</b> Auto-Edit / 8 Camera Perspectives &nbsp;|&nbsp;
-          <b>Z–M ,</b> Play Districts (Forge / Babbage / Light Organ)<br/>
-          <b>A S D F G J K</b> Brake Lock / 64th Drill / Tower Spread &nbsp;|&nbsp;
+          <b>SPACE</b> Play / Pause 96-Bar Film &amp; Score &nbsp;|&nbsp;
+          <b>0, 1–8</b> Morph-Follow Camera / 8 Perspectives &nbsp;|&nbsp;
+          <b>Z–M , . /</b> Play 10 Voices (Acid / Glass / Glitch / Chime)<br/>
+          <b>A S D F G J K</b> Glitch Stutter / 64th Drill / Shatter Lock &nbsp;|&nbsp;
           <b>Q W E R T Y</b> Cue Acts I–VI
         </div>
         <div class="ignition-actions">
-          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 6-ACT FILM &amp; SCORE [SPACE]</button>
+          <button class="btn btn-primary" id="ignite-score-btn">INITIATE 96-BAR FILM &amp; SCORE [SPACE]</button>
           <button class="btn" id="ignite-live-btn" style="padding:11px 14px">PURE LIVE INSTRUMENT</button>
         </div>
       </div>

@@ -14,7 +14,27 @@ export type SubsystemId =
   | 'arc-discharge'
   | 'larynx-lead'
   | 'bellows-choir'
-  | 'windup-inhale';
+  | 'windup-inhale'
+  | 'acid-squelch'
+  | 'glass-armonica'
+  | 'glitch-chirp';
+
+export interface PostFxState {
+  /** Digital scan-band tear & block displacement [0..1.5] */
+  glitch: number;
+  /** Anamorphic barrel/pincushion lens warp [-0.6..0.9] */
+  lensDistort: number;
+  /** Radial RGB chromatic dispersion [0..1.5] */
+  aberration: number;
+  /** 35mm silver-halide noise & micro-scan grain [0..1] */
+  grain: number;
+  /** Cunningham cold-cyan / bleach-bypass contrast grade [0..1] */
+  bleachGrade: number;
+  /** Stark Gantz-Graf high-contrast graphic threshold flash [0..1] */
+  starkThreshold: number;
+  /** Dynamic bloom boost [0.2..1.4] */
+  bloomStrength: number;
+}
 
 export type PunchFxId =
   | 'stutter'
@@ -126,6 +146,7 @@ export interface WorkRuntimeContext {
   audio: AudioEngine;
   clock: Clock;
   matrix: ModulationMatrix;
+  setPostFx?: (fx: Partial<PostFxState>) => void;
 }
 
 export interface TelemetrySnapshot {

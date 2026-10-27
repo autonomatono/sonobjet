@@ -57,6 +57,7 @@ async function bootstrap(): Promise<void> {
     audio,
     clock,
     matrix,
+    setPostFx: (fx) => stage.setPostFx(fx),
   });
 
   const dispatchLiveImpulse = (event: ImpulseEvent): void => {
@@ -79,6 +80,15 @@ async function bootstrap(): Promise<void> {
     activeInstance?.dispose();
 
     activeWorkDef = work;
+    stage.setPostFx({
+      glitch: 0,
+      lensDistort: 0.06,
+      aberration: 0.16,
+      grain: 0.12,
+      bleachGrade: 0.22,
+      starkThreshold: 0,
+      bloomStrength: 0.9,
+    });
     clock.configure(work.bpm, work.bars, work.sections);
     audio.setBpm(work.bpm);
     matrix.registerMacros(work.macros);

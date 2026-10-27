@@ -15,24 +15,26 @@ export interface PunchBinding {
 }
 
 export const KEY_IMPULSE_PADS: KeyPadBinding[] = [
-  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'DROP FORGE' },
-  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'TRIPLE HAMMER' },
-  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'JACQUARD BREAK' },
-  { key: 'v', label: 'V', subsystem: 'modal-clang', shortName: 'BABBAGE CHIME' },
-  { key: 'b', label: 'B', subsystem: 'larynx-lead', shortName: 'CLAVILUX REED' },
-  { key: 'n', label: 'N', subsystem: 'bellows-choir', shortName: 'ORGAN PLENUM' },
-  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'FURNACE BASS' },
-  { key: ',', label: ',', subsystem: 'arc-discharge', shortName: 'BRAKE ARC' },
+  { key: 'z', label: 'Z', subsystem: 'sub-rupture', shortName: 'SHOCK ANVIL' },
+  { key: 'x', label: 'X', subsystem: 'spine-shear', shortName: 'FAULT SHEAR' },
+  { key: 'c', label: 'C', subsystem: 'break-shred', shortName: 'BREAK CHOP' },
+  { key: 'v', label: 'V', subsystem: 'modal-clang', shortName: 'CHIME LATTICE' },
+  { key: 'b', label: 'B', subsystem: 'larynx-lead', shortName: 'FORMANT REED' },
+  { key: 'n', label: 'N', subsystem: 'bellows-choir', shortName: 'PLASMA CHOIR' },
+  { key: 'm', label: 'M', subsystem: 'core-implode', shortName: 'MONOLITH SUB' },
+  { key: ',', label: ',', subsystem: 'acid-squelch', shortName: 'ACID SQUELCH' },
+  { key: '.', label: '.', subsystem: 'glass-armonica', shortName: 'GLASS HALO' },
+  { key: '/', label: '/', subsystem: 'glitch-chirp', shortName: 'GLITCH CHIRP' },
 ];
 
 export const KEY_PUNCH_FX: PunchBinding[] = [
-  { key: 'a', id: 'stutter', label: 'BRAKE STUTTER' },
+  { key: 'a', id: 'stutter', label: 'GLITCH STUTTER' },
   { key: 's', id: 'ratchet', label: '64TH DRILL' },
   { key: 'd', id: 'halftime', label: 'HALFTIME' },
   { key: 'f', id: 'comb-scream', label: 'COMB SCREAM' },
   { key: 'g', id: 'reverse-slice', label: 'REV SLICE' },
-  { key: 'j', id: 'tectonic-explode', label: 'TOWER SPREAD' },
-  { key: 'k', id: 'hard-lock', label: 'BRAKE LOCK' },
+  { key: 'j', id: 'tectonic-explode', label: 'HYPER DILATE' },
+  { key: 'k', id: 'hard-lock', label: 'SHATTER LOCK' },
 ];
 
 // F-Phrygian scale notes across 2 octaves so live keyboard/mouse play is always deeply musical!
@@ -115,14 +117,31 @@ export class KeyboardMouseRig {
     let chordNotes: number[] | undefined;
     let durationSec: number | undefined;
 
-    if (subsystem === 'modal-clang' || subsystem === 'larynx-lead') {
-      // Blend user vertical cursor position with Seed Motif intervals
+    if (
+      subsystem === 'modal-clang' ||
+      subsystem === 'larynx-lead' ||
+      subsystem === 'glass-armonica'
+    ) {
       const scaleIdx =
         Math.abs(my) > 0.08
           ? Math.floor(normY * F_PHRYGIAN_MELODY.length)
-          : [4, 5, 2, 1, 0][this.motifCursor++ % 5]; // Seed Motif C5-Db5-Ab4-G4-F4 when centered!
-      midiNote = F_PHRYGIAN_MELODY[scaleIdx];
-      durationSec = subsystem === 'larynx-lead' ? 0.62 : 0.9;
+          : [4, 5, 2, 1, 0][this.motifCursor++ % 5];
+      midiNote =
+        F_PHRYGIAN_MELODY[scaleIdx] +
+        (subsystem === 'glass-armonica' ? 12 : 0);
+      durationSec =
+        subsystem === 'glass-armonica'
+          ? 2.2
+          : subsystem === 'larynx-lead'
+            ? 0.62
+            : 0.9;
+    } else if (subsystem === 'acid-squelch') {
+      midiNote =
+        F_PHRYGIAN_BASS[Math.floor(normY * F_PHRYGIAN_BASS.length)] + 12;
+      durationSec = 0.24;
+    } else if (subsystem === 'glitch-chirp') {
+      midiNote = F_PHRYGIAN_MELODY[Math.floor(normY * F_PHRYGIAN_MELODY.length)];
+      durationSec = 0.14;
     } else if (subsystem === 'core-implode') {
       midiNote =
         F_PHRYGIAN_BASS[Math.floor(normY * F_PHRYGIAN_BASS.length)];

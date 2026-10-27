@@ -11,33 +11,33 @@ import {
   type SonobjetMaterialRig,
 } from '../../engine/render/TSLMaterials';
 import { CinemaDirector } from '../../kit/camera/CinemaDirector';
-import { PiranesiFoundry } from '../../kit/environment/PiranesiFoundry';
-import { BabbageLightOrgan } from './BabbageLightOrgan';
+import { SurrealCyberVault } from '../../kit/environment/SurrealCyberVault';
 import {
   evaluateGantzMontageCut,
   evaluateGantzStepBundle,
   GANTZ_SECTIONS,
+  GANTZ_TOTAL_BARS,
 } from './GantzScore';
+import { HyperTectonMachine } from './HyperTectonMachine';
 
 class GantzSceneInstance implements WorkSceneInstance {
   private materials: SonobjetMaterialRig | null = null;
-  private foundry: PiranesiFoundry | null = null;
-  private machine: BabbageLightOrgan | null = null;
+  private vault: SurrealCyberVault | null = null;
+  private machine: HyperTectonMachine | null = null;
   private readonly cinemaDirector = new CinemaDirector();
   private lastMontageKey = -1;
 
   init(ctx: WorkRuntimeContext): void {
     this.materials = createSonobjetMaterials();
-    this.foundry = new PiranesiFoundry(this.materials.chamberConcrete);
-    this.machine = new BabbageLightOrgan(this.materials);
+    this.vault = new SurrealCyberVault(this.materials);
+    this.machine = new HyperTectonMachine(this.materials);
 
-    ctx.scene.add(this.foundry.group);
+    ctx.scene.add(this.vault.group);
     ctx.scene.add(this.machine.worldGroup);
 
-    // Start in Mode 0: EPIC AUTO-EDIT DIRECTOR (music-synced multi-scale montage!)
     this.cinemaDirector.setMode(0);
     this.cinemaDirector.applyEditorialDirective({
-      shot: 'macro-babbage',
+      shot: 'macro-fault-seams',
       transition: 'hard',
     });
   }
@@ -91,44 +91,45 @@ class GantzSceneInstance implements WorkSceneInstance {
     if (!this.machine) return;
     this.machine.applyImpulse(event);
 
-    // Transfer heavy Drop-Forge & Furnace shock to camera mount
     if (
       event.subsystem === 'sub-rupture' ||
       event.subsystem === 'spine-shear' ||
       event.subsystem === 'core-implode'
     ) {
-      const traumaMacro = ctx.matrix.getTarget('cameraTrauma', 0.76);
+      const traumaMacro = ctx.matrix.getTarget('cameraTrauma', 0.72);
       this.cinemaDirector.addShock(event.velocity * traumaMacro, event.locus);
     }
 
-    // In Pure Live mode (or paused transport), live pad hits trigger responsive smash-cuts!
+    // In Pure Live mode, morph state & camera smoothly track live performer energy!
     if (event.origin !== 'score' && !ctx.clock.isPlaying()) {
-      if (event.subsystem === 'sub-rupture') {
+      if (event.subsystem === 'bellows-choir' || event.subsystem === 'glass-armonica') {
+        this.machine.setMorphState('INVERTED_CATHEDRAL', 2.4);
         this.cinemaDirector.applyEditorialDirective({
-          shot: 'forge-hammers-low',
+          shot: 'interior-dive',
+          transition: 'morph-follow',
+        });
+      } else if (event.subsystem === 'acid-squelch') {
+        this.machine.setMorphState('NON_EUCLIDEAN_HELIX', 3.0);
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'helix-corkscrew',
+          transition: 'morph-follow',
+        });
+      } else if (event.subsystem === 'glitch-chirp') {
+        this.machine.setMorphState('QUANTIZED_SHATTER', 5.0);
+        this.cinemaDirector.applyEditorialDirective({
+          shot: 'macro-fault-seams',
           transition: 'hard',
         });
-      } else if (event.subsystem === 'modal-clang') {
+      } else if (event.subsystem === 'sub-rupture') {
+        this.machine.setMorphState('CANTILEVER_STRIKER', 3.2);
         this.cinemaDirector.applyEditorialDirective({
-          shot: 'macro-babbage',
-          transition: 'hard',
-        });
-      } else if (event.subsystem === 'break-shred') {
-        this.cinemaDirector.applyEditorialDirective({
-          shot: 'carriage-snorricam',
-          transition: 'hard',
-        });
-      } else if (
-        event.subsystem === 'larynx-lead' ||
-        event.subsystem === 'bellows-choir'
-      ) {
-        this.cinemaDirector.applyEditorialDirective({
-          shot: 'light-organ-crown',
-          transition: 'whip',
+          shot: 'cunningham-boom-track',
+          transition: 'morph-follow',
         });
       } else if (event.subsystem === 'core-implode') {
+        this.machine.setMorphState('SINGULARITY_CROWN', 3.8);
         this.cinemaDirector.applyEditorialDirective({
-          shot: 'cathedral-wide',
+          shot: 'morph-orbit',
           transition: 'hard',
         });
       }
@@ -150,19 +151,19 @@ class GantzSceneInstance implements WorkSceneInstance {
     transport: TransportState,
     ctx: WorkRuntimeContext,
   ): void {
-    if (!this.machine || !this.foundry || !this.materials) return;
+    if (!this.machine || !this.vault || !this.materials) return;
 
     const section = GANTZ_SECTIONS[transport.sectionIndex] ?? GANTZ_SECTIONS[0];
     ctx.matrix.setSource('score.intensity', section.intensity);
 
-    // Music-Synced Epic Montage & Continuous Zolly/Pullback Evaluation
+    const barMod = ((transport.bar % GANTZ_TOTAL_BARS) + GANTZ_TOTAL_BARS) % GANTZ_TOTAL_BARS;
+    const barFraction = (((transport.beat % 4) + 4) % 4) / 4;
+
+    // Evaluate Morph-Following Camera Choreography & Continuous Zolly/Pullback
     if (transport.playing) {
-      const barMod = ((transport.bar % 80) + 80) % 80;
-      const barFraction = ((transport.beat % 4) + 4) % 4 / 4;
       const stepKey = barMod * 16 + transport.step16;
 
-      // Continuous per-frame evaluation during Hitchcock Vertigo Zolly (56..59) & Epic Pull-Back (74..79)
-      if ((barMod >= 56 && barMod < 60) || barMod >= 74) {
+      if ((barMod >= 60 && barMod < 64) || barMod >= 88) {
         const contDirective = evaluateGantzMontageCut(
           barMod,
           transport.step16,
@@ -187,15 +188,17 @@ class GantzSceneInstance implements WorkSceneInstance {
     }
 
     const punchExplode = ctx.matrix.getSource('punch.tectonic-explode');
-    const macroExplode = ctx.matrix.getTarget('tectonicSpread', 0.06);
+    const macroExplode = ctx.matrix.getTarget('tectonicSpread', 0.12);
     const hardLock = ctx.matrix.getSource('punch.hard-lock') > 0.5;
     const stutter = ctx.matrix.getSource('punch.stutter');
 
     const spontaneous = this.machine.update(dt, elapsed, {
-      explodeAmount: Math.min(1.5, macroExplode + punchExplode * 0.95),
+      explodeAmount: Math.min(1.6, macroExplode + punchExplode * 0.95),
       hardLock,
       stutterFreeze: stutter > 0.5,
       sectionId: section.id,
+      bar: barMod,
+      step16: transport.step16,
     });
 
     if (spontaneous) {
@@ -203,16 +206,24 @@ class GantzSceneInstance implements WorkSceneInstance {
     }
 
     const stress = this.machine.getStructuralStress();
-    this.foundry.updateLighting(
+    const strobe = this.machine.getStrobePulse();
+    const spectral = this.machine.getSpectralGlow();
+    const acid = this.machine.getAcidEnergy();
+    const glitch = this.machine.getGlitchBurst();
+
+    this.vault.update(
+      dt,
       elapsed,
+      this.machine.getMorphState(),
       stress,
-      this.machine.getArcFlash(),
-      this.machine.getStrobePulse(),
-      this.machine.getOrganGlow(),
+      strobe,
+      spectral,
+      acid,
       this.machine.getSpectralHueNorm(),
+      stutter > 0.5 || hardLock,
     );
 
-    const traumaScale = ctx.matrix.getTarget('cameraTrauma', 0.76);
+    const traumaScale = ctx.matrix.getTarget('cameraTrauma', 0.72);
     this.cinemaDirector.update(
       ctx.camera,
       dt,
@@ -222,8 +233,41 @@ class GantzSceneInstance implements WorkSceneInstance {
       traumaScale,
     );
 
+    // Drive Stylized Cunningham / Gantz-Graf TSL Post-Processing Shader!
+    const opticalFxMacro = ctx.matrix.getTarget('opticalStylize', 0.48);
+    const isDeadStop =
+      transport.playing &&
+      section.id === 'flywheel-cadenza' &&
+      barMod < 60 &&
+      transport.step16 >= 12;
+
+    ctx.setPostFx?.({
+      glitch: Math.min(
+        1.4,
+        (glitch * 0.85 + stutter * 0.75) * (0.4 + opticalFxMacro * 1.15),
+      ),
+      lensDistort:
+        0.06 +
+        opticalFxMacro * 0.16 +
+        strobe * 0.14 +
+        (this.machine.getMorphState() === 'NON_EUCLIDEAN_HELIX' ? 0.12 : 0),
+      aberration:
+        0.18 +
+        opticalFxMacro * 0.42 +
+        this.machine.getArcFlash() * 0.45 +
+        glitch * 0.4,
+      grain: 0.12 + opticalFxMacro * 0.24,
+      bleachGrade: 0.28 + opticalFxMacro * 0.26,
+      starkThreshold: hardLock
+        ? 0.65
+        : isDeadStop
+          ? 0.42
+          : Math.max(0, glitch - 1.1) * 0.5,
+      bloomStrength: 0.92 + spectral * 0.26 + acid * 0.18,
+    });
+
     const combScream = ctx.matrix.getSource('punch.comb-scream');
-    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.34);
+    const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.32);
     const metallic = ctx.matrix.getTarget('metallicTension', 0.48);
 
     ctx.audio.updateContinuous(
@@ -237,7 +281,7 @@ class GantzSceneInstance implements WorkSceneInstance {
         stutterGate: stutter,
         grainMs: 9 + (1 - ctx.matrix.getTarget('drillDensity', 0.56)) * 42,
         combMix: Math.min(0.82, combScream * 0.72 + stress * 0.2),
-        combFreq: 174.61 + metallic * 523.25, // Tuned to F3..C5 harmonic series!
+        combFreq: 174.61 + metallic * 523.25,
         combFeedback: 0.68 + combScream * 0.23,
         crush: brutalDrive * 0.4,
       },
@@ -271,7 +315,7 @@ class GantzSceneInstance implements WorkSceneInstance {
 
   getMetrics() {
     return {
-      activeInstances: this.machine?.getActiveInstanceCount() ?? 0,
+      activeInstances: (this.machine?.getActiveInstanceCount() ?? 0) + 256,
       structuralStress: this.machine?.getStructuralStress() ?? 0,
       kineticEnergy: this.machine?.getKineticEnergy() ?? 0,
       behavioralState: this.machine?.getBehavioralState(),
@@ -280,9 +324,9 @@ class GantzSceneInstance implements WorkSceneInstance {
   }
 
   dispose(): void {
-    if (this.foundry) {
-      this.foundry.group.removeFromParent();
-      this.foundry.dispose();
+    if (this.vault) {
+      this.vault.group.removeFromParent();
+      this.vault.dispose();
     }
     if (this.machine) {
       this.machine.worldGroup.removeFromParent();
@@ -294,61 +338,62 @@ class GantzSceneInstance implements WorkSceneInstance {
 
 export const GantzWork: WorkDefinition = {
   id: 'gantz-tecton',
-  title: 'BABBAGE // CLAVILUX',
+  title: 'HYPER // TECTON',
   subtitle:
-    'Moving-Castle Acoustic Factory & 24-Pipe Light Organ // 6-Act Score',
+    'Non-Euclidean Metamorphic Megastructure // 96-Bar 6-Act Score',
   author: 'SONOBJET ENGINE // POC 01',
   bpm: 164,
-  bars: 80,
+  bars: GANTZ_TOTAL_BARS,
   sections: GANTZ_SECTIONS,
   macros: [
     {
-      id: 'fractureChaos',
-      label: 'LOOM MUTATION',
-      min: 0,
-      max: 1,
-      defaultValue: 0.36,
-      description: 'Jacquard breakcore turnaround variation & slice probability',
-    },
-    {
-      id: 'drillDensity',
-      label: 'CIPHER RATCHET',
-      min: 0,
-      max: 1,
-      defaultValue: 0.56,
-      description: 'Babbage carry-lever ratchet multiplier & stutter grain speed',
-    },
-    {
-      id: 'metallicTension',
-      label: 'PIPE / CHIME Q',
+      id: 'opticalStylize',
+      label: 'OPTICAL GLITCH & GRADE',
       min: 0,
       max: 1,
       defaultValue: 0.48,
-      description: 'Clavilux reed formant Q, Babbage chime partials & comb resonance',
+      description:
+        'TSL scan-band glitch tears, anamorphic lens distortion, RGB dispersion, bleach-bypass & 35mm grain',
+    },
+    {
+      id: 'fractureChaos',
+      label: 'GLITCH / BREAK MUTATION',
+      min: 0,
+      max: 1,
+      defaultValue: 0.38,
+      description: 'Breakcore turnaround variation & S&H glitch-chirp probability',
+    },
+    {
+      id: 'drillDensity',
+      label: 'RATCHET DENSITY',
+      min: 0,
+      max: 1,
+      defaultValue: 0.56,
+      description: '64th micro-ratchet multiplier & stutter grain speed',
+    },
+    {
+      id: 'metallicTension',
+      label: 'ACID / RESONANCE Q',
+      min: 0,
+      max: 1,
+      defaultValue: 0.48,
+      description: '303 Acid diode Q, Glass-Armonica FM shimmer & formant resonance',
     },
     {
       id: 'tectonicSpread',
-      label: 'TOWER & BELLOWS SPREAD',
+      label: 'NON-EUCLIDEAN DILATION',
       min: 0,
       max: 1.2,
-      defaultValue: 0.06,
-      description: 'Babbage cipher-tower gallery spread & lateral bellows inflation',
+      defaultValue: 0.12,
+      description: 'Radial expansion & GPU vertex torsion across all 4,348 elements',
     },
     {
       id: 'brutalDrive',
-      label: 'FURNACE GRIT',
+      label: 'WAVEFOLD SATURATION',
       min: 0,
       max: 1,
-      defaultValue: 0.3,
-      description: 'AudioWorklet West-Coast wavefolder & sub-anvil saturation',
-    },
-    {
-      id: 'cameraTrauma',
-      label: 'FORGE RECOIL',
-      min: 0,
-      max: 1.4,
-      defaultValue: 0.76,
-      description: 'Seismic camera shock when Drop-Forge Trip-Hammers strike anvils',
+      defaultValue: 0.32,
+      description: 'AudioWorklet West-Coast wavefolder & sub-bass grit',
     },
   ],
   defaultPatches: [
@@ -377,9 +422,9 @@ export const GantzWork: WorkDefinition = {
       enabled: true,
     },
     {
-      id: 'mouse-strain-drive',
+      id: 'mouse-strain-optical',
       source: 'mouse.strain',
-      target: 'brutalDrive',
+      target: 'opticalStylize',
       amount: 0.55,
       slew: 0.03,
       enabled: true,

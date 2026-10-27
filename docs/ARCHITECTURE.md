@@ -1,67 +1,92 @@
-# SONOBJET Engine Architecture
+# Architecture — `sonobjet` Engine & `HYPER // TECTON`
 
-## 1. System Overview
+## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
-`sonobjet` is structured as a modular audiovisual game engine where each **Work** (`WorkDefinition`) is a self-contained performance scene and interactive music video composed from four decoupled layers:
+`sonobjet` treats a scene as a **living, surreal electromechanical performance** rather than an FFT visualizer or a literal simulation of historic hardware:
+
+1. **Coupled Multi-Scale State Machines**: Global Macro-Morphology states reconfigure the entire megastructure across impossible topological geometries while 16 independent Fault-Cluster sub-state machines react locally to individual percussion, harmonic, acid, and glitch impulses.
+2. **Non-Euclidean GPU Vertex Deformation**: Laws of rigid-body geometry are intentionally transcended — TSL vertex shaders (`positionNode`) twist, shear, and ripple thousands of instanced ceramic and chrome structures directly on the GPU in tandem with CPU state-machine kinematics.
+3. **Through-Composed Hypermetric Musical Form**: Every section completes its full harmonic and melodic cycles (`8`-bar F-Phrygian Polychord & Aria cycles across a `96`-bar 6-Act score) with sculpted bridge handoffs and cadential drum/glitch rolls.
+4. **State-Coupled Camera & Stylized Optical Post-Processing**: Camera trajectories continuously follow the machine's live bounding envelope (`envelopeRadius`, `interiorRadius`, `verticalSpan`, `primaryBoomTip`) through TSL lens distortion, scan-band glitch tears, RGB chromatic aberration, and Cunningham bleach-bypass color grading.
+
+---
+
+## 2. Layered Directory Architecture
 
 ```text
 src/
-├── engine/
-│   ├── core/        # Clock (with AnticipationQueue), SonobjetCore, ModulationMatrix, WorkRegistry
-│   ├── audio/       # AudioEngine, SynthRack (11 architectural/tonal/percussive voices), FractureWorklet
-│   └── render/      # WebGPUStage (WebGPURenderer + TSL HDR Bloom & Vignette), TSLMaterials (8-shader palette)
-├── kit/
-│   ├── kinematics/  # ScalarSpring, CAD detent quantization
-│   ├── sequencer/   # Bjorklund Euclidean generator, exponential/decelerating ratchet bursts, break chopper
-│   ├── camera/      # CinemaDirector (8 multi-scale rigs + Auto-Edit Montage + SnorriCam + Vertigo Zolly)
-│   │                # & KineticCameraRig (orbital rig for Etude 02)
-│   └── environment/ # PiranesiFoundry (46x32x56m cathedral, 9 portal arches, catwalks, 8 chromatic beams)
-│                    # & BrutalistChamber (compact gantry chamber for Etude 02)
-├── studio/
-│   ├── input/       # KeyboardMouseRig (F-Phrygian modal performance pads, 0..8 camera cuts, strain/slam)
-│   ├── sensors/     # MediaPipeSensor (2-hand 3D + optical fallback), MicSensor, MidiGamepadSensor
-│   ├── recorder/    # TakeRecorder (multi-pass JSON overdub), VideoExporter (60fps WebM + Opus)
-│   └── ui/          # StudioShell + Live Camera Lens/Shot Telemetry & Signal HUD
-└── works/
-    ├── gantz-tecton/      # POC 01: BABBAGE // CLAVILUX (6-district factory/light-organ + 80-bar 6-Act score)
-    └── lattice-pendulum/  # Etude 02: PHASE // LATTICE (48-pendulum coprime polyrhythmic modal steel array)
+├── engine/                     # Core audiovisual runtime
+│   ├── core/
+│   │   ├── types.ts            # Contracts: WorkDefinition, ImpulseEvent, PostFxState, SubsystemId (14 voices)
+│   │   ├── Clock.ts            # Dual-domain 1/64th lookahead + AnticipationQueue + DAC VisualQueue
+│   │   ├── Sonobjet.ts         # Causal physics base class (spring-damper DOFs + spontaneous rupture)
+│   │   ├── ModulationMatrix.ts # Patchbay + Lorenz Chaos + S&H + slewed macro targets
+│   │   └── WorkRegistry.ts     # Scene/work registry for multi-work extensibility
+│   ├── audio/
+│   │   ├── AudioEngine.ts      # Master WebAudio graph, chamber IR, compressor, MediaStream tap
+│   │   ├── SynthRack.ts        # 14-voice procedural synth + dotted-16th stereo ping-pong delay bus
+│   │   ├── BreakBufferLab.ts   # Procedural 16-slice 2-bar Amen/Think breakbeat synthesizer
+│   │   └── FractureWorklet.ts  # Custom AudioWorklet DSP: stutter gate, Karplus comb, West-Coast wavefolder
+│   └── render/
+│       ├── WebGPUStage.ts      # WebGPU/WebGL2 renderer + Stylized TSL Post-Processing pipeline
+│       └── TSLMaterials.ts     # Cunningham ceramic/chrome/plasma PBR + GPU non-Euclidean positionNode shaders
+├── kit/                        # Composable construction kit for building works
+│   ├── camera/
+│   │   ├── CinemaDirector.ts   # Morph-following 8-rig camera director + Vertigo Zolly + Wrist SnorriCam
+│   │   └── KineticCameraRig.ts # Lightweight inertia rig (used by secondary works)
+│   ├── environment/
+│   │   ├── SurrealCyberVault.ts# 256 morphing monolith blades + 12 laser curtains + mercury mirror floor
+│   │   └── BrutalistChamber.ts # Compact brutalist chamber (used by PHASE // LATTICE)
+│   └── sequencer/
+│       └── IDMSequencer.ts     # Bjorklund Euclidean generator, exponential ratchet curves, break chopper
+├── studio/                     # Live performance, sensing & recording studio
+│   ├── input/
+│   │   └── KeyboardMouseRig.ts # F-Phrygian pitch/vowel cursor + 10 synth pads + 7 bus FX + strain drag
+│   ├── sensors/
+│   │   ├── MediaPipeTracker.ts # Offline-bundled WASM 2-hand 21-landmark optical tracker
+│   │   ├── MicAnalyzer.ts      # Live audio RMS + ZCR spectral centroid follower
+│   │   └── MidiGamepadInput.ts # WebMIDI + Gamepad API auto-mapper
+│   ├── recorder/
+│   │   ├── TakeRecorder.ts     # Multi-pass overdub gesture recorder (.json import/export)
+│   │   └── VideoExporter.ts    # 60fps Canvas + WebAudio master .webm recorder
+│   └── ui/
+│       ├── StudioShell.ts      # Collapsible HUD, act launcher, camera rig selector, oscilloscope, patchbay
+│       └── styles.css          # Stark architectural studio styling
+└── works/                      # Self-contained audiovisual works
+    ├── gantz-tecton/           # 01: HYPER // TECTON (4,348-element flagship megastructure + 96-bar score)
+    │   ├── HyperTectonMachine.ts
+    │   ├── GantzScore.ts
+    │   └── GantzWork.ts
+    └── lattice-pendulum/       # 02: PHASE // LATTICE (secondary polyrhythmic tensegrity work)
 ```
 
 ---
 
-## 2. Dual-Domain Clock & Mechanical Anticipation (`Clock.ts`)
+## 3. Coupled State Machines & Non-Euclidean Shader Pipeline
 
-Real drop-forges, cam-barrels, and pneumatic bellows never teleport instantaneously on an acoustic transient—they **crank upward and inflate before striking**.
+### 3.1 `HyperTectonMachine` (`4,092` Parts) + `SurrealCyberVault` (`256` Monoliths)
+- **Macro-Morphology State Machine (`MorphStateId`)**:
+  1. `FOLDED_MONOLITH`: Interlocked hyper-cubic carapace (`envelopeRadius = 2.8m`).
+  2. `CANTILEVER_STRIKER`: Horizontal shear split + 6 IK Cunningham striker booms lunging across fault seams (`envelopeRadius = 6.8m`).
+  3. `INVERTED_CATHEDRAL`: Carapace inverts inside-out (`interiorRadius = 5.4m`), exposing `768` glowing photonic capillaries for interior camera flight.
+  4. `NON_EUCLIDEAN_HELIX`: Vertical DNA/Möbius torsion spire (`verticalSpan = 14.5m`) with strong GPU `nonEuclideanTwist`.
+  5. `QUANTIZED_SHATTER`: Discontinuous *Gantz Graf* spatial voxelization (`spatialGlitch` + quantized steps).
+  6. `SINGULARITY_CROWN`: Maximum radial dilation (`envelopeRadius = 11.8m`) with all 8 layers precessing around the blazing core.
+- **16 Fault-Cluster Sub-State Machines**: Track per-cluster `extrude`, `flipCurrent` (`0 ↔ π`), `stretchX`, `shatterJitter`, and `glow`.
 
-`Clock.ts` coordinates three synchronized timelines:
-1. **WebAudio Lookahead (`95 ms` window, `1/64`-note resolution):** Schedules sample-accurate synthesis events ahead on `AudioContext` so rapid breakcore ratchets never jitter.
-2. **Pre-Strike `AnticipationCue` Queue:** Score steps emit `AnticipationCue`s (`leadTimeSec = 0.25..0.55 s` ahead of major impacts) paired with reverse-envelope `windup-inhale` audio events, allowing `BabbageLightOrgan` to physically crank its Drop-Forge Trip-Hammers upward and expand its lateral bellows before `t = 0`.
-3. **DAC-Locked Visual Presentation Queue:** Releases impact `ImpulseEvent`s on the exact animation frame when `ev.audioTime <= audioNow + 0.004`.
-
----
-
-## 3. Music-Synced Multi-Perspective Cinematography (`CinemaDirector.ts`)
-
-`CinemaDirector.ts` decouples editorial montage grammar from physical machine animation:
-- **8 Specialized Camera Rigs (`1–8`):** Ranges across two orders of spatial scale—from **`1.55m` / `85mm` Telephoto Macros** on clicking Babbage decimal wheels (`macro-babbage`) and **`50mm` Jacquard Loom** close-ups (`macro-jacquard`), to **`28mm` Interior Nave Flythroughs** threading straight through the `3.2m` central canyon (`Z = +5.4m -> -5.2m`), **Rigid SnorriCam POV** (`carriage-snorricam`) transforming local camera coordinates via `shuttleCarriage.localToWorld()`, and **`24mm` Monumental Cathedral Wide** crane sweeps (`16.8m..22m`).
-- **Editorial Transitions (`hard`, `whip`, `glide`, `vertigo`, `epic-pullback`):**
-  - **Hard Smash-Cuts (`hard`):** Instant zero-latency frame cuts on downbeats, snares, and Act IV dead-stops.
-  - **Hitchcock Vertigo Dolly-Zoom (`vertigo`):** Enforces the optical invariant $d(t) \cdot \tan(\theta_{\text{fov}}(t)/2) = 1.85\text{ m}$ as $\theta_{\text{fov}}$ narrows from $72^\circ \to 17^\circ$, keeping the central Dichroic Astrolabe constant in frame while the 9 receding Piranesian portal arches warp dramatically inward during Bars 56–59.
+### 3.2 TSL Non-Euclidean Vertex & Optical Post-FX Shaders
+- **`TSLMaterials.ts`**: Attaches a shared GPU `positionNode` deformation graph to instanced tectonic plates, surgical chrome needles, brass gyro-blades, and photonic filaments (`nonEuclideanTwist`, `spatialGlitch`, `acousticRipple`).
+- **`WebGPUStage.ts`**: Wraps `scenePass + bloomPass` via `convertToTexture(...)` (preserving identical UV orientation across WebGPU and WebGL2) and applies barrel lens distortion (`uLensDistort`), quantized scan-band glitch tears (`uGlitch`), radial RGB chromatic dispersion (`uAberration`), silver-halide bleach-bypass (`uBleachGrade`), stark stencil thresholding (`uStarkThreshold`), and 35mm grain (`uGrain`).
 
 ---
 
-## 4. Non-Anthropomorphic Architectural Synthesis (`BabbageLightOrgan.ts` + `SynthRack.ts`)
+## 4. 96-Bar 6-Act Score & 14-Voice Procedural Synth
 
-Every procedural WebAudio voice actuates a dedicated mechanical/optical district (`510` instanced elements, zero external samples):
-- **`larynx-lead` & `bellows-choir` -> 24-Pipe Chromatic Quartz Light-Organ Crown:** Formant-filtered reed/pipe leads and 5-voice modal polychords (`Fm(add9)`, `Dbmaj7#11`, `Bbm9`, `C7b9`) ignite matching smoked-quartz pipes with Scriabin pitch-class HDR plasma (`instanceColor` in `lightOrganPipeInstanced`) and flip open hinged brass louvers while tinting the 8 cathedral projection beams in `PiranesiFoundry`.
-- **`modal-clang`, `fin-cascade`, `piston-snap` -> Twin Babbage Analytical Cipher Towers:** Steps 48 engraved decagonal brass wheels by exact `36°` (`2π/10`) decimal increments and kicks surgical-chrome carry-levers inward.
-- **`break-shred` -> Overhead Jacquard Punched-Card Loom & Shuttle Carriage:** Advances the hexagonal ivory card-prism by `60°`, slams the shuttle carriage across twin chrome rails, and plunges 16 chrome sensing needles.
-- **`sub-rupture` & `spine-shear` -> 3 Cam-Driven Drop-Forge Trip-Hammers & Locomotive Bogie:** Drops staggered cast-iron hammers onto brass-capped anvils, spraying 220 floor-bouncing sparks and driving spring-damped heave into the flanged rail wheels.
-- **`arc-discharge` & `core-implode` -> Central 3-Ring Counter-Rotating Dichroic Astrolabe & Hydraulic Brake Shoes.**
-
----
-
-## 5. Custom TSL Shader Rig & WebGPU HDR Bloom (`TSLMaterials.ts` + `WebGPUStage.ts`)
-
-- **`TSLMaterials.ts`:** Compiles tactile node materials natively to WGSL (WebGPU) and GLSL (WebGL2 fallback), including `lightOrganPipeInstanced` (fresnel smoked quartz + per-instance animated plasma wave emission), `brassInstanced` (radial gear-tooth graduations + aged patina), `boneCarapace` (punched Jacquard ivory), `forgedIron` (anvil-heat ember glow), `surgicalChrome`, and `visceralFilament`.
-- **`WebGPUStage.ts`:** Runs `THREE.PostProcessing` combining `pass(scene, camera)` + TSL `bloom()` + chiaroscuro vignette inside an extended `160m` far-plane Piranesian fog envelope.
+| Act | Bars | Morphology State | Musical Role & Transition Architecture |
+| :--- | :--- | :--- | :--- |
+| **I. STASIS SEED** | `0–11` (`12`) | `FOLDED_MONOLITH` | Sparse Glass-Armonica & Modal Chime statements of `C5–Db5–Ab4–G4–F4` over `Fm(add9)`. |
+| **II. CANTILEVER LOOM** | `12–27` (`16 = 2×8`) | `CANTILEVER_STRIKER` | Syncopated 2-step & Amen breaks + resonant 303 Acid Squelch bassline + Glitch-Chirps. |
+| **III. INVERTED CATHEDRAL** | `28–51` (`24 = 3×8`) | `INVERTED_CATHEDRAL` → `HELIX` | 2 full 8-bar Aria & Polychord cycles (`28–43`), beatless suspension (`44–47`), and 4-bar Glitch-Deconstruction Bridge (`48–51`) completing the `E4` (`C7b9`) cadence into Act IV. |
+| **IV. SHATTER CADENZA** | `52–63` (`12`) | `QUANTIZED_SHATTER` | Stop-start 64th drill cadenza with Beat-4 dead-stops (`52–59`) + 4-bar snare/acid riser & 2-beat silence lock (`60–63`). |
+| **V. SINGULARITY CROWN** | `64–79` (`16 = 2×8`) | `SINGULARITY_CROWN` | Full 2-pass polyrhythmic & harmonic convergence through `Bar 79` + grand cadential roll into Act VI. |
+| **VI. ENTROPIC DISSOLVE** | `80–95` (`16 = 2×8`) | `INVERTED` → `FOLDED` | Cathartic `Fm9` resolution at `Bar 80`, Glass-Armonica & Chime recall of Seed Motif, final lock at `Bar 95`. |

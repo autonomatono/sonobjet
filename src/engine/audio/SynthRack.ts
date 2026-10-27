@@ -49,6 +49,9 @@ export class SynthRack {
   private readonly ctx: AudioContext;
   private readonly dryBus: GainNode;
   private readonly reverbSend: GainNode;
+  private readonly pingPongInput: GainNode;
+  private delayNodeL: DelayNode | null = null;
+  private delayNodeR: DelayNode | null = null;
   private readonly noiseBuffer: AudioBuffer;
   private breakKit: SynthesizedBreakKit;
   private readonly driveCurve: Float32Array<ArrayBuffer>;
@@ -68,14 +71,22 @@ export class SynthRack {
     this.ctx = ctx;
     this.dryBus = dryBus;
     this.reverbSend = reverbSend;
+    this.pingPongInput = ctx.createGain();
     this.noiseBuffer = this.createWhiteNoiseBuffer();
     this.breakKit = buildProceduralBreakKit(ctx, bpm);
     this.driveCurve = this.createSaturationCurve(3.1);
+    this.initPingPongDelay(bpm);
     this.initContinuousStrainVoice();
   }
 
   rebuildBreakForBpm(bpm: number): void {
     this.breakKit = buildProceduralBreakKit(this.ctx, bpm);
+    const step16 = 60 / Math.max(60, bpm) / 4;
+    if (this.delayNodeL && this.delayNodeR) {
+      const now = this.ctx.currentTime;
+      this.delayNodeL.delayTime.setTargetAtTime(step16 * 3, now, 0.03);
+      this.delayNodeR.delayTime.setTargetAtTime(step16 * 2, now, 0.03);
+    }
   }
 
   updateContinuousStrain(macros: SynthMacroState): void {
@@ -148,6 +159,15 @@ export class SynthRack {
       case 'windup-inhale':
         this.playWindupInhale(t, vel, event, pan, macros);
         break;
+      case 'acid-squelch':
+        this.playAcidSquelch(t, vel, event, pan, macros);
+        break;
+      case 'glass-armonica':
+        this.playGlassArmonica(t, vel, event, pan, macros);
+        break;
+      case 'glitch-chirp':
+        this.playGlitchChirp(t, vel, event, pan, macros);
+        break;
     }
   }
 
@@ -156,6 +176,7 @@ export class SynthRack {
     pan: number,
     reverbAmount: number,
     stopTime: number,
+    delayAmount = 0,
   ): void {
     const panner = this.ctx.createStereoPanner();
     panner.pan.value = pan;
@@ -170,6 +191,14 @@ export class SynthRack {
       sendGain.connect(this.reverbSend);
     }
 
+    let delayGain: GainNode | null = null;
+    if (delayAmount > 0.01) {
+      delayGain = this.ctx.createGain();
+      delayGain.gain.value = delayAmount;
+      panner.connect(delayGain);
+      delayGain.connect(this.pingPongInput);
+    }
+
     const cleanupDelayMs = Math.max(
       120,
       (stopTime - this.ctx.currentTime + 0.25) * 1000,
@@ -179,6 +208,7 @@ export class SynthRack {
         source.disconnect();
         panner.disconnect();
         sendGain?.disconnect();
+        delayGain?.disconnect();
       } catch {
         // Already disconnected
       }
@@ -687,7 +717,7 @@ export class SynthRack {
       osc.stop(t + modeDecay + 0.015);
     });
 
-    this.routeSpatial(sum, pan, 0.46, t + dur);
+    this.routeSpatial(sum, pan, 0.46, t + dur, 0.2);
   }
 
   /**
@@ -799,6 +829,266 @@ export class SynthRack {
     mod.start(t);
     carrier.stop(t + dur + 0.01);
     mod.stop(t + dur + 0.01);
+  }
+
+  /**
+   * ACID-SQUELCH: Liquid 303 / Buchla Dual-Cascade Resonant Acid Counterpoint.
+   */
+  private playAcidSquelch(
+    t: number,
+    vel: number,
+    event: ImpulseEvent,
+    pan: number,
+    macros: SynthMacroState,
+  ): void {
+    const baseHz = event.midiNote
+      ? midiToHz(event.midiNote)
+      : 174.61 * event.pitchRatio;
+    const dur = Math.max(
+      0.08,
+      Math.min(0.65, (event.durationSec ?? 0.16) * macros.decayScale),
+    );
+
+    const oscSaw = this.ctx.createOscillator();
+    const oscPulse = this.ctx.createOscillator();
+    oscSaw.type = 'sawtooth';
+    oscPulse.type = 'square';
+
+    // Optional pitch-glide snap from slightly above/below
+    const glideStart = baseHz * (event.vowel && event.vowel > 0.5 ? 1.26 : 0.94);
+    oscSaw.frequency.setValueAtTime(glideStart, t);
+    oscSaw.frequency.exponentialRampToValueAtTime(baseHz, t + 0.028);
+    oscPulse.frequency.setValueAtTime(baseHz * 0.5, t);
+
+    const subGain = this.ctx.createGain();
+    subGain.gain.value = 0.36;
+    oscPulse.connect(subGain);
+
+    // Dual cascaded resonant lowpass (24dB/oct liquid acid squelch)
+    const lp1 = this.ctx.createBiquadFilter();
+    const lp2 = this.ctx.createBiquadFilter();
+    lp1.type = 'lowpass';
+    lp2.type = 'lowpass';
+
+    const peakCutoff = Math.min(
+      6800,
+      baseHz * (4.5 + vel * 6.5 + macros.metallicTension * 5.0),
+    );
+    const floorCutoff = Math.max(110, baseHz * 1.35);
+
+    lp1.Q.value = 8.5 + macros.metallicTension * 7.5;
+    lp2.Q.value = 5.5 + macros.metallicTension * 5.0;
+
+    lp1.frequency.setValueAtTime(floorCutoff * 1.4, t);
+    lp1.frequency.exponentialRampToValueAtTime(peakCutoff, t + 0.018);
+    lp1.frequency.exponentialRampToValueAtTime(floorCutoff, t + dur * 0.85);
+
+    lp2.frequency.setValueAtTime(floorCutoff * 1.6, t);
+    lp2.frequency.exponentialRampToValueAtTime(peakCutoff * 1.15, t + 0.02);
+    lp2.frequency.exponentialRampToValueAtTime(floorCutoff * 1.1, t + dur * 0.9);
+
+    const shaper = this.ctx.createWaveShaper();
+    shaper.curve = this.driveCurve;
+
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(0.28 * vel, t + 0.005);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    oscSaw.connect(lp1);
+    subGain.connect(lp1);
+    lp1.connect(lp2);
+    lp2.connect(shaper);
+    shaper.connect(env);
+
+    this.routeSpatial(env, pan, 0.24, t + dur, 0.36);
+
+    oscSaw.start(t);
+    oscPulse.start(t);
+    oscSaw.stop(t + dur + 0.02);
+    oscPulse.stop(t + dur + 0.02);
+  }
+
+  /**
+   * GLASS-ARMONICA: Ethereal Inharmonic Crystalline 3-Op FM / Bowed Quartz Halo.
+   */
+  private playGlassArmonica(
+    t: number,
+    vel: number,
+    event: ImpulseEvent,
+    pan: number,
+    macros: SynthMacroState,
+  ): void {
+    const freq = event.midiNote
+      ? midiToHz(event.midiNote)
+      : 523.25 * event.pitchRatio;
+    const dur = Math.max(
+      0.45,
+      Math.min(4.8, (event.durationSec ?? 1.8) * macros.decayScale),
+    );
+
+    const carrierA = this.ctx.createOscillator();
+    const carrierB = this.ctx.createOscillator();
+    const mod1 = this.ctx.createOscillator();
+    const mod2 = this.ctx.createOscillator();
+    const mod1Gain = this.ctx.createGain();
+    const mod2Gain = this.ctx.createGain();
+
+    carrierA.type = 'sine';
+    carrierB.type = 'sine';
+    carrierA.frequency.value = freq;
+    carrierB.frequency.value = freq * 1.0038; // Ethereal beating chorus
+
+    // Non-integer quartz bell/glass overtone ratios
+    mod1.type = 'sine';
+    mod1.frequency.value = freq * 2.756;
+    mod2.type = 'sine';
+    mod2.frequency.value = freq * 5.404;
+
+    mod1Gain.gain.setValueAtTime(freq * (0.45 + macros.metallicTension * 0.8), t);
+    mod1Gain.gain.exponentialRampToValueAtTime(freq * 0.08, t + dur * 0.85);
+
+    mod2Gain.gain.setValueAtTime(freq * 0.28, t);
+    mod2Gain.gain.exponentialRampToValueAtTime(1.0, t + dur * 0.5);
+
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 280;
+
+    const env = this.ctx.createGain();
+    const attack = Math.min(0.18, dur * 0.22);
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.linearRampToValueAtTime(0.17 * vel, t + attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    mod1.connect(mod1Gain);
+    mod2.connect(mod2Gain);
+    mod1Gain.connect(carrierA.frequency);
+    mod1Gain.connect(carrierB.frequency);
+    mod2Gain.connect(carrierA.frequency);
+
+    carrierA.connect(hp);
+    carrierB.connect(hp);
+    hp.connect(env);
+
+    this.routeSpatial(env, pan, 0.68, t + dur, 0.44);
+
+    carrierA.start(t);
+    carrierB.start(t);
+    mod1.start(t);
+    mod2.start(t);
+    const stopAt = t + dur + 0.03;
+    carrierA.stop(stopAt);
+    carrierB.stop(stopAt);
+    mod1.stop(stopAt);
+    mod2.stop(stopAt);
+  }
+
+  /**
+   * GLITCH-CHIRP: Hyper-Fast Stepped S&H Digital Artifact / Buffer-Scrub / Modem Zap.
+   */
+  private playGlitchChirp(
+    t: number,
+    vel: number,
+    event: ImpulseEvent,
+    pan: number,
+    macros: SynthMacroState,
+  ): void {
+    const steps = 6 + ((event.sliceIndex ?? 3) % 8);
+    const stepDur = Math.max(0.009, 0.014 * event.decay);
+    const totalDur = steps * stepDur;
+
+    const carrier = this.ctx.createOscillator();
+    const ringOsc = this.ctx.createOscillator();
+    const ringVca = this.ctx.createGain();
+    const bp = this.ctx.createBiquadFilter();
+    const env = this.ctx.createGain();
+
+    carrier.type = (event.sliceIndex ?? 0) % 2 === 0 ? 'square' : 'sawtooth';
+    ringOsc.type = 'triangle';
+
+    const baseHz = event.midiNote
+      ? midiToHz(event.midiNote) * 2
+      : 880 * event.pitchRatio;
+
+    // Stepped S&H pitch staircase (zero glide — crisp digital quantization!)
+    const ratios = [1.0, 2.37, 0.62, 3.85, 1.5, 5.12, 0.84, 2.95];
+    for (let s = 0; s < steps; s++) {
+      const st = t + s * stepDur;
+      const r = ratios[(s + (event.sliceIndex ?? 0)) % ratios.length];
+      carrier.frequency.setValueAtTime(
+        Math.min(9500, baseHz * r * (0.8 + macros.metallicTension * 0.6)),
+        st,
+      );
+      ringOsc.frequency.setValueAtTime(baseHz * r * 1.618, st);
+    }
+
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(2200 * event.pitchRatio, t);
+    bp.frequency.exponentialRampToValueAtTime(5200, t + totalDur);
+    bp.Q.value = 3.2 + macros.metallicTension * 4.5;
+
+    ringVca.gain.value = 0;
+    ringOsc.connect(ringVca.gain);
+
+    env.gain.setValueAtTime(0.24 * vel, t);
+    env.gain.setValueAtTime(0.22 * vel, t + totalDur * 0.72);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + totalDur);
+
+    carrier.connect(ringVca);
+    ringVca.connect(bp);
+    bp.connect(env);
+
+    this.routeSpatial(env, pan, 0.32, t + totalDur, 0.52);
+
+    carrier.start(t);
+    ringOsc.start(t);
+    carrier.stop(t + totalDur + 0.015);
+    ringOsc.stop(t + totalDur + 0.015);
+  }
+
+  private initPingPongDelay(bpm: number): void {
+    const step16 = 60 / Math.max(60, bpm) / 4;
+    const delayL = this.ctx.createDelay(1.5);
+    const delayR = this.ctx.createDelay(1.5);
+    delayL.delayTime.value = step16 * 3; // Dotted 16th left
+    delayR.delayTime.value = step16 * 2; // 8th note right
+
+    const fbL = this.ctx.createGain();
+    const fbR = this.ctx.createGain();
+    fbL.gain.value = 0.36;
+    fbR.gain.value = 0.34;
+
+    const toneFilter = this.ctx.createBiquadFilter();
+    toneFilter.type = 'bandpass';
+    toneFilter.frequency.value = 1650;
+    toneFilter.Q.value = 0.85;
+
+    const panL = this.ctx.createStereoPanner();
+    const panR = this.ctx.createStereoPanner();
+    panL.pan.value = -0.78;
+    panR.pan.value = 0.78;
+
+    const wetReturn = this.ctx.createGain();
+    wetReturn.gain.value = 0.36;
+
+    this.pingPongInput.connect(toneFilter);
+    toneFilter.connect(delayL);
+
+    delayL.connect(panL);
+    panL.connect(wetReturn);
+    delayL.connect(fbL);
+    fbL.connect(delayR);
+
+    delayR.connect(panR);
+    panR.connect(wetReturn);
+    delayR.connect(fbR);
+    fbR.connect(delayL);
+
+    wetReturn.connect(this.dryBus);
+
+    this.delayNodeL = delayL;
+    this.delayNodeR = delayR;
   }
 
   private initContinuousStrainVoice(): void {
