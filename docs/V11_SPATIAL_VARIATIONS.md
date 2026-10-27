@@ -16,6 +16,8 @@ v0.1.3 — space pinball
 
 Everything below is learned forward from that point. `NEON PINBALL // BREAKCORE COMPUTER` remains the default work and its original V10 document remains in [`V10_NEON_PINBALL.md`](V10_NEON_PINBALL.md).
 
+V11 was implemented in commit `d7abf57d333e4b3a0843c211ad024beaa2b02ac8`; GitHub Pages run `40598646762` passed typecheck, all 48 tests, production build and deployment.
+
 ## 2. Shared live-performance changes
 
 ### 2.1 Grid-by-default physics notes

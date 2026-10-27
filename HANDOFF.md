@@ -65,6 +65,8 @@
 - `npm test`: **48 / 48 passing** across eight files
 - `npm run build`: **clean production bundle**, 79 modules transformed
 - `git diff --check`: **clean**
+- Vite route/module smoke checks for the default and all three V11 works: **HTTP 200**
+- Automated WebGPU screenshot inspection was unavailable because this sandbox has no browser executable.
 - V11 tests cover grid-time conversion, scale hierarchy, liquid-light packet count, atmosphere registration, all three score/topology contracts, physical chord metadata, complete rig parenting and clean disposal.
 
 ### Documentation
@@ -385,10 +387,12 @@ Implemented:
 
 - **Repository:** `autonomatono/sonobjet` (`/home/user/sonobjet`)
 - **Active Session Branch:** `arena/ebe788b1-sonobjet`
-- **Space Pinball checkpoint:** commit `ad2b9a9`, annotated local tag `v0.1.3` (`space pinball`)
+- **Space Pinball checkpoint:** commit `ad2b9a94d3f1502364a10662521fab03cdecc428`, published annotated tag `v0.1.3` (`space pinball`)
+- **V11 implementation:** commit `d7abf57d333e4b3a0843c211ad024beaa2b02ac8`
 - **Historical Branches:** `arena/23eed999-sonobjet` (V5–V8) and `arena/86769aaf-sonobjet` (V4 handoff)
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
+- **Deployment:** V11 Pages run `40598646762` completed successfully; V10 checkpoint run `40592137876` also completed successfully.
 - **Current Verification Status (V11):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
   - `npm test` (`vitest run`): **48 / 48 passing** (12 engine + 10 V5 + 3 V6 + 4 V7 + 6 V8 + 4 V9 + 4 V10 + 5 V11)
