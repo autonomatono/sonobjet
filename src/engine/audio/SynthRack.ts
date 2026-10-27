@@ -101,14 +101,15 @@ export class SynthRack {
     }
     const now = this.ctx.currentTime;
     const s = Math.max(0, Math.min(1.5, macros.strain));
-    const targetGain = s > 0.04 ? Math.min(0.2, Math.pow(s, 1.35) * 0.16) : 0;
-    const baseFreq = 87.31 + s * 260 + macros.metallicTension * 110; // Grounded on F2
+    // Grounded F1 (43.65 Hz) low mechanical rumble ONLY during active manual drag — never pitch-glides!
+    const targetGain = s > 0.14 ? Math.min(0.07, Math.pow(s - 0.14, 1.4) * 0.08) : 0;
+    const baseFreq = 43.65;
 
-    this.strainGain.gain.setTargetAtTime(targetGain, now, 0.03);
+    this.strainGain.gain.setTargetAtTime(targetGain, now, 0.025);
     this.strainCarrier.frequency.setTargetAtTime(baseFreq, now, 0.03);
-    this.strainMod.frequency.setTargetAtTime(baseFreq * 2.5, now, 0.03);
-    this.strainModGain.gain.setTargetAtTime(65 + s * 520, now, 0.03);
-    this.strainFilter.frequency.setTargetAtTime(580 + s * 3200, now, 0.03);
+    this.strainMod.frequency.setTargetAtTime(baseFreq * 2.0, now, 0.03);
+    this.strainModGain.gain.setTargetAtTime(18 + s * 65, now, 0.03);
+    this.strainFilter.frequency.setTargetAtTime(180 + s * 420, now, 0.03);
   }
 
   trigger(event: ImpulseEvent, macros: SynthMacroState): void {
@@ -372,41 +373,34 @@ export class SynthRack {
     const noise = this.ctx.createBufferSource();
     noise.buffer = this.noiseBuffer;
 
+    // Pure dry mechanical air-valve rush — low Q so it never whistles or mews
+    const hp = this.ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(650, t);
+    hp.frequency.exponentialRampToValueAtTime(2400, t + dur * 0.96);
+
     const bp = this.ctx.createBiquadFilter();
     bp.type = 'bandpass';
-    bp.frequency.setValueAtTime(320, t);
+    bp.frequency.setValueAtTime(950, t);
     bp.frequency.exponentialRampToValueAtTime(
-      2100 + macros.metallicTension * 1400,
+      3400 + macros.metallicTension * 900,
       t + dur * 0.96,
     );
-    bp.Q.value = 3.8;
-
-    const servo = this.ctx.createOscillator();
-    servo.type = 'sine';
-    servo.frequency.setValueAtTime(110 * event.pitchRatio, t);
-    servo.frequency.exponentialRampToValueAtTime(
-      420 * event.pitchRatio,
-      t + dur * 0.96,
-    );
-    const servoGain = this.ctx.createGain();
-    servoGain.gain.value = 0.22;
+    bp.Q.value = 1.15;
 
     const env = this.ctx.createGain();
-    env.gain.setValueAtTime(0.001, t);
-    env.gain.exponentialRampToValueAtTime(0.36 * vel, t + dur * 0.94);
+    env.gain.setValueAtTime(0.0005, t);
+    env.gain.exponentialRampToValueAtTime(0.24 * vel, t + dur * 0.94);
     env.gain.linearRampToValueAtTime(0.0001, t + dur);
 
-    noise.connect(bp);
-    servo.connect(servoGain);
-    servoGain.connect(bp);
+    noise.connect(hp);
+    hp.connect(bp);
     bp.connect(env);
 
-    this.routeSpatial(env, pan, 0.28, t + dur);
+    this.routeSpatial(env, pan, 0.16, t + dur);
 
     noise.start(t);
-    servo.start(t);
     noise.stop(t + dur + 0.01);
-    servo.stop(t + dur + 0.01);
   }
 
   /**
@@ -876,8 +870,9 @@ export class SynthRack {
     );
     const floorCutoff = Math.max(110, baseHz * 1.35);
 
-    lp1.Q.value = 8.5 + macros.metallicTension * 7.5;
-    lp2.Q.value = 5.5 + macros.metallicTension * 5.0;
+    // Note: WebAudio lowpass BiquadFilter Q is in dB — keep Q tight so cascaded stages punch without whistling/mewing!
+    lp1.Q.value = 4.2 + macros.metallicTension * 3.5;
+    lp2.Q.value = 1.8 + macros.metallicTension * 1.6;
 
     lp1.frequency.setValueAtTime(floorCutoff * 1.4, t);
     lp1.frequency.exponentialRampToValueAtTime(peakCutoff, t + 0.018);

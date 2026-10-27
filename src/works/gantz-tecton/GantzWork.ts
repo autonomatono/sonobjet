@@ -267,6 +267,7 @@ class GantzSceneInstance implements WorkSceneInstance {
     });
 
     const combScream = ctx.matrix.getSource('punch.comb-scream');
+    const pointerStrain = ctx.matrix.getSource('mouse.strain');
     const brutalDrive = ctx.matrix.getTarget('brutalDrive', 0.32);
     const metallic = ctx.matrix.getTarget('metallicTension', 0.48);
 
@@ -275,12 +276,12 @@ class GantzSceneInstance implements WorkSceneInstance {
         metallicTension: metallic,
         brutalDrive,
         decayScale: ctx.matrix.getTarget('decayScale', 1.0),
-        strain: Math.max(0, stress - 0.16),
+        strain: pointerStrain > 0.12 ? pointerStrain * 0.55 : 0,
       },
       {
         stutterGate: stutter,
         grainMs: 9 + (1 - ctx.matrix.getTarget('drillDensity', 0.56)) * 42,
-        combMix: Math.min(0.82, combScream * 0.72 + stress * 0.2),
+        combMix: combScream * 0.75,
         combFreq: 174.61 + metallic * 523.25,
         combFeedback: 0.68 + combScream * 0.23,
         crush: brutalDrive * 0.4,
