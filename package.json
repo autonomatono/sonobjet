@@ -1,0 +1,26 @@
+{
+  "name": "sonobjet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WebGPU + WebAudio causal audiovisual synth, composition engine, and live performance studio for living visceral media objects",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.1.1",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/three": "^0.186.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}
