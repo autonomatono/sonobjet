@@ -2,6 +2,8 @@
 
 **Machine-building kit, many-to-many score ecology, and multi-scale director focus.**
 
+> **Reference work:** V7 `PENDULUM // MARBLE ENGINE` is now the default work. V6 remains registered as the graph-based machine-building reference; its generic `MACHINE` tab also visualizes V7's physical part registry. See [`V7_MARBLE_PENDULUM.md`](V7_MARBLE_PENDULUM.md).
+
 V6 keeps `CHRONO // AUTOMATON` as a load-bearing reference assembly and grows it into a modular installation: 72 addressable modules by default, 216+ typed conduits, 12 independent energy sources, 20 score bindings, and focus targets at **macro / cluster / module / port / conduit** scale. The same deterministic generator can rebuild the installation at 12–256 modules without touching the preserved 96-bar score or the procedural audio engine.
 
 Creative references: Wintergatan marble machines, Animusic self-playing instruments, Merlin/antique automata, Central European clockwork organs, and celestial orreries.

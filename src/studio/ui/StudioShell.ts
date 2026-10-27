@@ -460,16 +460,16 @@ export class StudioShell {
     this.ignitionOverlay.className = 'ignition-overlay';
     this.ignitionOverlay.innerHTML = `
       <div class="ignition-card">
-        <div class="ignition-kicker">SONOBJET V6 // MODULAR MACHINE ECOLOGY + MANY-TO-MANY SCORE GRAPH + 14-VOICE SYNTH</div>
+        <div class="ignition-kicker">SONOBJET V7 // CUSTOM MARBLE PHYSICS + PINNED PROGRAMMING WHEEL + 14-VOICE SYNTH</div>
         <h1 class="ignition-title">${initialWork.title}</h1>
         <p class="ignition-desc">
-          ${initialWork.subtitle}. A growing, joint-parented installation of addressable clockwork modules,
-          orrery rings, organ pipes, marble gates and live energy conduits — with the preserved V5 automaton
-          as its reference core and the same 96-bar F-Phrygian procedural score.
+          ${initialWork.subtitle}. A blank-slate gravity instrument: a hand-cranked flywheel turns a pinned
+          programming wheel, twelve gates release simulated steel marbles onto vibraphone bars and percussion,
+          and a bucket lift recycles every marble. The original pendulum spirit, rebuilt with a real solver.
         </p>
         <div class="ignition-shortcuts">
           <b>SPACE</b> Play / Pause 96-Bar Film &amp; Score &nbsp;|&nbsp;
-          <b>[\`]</b> Director Studio / Machine Graph / Free-Flight / Keyframes &nbsp;|&nbsp;
+          <b>[\`]</b> Director Studio / Physics Lab / Graph / Free-Flight / Keyframes &nbsp;|&nbsp;
           <b>K / L / M</b> Add Camera / Look / Milestone<br/>
           <b>0, 1–8</b> Procedural Camera / 8 Perspectives &nbsp;|&nbsp;
           <b>Z–M , . /</b> Play 10 Voices &nbsp;|&nbsp;

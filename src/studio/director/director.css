@@ -443,9 +443,27 @@
 
 /* Machine graph cockpit */
 .director-tab {
-  font-size: 8px;
+  font-size: 7px;
   padding-left: 1px;
   padding-right: 1px;
+}
+
+.director-physics-canvas {
+  display: block;
+  width: 100%;
+  height: 148px;
+  margin: 6px 0 4px;
+  border: 1px solid rgba(138, 164, 196, 0.22);
+  background: #070b10;
+  cursor: crosshair;
+}
+
+.director-physics-parts {
+  max-height: 184px;
+}
+
+.director-physics-parts .director-graph-meter-row {
+  grid-template-columns: minmax(0, 2.1fr) minmax(24px, 0.8fr) 28px;
 }
 
 .director-graph-summary {

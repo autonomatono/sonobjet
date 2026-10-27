@@ -4,6 +4,8 @@ import type {
   GraphMacroSnapshot,
   MachineGraphSnapshot,
   PatchRoute,
+  PhysicsMacroSnapshot,
+  PhysicsStudioSnapshot,
   PostFxState,
   RigJointDescriptor,
   ScoreBindingPatch,
@@ -43,6 +45,7 @@ export interface DirectorFrameInfo {
   cameraMode: DirectorCameraMode;
   enabled: boolean;
   graph?: MachineGraphSnapshot | null;
+  physics?: PhysicsStudioSnapshot | null;
 }
 
 export interface DirectorUICallbacks {
@@ -81,9 +84,16 @@ export interface DirectorUICallbacks {
   onRebuildMachine(moduleCount: number): void;
   onExportGraphConfig(): void;
   onImportGraphConfig(raw: string): void;
+  onPhysicsMacro(id: string, value: number): void;
+  onPhysicsPinToggle(lane: number, step: number, enabled?: boolean): void;
+  onPhysicsFocus(id: string): void;
+  onPhysicsReset(): void;
+  onPhysicsDrop(count: number): void;
+  onExportPhysicsProgram(): void;
+  onImportPhysicsProgram(raw: string): void;
 }
 
-type TabId = 'SHOTS' | 'LOOKS' | 'CONFIG' | 'MAPS' | 'MACHINE' | 'PROJECT';
+type TabId = 'SHOTS' | 'LOOKS' | 'CONFIG' | 'MAPS' | 'PHYSICS' | 'MACHINE' | 'PROJECT';
 
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -173,6 +183,9 @@ export class DirectorStudioUI {
   private machineGraph: MachineGraphSnapshot | null = null;
   private lastMachineRender = 0;
   private machineInputActive = false;
+  private physicsSnapshot: PhysicsStudioSnapshot | null = null;
+  private lastPhysicsRender = 0;
+  private physicsInputActive = false;
 
   constructor(
     mount: HTMLElement,
@@ -195,7 +208,7 @@ export class DirectorStudioUI {
     const subtitle = el(
       'div',
       'director-subtitle',
-      'SHOTS // LOOKS // CONFIG // MAPS // MACHINE GRAPH',
+      'SHOTS // LOOKS // CONFIG // MAPS // PHYSICS // GRAPH',
     );
     this.statusLine = el('div', 'director-status', 'TIMELINE // IDLE');
     header.append(title, subtitle, this.statusLine);
@@ -221,7 +234,7 @@ export class DirectorStudioUI {
     jointRow.appendChild(this.jointSelect);
 
     this.tabBar = el('div', 'director-tabs');
-    const tabs: TabId[] = ['SHOTS', 'LOOKS', 'CONFIG', 'MAPS', 'MACHINE', 'PROJECT'];
+    const tabs: TabId[] = ['SHOTS', 'LOOKS', 'CONFIG', 'MAPS', 'PHYSICS', 'MACHINE', 'PROJECT'];
     for (const tab of tabs) {
       const btn = button(tab, 'btn director-tab');
       btn.onclick = () => this.setTab(tab);
@@ -361,6 +374,21 @@ export class DirectorStudioUI {
     }
   }
 
+  setPhysicsSnapshot(snapshot: PhysicsStudioSnapshot | null): void {
+    this.physicsSnapshot = snapshot;
+    const now = Date.now();
+    const editing =
+      this.activeTab === 'PHYSICS' && this.tabContent.contains(document.activeElement);
+    if (
+      this.activeTab === 'PHYSICS' &&
+      !this.physicsInputActive &&
+      !editing &&
+      now - this.lastPhysicsRender > 320
+    ) {
+      this.renderPhysicsTab();
+    }
+  }
+
   setArticulationValues(state: ArticulationState | Record<string, number>): void {
     this.currentArticulation = { ...state };
     for (const [id, input] of this.articulationInputs) {
@@ -406,9 +434,15 @@ export class DirectorStudioUI {
     const arousal = info.ecology['ecology.arousal'] ?? 0;
     const coherence = info.ecology['ecology.resonance'] ?? 0;
     this.setMachineGraph(info.graph ?? null);
-    this.statusLine.textContent = info.graph
-      ? `${info.cameraMode} // ${info.graph.moduleCount} MODULES // ${info.graph.edgeCount} CONDUITS // ${info.graph.activeFocusLabel}`
-      : `${info.cameraMode} // ${info.shotLabel} // AROUSAL ${arousal.toFixed(2)} // PHASE LOCK ${coherence.toFixed(2)}`;
+    this.setPhysicsSnapshot(info.physics ?? null);
+    if (info.physics) {
+      const t = info.physics.telemetry;
+      this.statusLine.textContent = `${info.cameraMode} // ${info.physics.activeFocusLabel} // FREE ${t.freeMarbles ?? 0} // IMPACTS ${t.impactCount ?? 0} // JAMS ${t.jamCount ?? 0}`;
+    } else if (info.graph) {
+      this.statusLine.textContent = `${info.cameraMode} // ${info.graph.moduleCount} MODULES // ${info.graph.edgeCount} CONDUITS // ${info.graph.activeFocusLabel}`;
+    } else {
+      this.statusLine.textContent = `${info.cameraMode} // ${info.shotLabel} // AROUSAL ${arousal.toFixed(2)} // PHASE LOCK ${coherence.toFixed(2)}`;
+    }
   }
 
   refreshProject(): void {
@@ -447,6 +481,9 @@ export class DirectorStudioUI {
         break;
       case 'MAPS':
         this.renderMapsTab();
+        break;
+      case 'PHYSICS':
+        this.renderPhysicsTab();
         break;
       case 'MACHINE':
         this.renderMachineTab();
@@ -1089,6 +1126,242 @@ export class DirectorStudioUI {
     ctx.fillText(`${snapshot.moduleCount} ADDRESSABLE MODULES // ${snapshot.edgeCount} TYPED CONDUITS`, 10, 16);
     ctx.fillStyle = 'rgba(255, 220, 150, 0.82)';
     ctx.fillText(`FOCUS: ${snapshot.activeFocusLabel}`, 10, h - 10);
+  }
+
+  private renderPhysicsTab(): void {
+    this.tabContent.innerHTML = '';
+    this.articulationInputs.clear();
+    this.postFxInputs.clear();
+    this.lastPhysicsRender = Date.now();
+    const snapshot = this.physicsSnapshot;
+    const header = el('div', 'director-editor');
+    header.appendChild(el('div', 'director-section-title', 'PHYSICS MACHINE // PROGRAMMING WHEEL'));
+    if (!snapshot) {
+      header.appendChild(
+        el(
+          'div',
+          'director-help',
+          'This work does not expose a custom physics machine. Load PENDULUM // MARBLE ENGINE to edit gravity, gate timing, programming pins and the part registry.',
+        ),
+      );
+      this.tabContent.appendChild(header);
+      return;
+    }
+
+    const summary = el('div', 'director-graph-summary');
+    summary.textContent = `${snapshot.name} // ${snapshot.parts.length} PARTS // ${snapshot.pins.length} PINS // ${snapshot.laneCount} LANES × ${snapshot.stepCount} STEPS // FOCUS ${snapshot.activeFocusLabel}`;
+    header.appendChild(summary);
+
+    const canvas = el('canvas', 'director-physics-canvas');
+    canvas.width = 760;
+    canvas.height = 210;
+    header.appendChild(canvas);
+    this.tabContent.appendChild(header);
+    this.drawProgramGrid(canvas, snapshot);
+
+    const focusBlock = el('div', 'director-editor');
+    focusBlock.appendChild(el('div', 'director-section-title', 'PHYSICS FOCUS'));
+    const focusSelect = el('select', 'director-select');
+    for (const focus of snapshot.focusTargets) {
+      const option = el('option', '', `${focus.scale} // ${focus.label}`);
+      option.value = focus.id;
+      focusSelect.appendChild(option);
+    }
+    focusSelect.value = snapshot.activeFocusId;
+    focusSelect.onchange = () => this.callbacks.onPhysicsFocus(focusSelect.value);
+    focusBlock.appendChild(focusSelect);
+    this.tabContent.appendChild(focusBlock);
+
+    const macroBlock = el('div', 'director-editor');
+    macroBlock.appendChild(el('div', 'director-section-title', 'CUSTOM SOLVER MACROS'));
+    snapshot.macros.forEach((macro: PhysicsMacroSnapshot) => {
+      const row = el('div', 'director-graph-macro');
+      const value = el('span', 'director-graph-value', macro.value.toFixed(2));
+      const range = el('input', 'director-range');
+      range.type = 'range';
+      range.min = String(macro.min);
+      range.max = String(macro.max);
+      range.step = '0.01';
+      range.value = String(macro.value);
+      range.onpointerdown = () => {
+        this.physicsInputActive = true;
+      };
+      range.onpointerup = () => {
+        this.physicsInputActive = false;
+      };
+      range.onchange = () => {
+        this.physicsInputActive = false;
+      };
+      range.oninput = () => {
+        const next = Number(range.value);
+        value.textContent = next.toFixed(2);
+        this.callbacks.onPhysicsMacro(macro.id, next);
+      };
+      row.append(el('span', '', macro.label), value, range);
+      macroBlock.appendChild(row);
+    });
+    this.tabContent.appendChild(macroBlock);
+
+    const actions = el('div', 'director-editor');
+    actions.appendChild(el('div', 'director-section-title', 'PHYSICS ACTIONS & PROGRAM I/O'));
+    const actionRow = el('div', 'director-editor-actions');
+    const reset = button('RESET SOLVER', 'btn director-action danger');
+    reset.onclick = () => this.callbacks.onPhysicsReset();
+    actionRow.appendChild(reset);
+    for (const count of [8, 16, 32]) {
+      const drop = button(`DROP ${count}`, 'btn director-action');
+      drop.onclick = () => this.callbacks.onPhysicsDrop(count);
+      actionRow.appendChild(drop);
+    }
+    actions.appendChild(actionRow);
+    const ioRow = el('div', 'director-editor-actions');
+    const exportProgram = button('EXPORT PROGRAM .JSON', 'btn director-action');
+    exportProgram.onclick = () => this.callbacks.onExportPhysicsProgram();
+    const importProgram = button('IMPORT PROGRAM .JSON', 'btn director-action');
+    const programInput = this.fileInput((text) => this.callbacks.onImportPhysicsProgram(text));
+    importProgram.onclick = () => programInput.click();
+    ioRow.append(exportProgram, importProgram, programInput);
+    actions.appendChild(ioRow);
+    actions.appendChild(
+      el(
+        'div',
+        'director-help',
+        'Click the grid to toggle a programming-wheel pin; right-click clears a pin. Pins are sampled from the rotating wheel angle, and every released marble is simulated by the custom fixed-step solver.',
+      ),
+    );
+    this.tabContent.appendChild(actions);
+
+    const partsBlock = el('div', 'director-editor');
+    partsBlock.appendChild(el('div', 'director-section-title', 'PHYSICAL PART REGISTRY'));
+    const partList = el('div', 'director-graph-list director-physics-parts');
+    for (const part of snapshot.parts) {
+      this.appendMeter(partList, `${part.label} // ${part.state}`, part.energy, 1.2);
+    }
+    partsBlock.appendChild(partList);
+    this.tabContent.appendChild(partsBlock);
+
+    const telemetryBlock = el('div', 'director-editor');
+    telemetryBlock.appendChild(el('div', 'director-section-title', 'LIVE SOLVER TELEMETRY'));
+    const columns = el('div', 'director-graph-columns');
+    const columnA = el('div', 'director-graph-column');
+    const columnB = el('div', 'director-graph-column');
+    const columnC = el('div', 'director-graph-column');
+    columnA.appendChild(el('div', 'director-graph-column-title', 'MARBLE STATES'));
+    columnB.appendChild(el('div', 'director-graph-column-title', 'CAUSAL EVENTS'));
+    columnC.appendChild(el('div', 'director-graph-column-title', 'GOVERNOR & ERROR'));
+    const metersA: Array<[string, number, string]> = [
+      ['freeMarbles', 80, 'FREE'],
+      ['queuedMarbles', 170, 'QUEUED'],
+      ['liftingMarbles', 60, 'LIFTING'],
+      ['activeGates', 12, 'OPEN GATES'],
+    ];
+    const metersB: Array<[string, number, string]> = [
+      ['impactCount', 500, 'IMPACTS'],
+      ['releaseCount', 250, 'RELEASES'],
+      ['recycleCount', 250, 'RECYCLES'],
+      ['instrumentEnergy', 10, 'INSTRUMENT ENERGY'],
+    ];
+    const metersC: Array<[string, number, string]> = [
+      ['jamCount', 20, 'JAMS'],
+      ['lostCount', 10, 'LOST'],
+      ['releaseJitterMs', 10, 'JITTER ms'],
+      ['governorEnergy', 3, 'PENDULUM ENERGY'],
+    ];
+    for (const [key, max, label] of metersA) {
+      this.appendMeter(columnA, label, snapshot.telemetry[key] ?? 0, max);
+    }
+    for (const [key, max, label] of metersB) {
+      this.appendMeter(columnB, label, snapshot.telemetry[key] ?? 0, max);
+    }
+    for (const [key, max, label] of metersC) {
+      this.appendMeter(columnC, label, snapshot.telemetry[key] ?? 0, max);
+    }
+    columns.append(columnA, columnB, columnC);
+    telemetryBlock.appendChild(columns);
+    this.tabContent.appendChild(telemetryBlock);
+  }
+
+  private drawProgramGrid(
+    canvas: HTMLCanvasElement,
+    snapshot: PhysicsStudioSnapshot,
+  ): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    const labelWidth = 92;
+    const top = 18;
+    const gridWidth = w - labelWidth - 12;
+    const gridHeight = 180;
+    const cellW = gridWidth / snapshot.stepCount;
+    const cellH = gridHeight / snapshot.laneCount;
+    ctx.fillStyle = '#070b10';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = 'rgba(140, 200, 255, 0.16)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= snapshot.stepCount; i++) {
+      const x = labelWidth + i * cellW;
+      ctx.strokeStyle = i % 8 === 0 ? 'rgba(140, 200, 255, 0.28)' : 'rgba(140, 200, 255, 0.08)';
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, top + gridHeight);
+      ctx.stroke();
+    }
+    for (let i = 0; i <= snapshot.laneCount; i++) {
+      const y = top + i * cellH;
+      ctx.beginPath();
+      ctx.moveTo(labelWidth, y);
+      ctx.lineTo(labelWidth + gridWidth, y);
+      ctx.stroke();
+    }
+    ctx.font = '9px monospace';
+    ctx.fillStyle = 'rgba(180, 210, 235, 0.8)';
+    for (let lane = 0; lane < snapshot.laneCount; lane++) {
+      ctx.fillText(snapshot.laneLabels[lane] ?? `L${lane}`, 8, top + (lane + 0.68) * cellH);
+    }
+    for (let step = 0; step < snapshot.stepCount; step += 8) {
+      ctx.fillText(String(step).padStart(2, '0'), labelWidth + step * cellW + 2, top - 5);
+    }
+    for (const pin of snapshot.pins) {
+      const x = labelWidth + pin.step * cellW + 1.2;
+      const y = top + pin.lane * cellH + 1.2;
+      ctx.fillStyle = pin.lane < 8 ? '#ffd48a' : '#9ee9ff';
+      ctx.fillRect(x, y, Math.max(2, cellW - 2.4), Math.max(2, cellH - 2.4));
+    }
+    const activeStep = Math.max(
+      0,
+      Math.min(snapshot.stepCount - 1, Math.floor(snapshot.telemetry.programStep ?? 0)),
+    );
+    ctx.strokeStyle = '#ff6b4a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(labelWidth + (activeStep + 0.5) * cellW, top);
+    ctx.lineTo(labelWidth + (activeStep + 0.5) * cellW, top + gridHeight);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(180, 210, 235, 0.62)';
+    ctx.fillText('CLICK = TOGGLE PIN // RIGHT-CLICK = CLEAR // 64 EIGHTH-NOTE STEPS', labelWidth, h - 7);
+
+    const locate = (event: MouseEvent): { lane: number; step: number } | null => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * (canvas.width / Math.max(1, rect.width));
+      const y = (event.clientY - rect.top) * (canvas.height / Math.max(1, rect.height));
+      if (x < labelWidth || x > labelWidth + gridWidth || y < top || y > top + gridHeight) {
+        return null;
+      }
+      return {
+        lane: Math.max(0, Math.min(snapshot.laneCount - 1, Math.floor((y - top) / cellH))),
+        step: Math.max(0, Math.min(snapshot.stepCount - 1, Math.floor((x - labelWidth) / cellW))),
+      };
+    };
+    canvas.onclick = (event) => {
+      const cell = locate(event);
+      if (cell) this.callbacks.onPhysicsPinToggle(cell.lane, cell.step);
+    };
+    canvas.oncontextmenu = (event) => {
+      event.preventDefault();
+      const cell = locate(event);
+      if (cell) this.callbacks.onPhysicsPinToggle(cell.lane, cell.step, false);
+    };
   }
 
   private renderProjectTab(): void {

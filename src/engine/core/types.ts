@@ -256,6 +256,47 @@ export interface ScoreBindingPatch {
   mode?: string;
 }
 
+export interface PhysicsMacroSnapshot {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+  value: number;
+}
+
+export interface ProgrammingPinSnapshot {
+  lane: number;
+  step: number;
+  velocity: number;
+}
+
+export interface PhysicalPartSnapshot {
+  id: string;
+  label: string;
+  kind: string;
+  jointId: string;
+  parentId?: string;
+  state: string;
+  energy: number;
+  tags: string[];
+}
+
+export interface PhysicsStudioSnapshot {
+  name: string;
+  version: number;
+  laneCount: number;
+  stepCount: number;
+  laneLabels: string[];
+  instrumentLabels: string[];
+  pins: ProgrammingPinSnapshot[];
+  macros: PhysicsMacroSnapshot[];
+  parts: PhysicalPartSnapshot[];
+  focusTargets: FocusDescriptor[];
+  activeFocusId: string;
+  activeFocusLabel: string;
+  telemetry: Record<string, number>;
+}
+
 /**
  * Optional adapter implemented by articulated works. Keeping these hooks on the
  * generic WorkSceneInstance lets the Director Studio author any work that can
@@ -278,6 +319,13 @@ export interface DirectorWorkHooks {
   rebuildMachine?(moduleCount: number): void;
   exportGraphConfig?(): string;
   importGraphConfig?(raw: string): void;
+  getPhysicsSnapshot?(): PhysicsStudioSnapshot;
+  setPhysicsMacro?(id: string, value: number): void;
+  toggleProgrammingPin?(lane: number, step: number, enabled?: boolean): void;
+  resetPhysics?(): void;
+  dropMarbles?(count: number): void;
+  exportPhysicsProgram?(): string;
+  importPhysicsProgram?(raw: string): void;
 }
 
 export interface TelemetrySnapshot {

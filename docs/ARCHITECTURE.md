@@ -1,4 +1,4 @@
-# Architecture — `sonobjet` Engine, V4 Legacy, V5 Automaton & V6 Machine Kit
+# Architecture — `sonobjet` Engine, V4–V7 Works
 
 ## 1. Design Philosophy: Non-Euclidean Causal Sound-Objects
 
@@ -207,3 +207,70 @@ Director Studio
 ```
 
 `DirectorSystem` discovers graph capabilities through optional `DirectorWorkHooks`, so legacy works remain compatible. For the full graph schema, installation layout and authoring workflow, see [`V6_MACHINE_BUILDING_KIT.md`](V6_MACHINE_BUILDING_KIT.md).
+
+---
+
+## 7. V7 Additions — Custom Physics & Blank-Slate Marble Machine
+
+The current default work is `PENDULUM // MARBLE ENGINE`. It does not instantiate the V6 graph installation; it starts from an empty scene and uses a purpose-built deterministic physics engine. V4–V6 remain registered as reference works.
+
+```text
+src/
+├── engine/core/types.ts                 # PhysicsStudioSnapshot + generic physics hooks
+├── kit/physics/
+│   ├── MarbleBlueprint.ts              # Tracks, gates, instruments, lift path, parts, focus
+│   ├── MarblePhysics.ts                # Fixed-step sphere/capsule solver + governor + telemetry
+│   └── ProgrammingWheel.ts             # 12×64 editable pinned score memory
+├── studio/director/
+│   ├── DirectorStudioUI.ts             # Adds PHYSICS tab: pin grid, macros, parts, telemetry
+│   └── DirectorSystem.ts               # Generic physics/program/focus callbacks
+└── works/marble-pendulum/
+    ├── MarblePendulumMachine.ts        # Kinematic rig, instanced marbles/pins/buckets, visuals
+    └── MarblePendulumWork.ts           # Score, audio, Director, post-FX and physics integration
+```
+
+### 7.1 Physical causality
+
+```text
+Clock / 96-bar transport → flywheel angle (1 rev / beat)
+  └─ GearRatioDriver 1:32 → programming wheel angle
+       └─ pin step crossing → gate release
+            └─ MarblePhysics free body → instrument collision
+                 ├─ AudioEngine.triggerImpulse (physical sound)
+                 ├─ instrument joint pulse + HUD pad flash
+                 └─ collector trough → bucket lift → queue
+```
+
+The score engine still supplies section intensity, anticipation cues and an optional blended under-score. The primary audiovisual events are physical impacts from simulated marbles, not direct beat-to-mesh mappings.
+
+### 7.2 Solver invariants
+
+- Fixed `1/120 s` substeps with a deterministic seeded RNG.
+- Free marbles collide with capsule segments and with each other in the same lane.
+- Gate segments are skipped while their lever is open; queue slots are kinematic constraints.
+- Instrument segments emit velocity/pitch/energy events that drive the procedural synth.
+- Stuck marbles, jams and lost marbles are observed in telemetry rather than silently deleted.
+- The pendulum governor is integrated as a damped nonlinear pendulum driven by crank phase.
+
+### 7.3 Rig invariants
+
+- Every visible mesh has a `RigJoint` ancestor; `tests/v7.test.ts` enforces zero unparented meshes.
+- Flywheel, programming wheel, pendulum, gate levers, instrument bars and conveyor buckets are named joints in `KinematicRig`.
+- Marbles, pins and buckets are instanced meshes parented to `rig:marbleField`, `rig:programWheel`, and `rig:liftChain`.
+- The flywheel–pendulum pitman is a rod mesh dynamically stretched between two joint world positions.
+
+### 7.4 Studio data flow
+
+```text
+Work.getPhysicsSnapshot() → DirectorStudioUI.PHYSICS tab
+  ├─ pin grid clicks → toggleProgrammingPin()
+  ├─ macro sliders   → setPhysicsMacro() → ModulationMatrix + MarblePhysics
+  ├─ focus select    → setFocusTarget() → MachineCameraDirector
+  ├─ reset/drop      → resetPhysics() / dropMarbles()
+  └─ program I/O     → export/import ProgrammingWheel JSON
+
+Work.getMachineGraphSnapshot() → MACHINE tab
+  └─ graph projection of physical parts, pin→gate, gate→instrument, recycle path
+```
+
+For research context, the full physics design, verification and extension vectors, see [`V7_MARBLE_PENDULUM.md`](V7_MARBLE_PENDULUM.md).

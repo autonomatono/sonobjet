@@ -4,33 +4,40 @@
 
 **Live Deployment (GitHub Pages):** [`https://autonomatono.github.io/sonobjet/`](https://autonomatono.github.io/sonobjet/)
 
-`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V6 flagship is a growing, fully parented **machine-building kit** — dozens of addressable clockwork modules connected by typed energy conduits, many-to-many score bindings, and a multi-scale director graph studio. V5 `CHRONO // AUTOMATON` remains its reference core and a selectable work. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, Wintergatan, Animusic, Central European clockwork organs, celestial orreries, and the human–robotic ballet of *Sans Objet*.
+`sonobjet` is a custom game-engine-style audiovisual synthesis, composition, and live performance platform built on **Three.js (`three/webgpu` + TSL Node Shaders)** and a **zero-sample procedural WebAudio + `AudioWorklet` synthesizer**. The current V7 flagship starts from a blank slate: a hand-cranked **marble music machine** with its own deterministic steel-marble physics engine, pinned programming wheel, twelve gates, physical instrument impacts, and a bucket-lift recycling loop. The V6 graph kit, V5 automaton, V4 work, and the original pendulum study all remain selectable references. Inspirations include *Gantz Graf*, Chris Cunningham, 18th-century horological automata, Wintergatan, Animusic, Central European clockwork organs, celestial orreries, and the human–robotic ballet of *Sans Objet*.
 
 ---
 
-## Current Flagship (`01`): `ASTRARIUM // MODULAR ENGINE`
+## Current Flagship (`01`): `PENDULUM // MARBLE ENGINE`
 
-A **machine-building kit that grows module by module**. The default installation has 72 addressable clockwork modules, 216+ typed conduits, 12 independent prime movers, 20 many-to-many score bindings, and focus targets at macro, cluster, module, port, and conduit scale. It can be rebuilt live from 12 to 256 modules. The preserved V5 automaton is nested as the load-bearing reference core.
+A **blank-slate gravity instrument** inspired by the mechanism that made the first simple pendulum demo compelling: one visible cause, one visible effect, repeated until it becomes music. A flywheel turns a pinned programming wheel; pins trip twelve gates; steel marbles free-fall under custom physics onto vibraphone bars and percussion; a collector funnel and bucket lift return them to the top.
 
-### V6 Systems
+### V7 Systems
 
-1. **Generic Machine Graph** — modules, typed ports, energy sources, weighted edges, nonlinear transfer modes, selector-based score bindings, focus descriptors, live growth, and JSON config I/O. Music never maps 1-to-1 to a part.
-2. **Joint-Parented Modular Installation** — ten counter-rotating orrery clusters with gear trees, escapements, marble gates, bellows, organ pipes, tuned combs, iris valves, flux coils, planetary arms, port collars, and bent conduit networks with visible flow beads.
-3. **Multi-Scale Camera Director** — auto-cycling focus narrative or locked `MACRO / CLUSTER / MODULE / PORT / CONDUIT` shots, with conduit cameras following moving edge endpoints.
-4. **Machine Graph Tab in Director Studio** — live network map, graph macros, binding editor, focus selector, installation growth controls, graph JSON import/export, and energy/flow telemetry.
-5. **Preserved V5, Score & Synth** — V5's kinematic rig, articulation/ecology/preset lab, 96-bar keyframe studio, 6-Act F-Phrygian composition, 14 procedural voices, stereo delay, `FractureWorklet`, and Section IV anti-mewing/humming fix all remain intact.
+1. **Custom Fixed-Step Physics** — deterministic semi-implicit sphere integration, capsule-segment contacts, sphere-sphere collisions, restitution, tangential friction, gate obstacles, stuck-marble recovery, and impact telemetry.
+2. **Pinned Programming Wheel** — 12 lanes × 64 eighth-note steps with an editable F-Phrygian pattern. Gate cues are sampled from actual wheel angle, not a beat-to-mesh mapping.
+3. **Physical Machine** — plywood A-frame, hand-crank flywheel, 1:32 gear reduction, pendulum governor with a real ODE, transparent feeder tubes, twelve gate levers, vibraphone/percussion bank, collector trough, and animated bucket lift.
+4. **Causal Audio** — physical marble/instrument collisions trigger the 14-voice procedural synth; the preserved 96-bar score remains available underneath via `SCORE ENGINE BLEND`.
+5. **Physics Lab Tab** — clickable pin grid, ten solver macros, live part registry, focus selector, marble drop/reset controls, program JSON I/O, and free/queued/lifting/impact/jam telemetry.
+6. **Preserved Studio Tools** — Director Studio, free-fly/joint-lock camera, 96-bar keyframe timeline, looks/effects, configs/presets, behavior maps, patchbay, articulation DOFs, recording and video export.
 
-See [`docs/V6_MACHINE_BUILDING_KIT.md`](docs/V6_MACHINE_BUILDING_KIT.md) for the complete architecture, graph schema, and director workflow.
-
----
-
-## Reference Work (`02`): `CHRONO // AUTOMATON`
-
-The V5 flagship remains directly loadable with `?work=chrono-automaton`. It is a **time-traveled self-playing clockwork automaton** with zero unparented parts: pinned programme barrel, meshing escapement gears, balance wheel, Geneva indexer, tuned comb banks, exact four-bar striker linkages, crank-driven bellows, iris resonator pipes, hinged ceramic carapace shells, and magnetic flux rails with taut plasma torque-axles. Its rig, ecology, articulation lab, and 96-bar Director Studio are documented in [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md).
+See [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) for the Wintergatan research, physics architecture, and authoring workflow.
 
 ---
 
-## Legacy Work (`03`): `HYPER // TECTON`
+## Graph Reference (`02`): `ASTRARIUM // MODULAR ENGINE`
+
+V6 remains loadable with `?work=astrarium-modular-engine`. It is the **machine-building kit** with 72 addressable modules, 216+ typed conduits, many-to-many score bindings, and multi-scale graph focus. The V5 automaton is nested as its reference core. See [`docs/V6_MACHINE_BUILDING_KIT.md`](docs/V6_MACHINE_BUILDING_KIT.md).
+
+---
+
+## Automaton Reference (`03`): `CHRONO // AUTOMATON`
+
+V5 remains loadable with `?work=chrono-automaton`. It is the **time-traveled self-playing clockwork automaton** with zero unparented parts: pinned programme barrel, meshing escapement gears, balance wheel, Geneva indexer, tuned comb banks, exact four-bar striker linkages, crank-driven bellows, iris resonator pipes, hinged ceramic carapace shells, and magnetic flux rails. Its rig, ecology, articulation lab, and 96-bar Director Studio are documented in [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md).
+
+---
+
+## Legacy Work (`04`): `HYPER // TECTON`
 
 A surreal **4,348-element** (`4,092` machine elements + `256` vault monoliths) metamorphic sound megastructure suspended inside a reflective obsidian-mercury cyber-vault:
 
@@ -63,7 +70,7 @@ A surreal **4,348-element** (`4,092` machine elements + `256` vault monoliths) m
 - **Morph-Following Camera Choreography (`CinemaDirector.ts`)**: Couples camera trajectories directly to `HyperTectonMachine.getCameraAnchors()` (`envelopeRadius`, `interiorRadius`, `verticalSpan`, `primaryBoomTip`), combining continuous **`morph-follow`**, **`vertigo` (dolly-zoom)**, and **`epic-pullback`** flights with selective rhythmic **`hard`** and **`whip`** cuts across 8 perspectives (`[0]` Auto-Director, `[1–8]` manual rigs including `SHELL FLIGHT`, `CORKSCREW`, `BOOM TRACK`, and `WRIST POV`).
 - **Stylized Optical & Glitch Post-Processing (`WebGPUStage.ts`)**: Custom `THREE.PostProcessing` TSL shader pipeline featuring **Anamorphic Barrel Lens Distortion**, **Quantized Scan-Band & Block Glitch Tears**, **Radial RGB Chromatic Dispersion**, **HDR Bloom**, **Cunningham Silver-Halide Bleach-Bypass Color Grading**, **Stark Graphic Stencil Thresholding**, and **35mm Film Grain**.
 
-Also includes **`04: PHASE // LATTICE`**, a minimal polyrhythmic tensegrity work demonstrating multi-scene modularity via `WorkRegistry`.
+Also includes **`05: PHASE // LATTICE`**, the original simple pendulum/polyrhythmic study that inspired the V7 return to first principles.
 
 ---
 
@@ -80,11 +87,12 @@ Also includes **`04: PHASE // LATTICE`**, a minimal polyrhythmic tensegrity work
 | **Right-Drag / `Shift`+Drag / Wheel** | Manual camera orbit & zoom offset on any rig |
 | **`CAM: HAND`** | MediaPipe Vision 2-hand 21-landmark optical tracking (span → dilation, pinches → ratchet/acid Q, wrist velocity → mid-air shear strikes) |
 | **`MIC: ENV` / MIDI / Gamepad** | Live audio envelope follower + auto-bound WebMIDI CCs/notes & Gamepad |
-| **Backquote (`` ` ``)** | Toggle **Director Studio** (free-flight, keyframes, looks, configurations, maps, machine graph) |
+| **Backquote (`` ` ``)** | Toggle **Director Studio** (free-flight, keyframes, looks, configurations, maps, physics lab, graph) |
 | **`W A S D` / `E Q` / `Z X` / `0`** | Director free-flight move / rise-fall / Dutch roll / level horizon |
 | **`K` / `L` / `M`** | In Director Mode: add camera key / look key / machine milestone at playhead |
+| **Director `PHYSICS` tab** | Click programming-wheel pins, edit gravity/restitution/friction/gate/lift macros, inspect the part registry, drop/reset marbles, import/export the program |
 | **Director `MACHINE` tab** | Edit graph macros and many-to-many bindings; pick macro/cluster/module/port/conduit focus; grow or rebuild the installation; export/import machine graph JSON |
-| **`0` / `1`–`8` on V6** | Auto graph-focus camera or lock one of eight focus targets |
+| **`0` / `1`–`8` on V7** | Auto physics-focus camera or lock one of eight focus targets |
 | **`TAB`** | Cinema HUD toggle (pure full-bleed 60fps view) |
 
 While Director Studio is open, live performance pad keys are suspended so free-flight keys never trigger synth voices. `SPACE` and `TAB` remain available.
@@ -103,9 +111,10 @@ npm run build      # Production bundle into dist/ (with offline MediaPipe WASM)
 
 ## Documentation
 
+- [`docs/V7_MARBLE_PENDULUM.md`](docs/V7_MARBLE_PENDULUM.md) — V7 Wintergatan research, custom physics engine, programming wheel, machine anatomy, Physics Lab workflow, and verification.
 - [`docs/V6_MACHINE_BUILDING_KIT.md`](docs/V6_MACHINE_BUILDING_KIT.md) — V6 graph schema, module/port/conduit architecture, many-to-many bindings, multi-scale focus, live growth, and Machine tab workflow.
 - [`docs/V5_DIRECTOR_STUDIO.md`](docs/V5_DIRECTOR_STUDIO.md) — V5 clockwork automaton, kinematic rig, ecological behavior, 96-bar Director Studio and JSON workflows.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6 module maps, TSL vertex/post-FX shaders, and the 96-bar score.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Engine architecture, V4 coupled state machines, V5/V6/V7 module maps, TSL vertex/post-FX shaders, and the 96-bar score.
 - [`docs/PERFORMANCE_AND_RECORDING.md`](docs/PERFORMANCE_AND_RECORDING.md) — Keyboard/mouse rig, MediaPipe optical tracking, overdub take recorder, and `.webm` master export.
 - [`docs/CI_AND_DEPLOYMENT.md`](docs/CI_AND_DEPLOYMENT.md) — Continuous any-branch GitHub Pages CI/CD pipeline.
 - [`HANDOFF.md`](HANDOFF.md) — Session state, V4 upgrades, verification status, and next extension vectors.

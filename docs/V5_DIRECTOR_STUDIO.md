@@ -4,7 +4,7 @@
 >
 > A time-traveled, self-playing 18th-century clockwork automaton retrofitted by a 32nd-century civilization, driven by the existing 96-bar F-Phrygian score and 14-voice procedural synth. The creative reference is a *nuevo-cirque / Sans Objet* human–robotic ballet: not a particle visualizer, but an articulated body with organs, load paths, anticipation, fatigue and social coupling between mechanisms.
 >
-> V6 keeps this document's rig, ecology, articulation and keyframe architecture intact, and adds a generic machine graph plus a sixth `MACHINE` Director tab. See [`V6_MACHINE_BUILDING_KIT.md`](V6_MACHINE_BUILDING_KIT.md).
+> V6 and V7 keep this document's rig, ecology, articulation and keyframe architecture intact. V6 adds a generic machine graph and `MACHINE` tab; V7 adds a custom physics engine and `PHYSICS` tab. See [`V6_MACHINE_BUILDING_KIT.md`](V6_MACHINE_BUILDING_KIT.md) and [`V7_MARBLE_PENDULUM.md`](V7_MARBLE_PENDULUM.md).
 
 ---
 

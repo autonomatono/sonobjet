@@ -6,6 +6,7 @@ import type {
   BehaviorMapEntry,
   MachineGraphSnapshot,
   PatchRoute,
+  PhysicsStudioSnapshot,
   PostFxState,
   ScoreBindingPatch,
   TransportState,
@@ -82,6 +83,7 @@ export class DirectorSystem {
   private cameraMode: DirectorCameraMode = 'TIMELINE';
   private jointIds: string[] = [];
   private lastGraphSnapshot: MachineGraphSnapshot | null = null;
+  private lastPhysicsSnapshot: PhysicsStudioSnapshot | null = null;
 
   private lastPose: CameraPose | null = null;
   private lastLook = { fx: { ...DEFAULT_POST_FX }, keyId: '', label: 'DEFAULT LOOK' };
@@ -136,6 +138,13 @@ export class DirectorSystem {
       onRebuildMachine: (moduleCount) => this.rebuildMachine(moduleCount),
       onExportGraphConfig: () => this.exportGraphConfig(),
       onImportGraphConfig: (raw) => this.importGraphConfig(raw),
+      onPhysicsMacro: (id, value) => this.setPhysicsMacro(id, value),
+      onPhysicsPinToggle: (lane, step, enabled) => this.togglePhysicsPin(lane, step, enabled),
+      onPhysicsFocus: (id) => this.setFocusTarget(id),
+      onPhysicsReset: () => this.resetPhysics(),
+      onPhysicsDrop: (count) => this.dropMarbles(count),
+      onExportPhysicsProgram: () => this.exportPhysicsProgram(),
+      onImportPhysicsProgram: (raw) => this.importPhysicsProgram(raw),
     });
 
     window.addEventListener('keydown', this.onHotkey);
@@ -155,6 +164,8 @@ export class DirectorSystem {
     this.freeFly.setJointId(undefined);
     this.lastGraphSnapshot = work?.getMachineGraphSnapshot?.() ?? null;
     this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.lastPhysicsSnapshot = work?.getPhysicsSnapshot?.() ?? null;
+    this.ui.setPhysicsSnapshot(this.lastPhysicsSnapshot);
   }
 
   isEnabled(): boolean {
@@ -162,7 +173,8 @@ export class DirectorSystem {
   }
 
   getBadge(): string {
-    const focus = this.lastGraphSnapshot?.activeFocusLabel;
+    const focus =
+      this.lastPhysicsSnapshot?.activeFocusLabel ?? this.lastGraphSnapshot?.activeFocusLabel;
     return focus
       ? `DIRECTOR // ${focus} // MILESTONE ${this.lastMilestoneBeat.toFixed(1)}`
       : `DIRECTOR // ${this.activeShotLabel} // MILESTONE ${this.lastMilestoneBeat.toFixed(1)}`;
@@ -249,6 +261,7 @@ export class DirectorSystem {
 
     const ecology = this.work?.getEcologySnapshot?.() ?? {};
     this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
+    this.lastPhysicsSnapshot = this.work?.getPhysicsSnapshot?.() ?? null;
     this.ui.updateFrame({
       beat,
       bar: transport.bar,
@@ -259,6 +272,7 @@ export class DirectorSystem {
       cameraMode: this.cameraMode,
       enabled: this.enabled,
       graph: this.lastGraphSnapshot,
+      physics: this.lastPhysicsSnapshot,
     });
   }
 
@@ -277,25 +291,76 @@ export class DirectorSystem {
 
   private setGraphMacro(id: string, value: number): void {
     this.work?.setGraphMacro?.(id, value);
-    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
-    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.refreshWorkSnapshots();
   }
 
   private updateGraphBinding(id: string, patch: ScoreBindingPatch): void {
     this.work?.updateGraphBinding?.(id, patch);
-    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
-    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.refreshWorkSnapshots();
   }
 
   private setFocusTarget(id: string): void {
     this.work?.setFocusTarget?.(id);
-    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
-    this.ui.setMachineGraph(this.lastGraphSnapshot);
-    const focus = this.lastGraphSnapshot?.focusTargets.find((f) => f.id === id);
+    this.refreshWorkSnapshots();
+    const focus =
+      this.lastPhysicsSnapshot?.focusTargets.find((f) => f.id === id) ??
+      this.lastGraphSnapshot?.focusTargets.find((f) => f.id === id);
     if (focus?.jointId && this.cameraMode === 'JOINT') {
       this.freeFly.setJointId(focus.jointId);
     }
     this.ui.showMessage(`MACHINE FOCUS // ${focus?.label ?? id}`);
+  }
+
+  private setPhysicsMacro(id: string, value: number): void {
+    this.work?.setPhysicsMacro?.(id, value);
+    this.refreshWorkSnapshots();
+  }
+
+  private togglePhysicsPin(lane: number, step: number, enabled?: boolean): void {
+    this.work?.toggleProgrammingPin?.(lane, step, enabled);
+    this.refreshWorkSnapshots();
+  }
+
+  private resetPhysics(): void {
+    if (!this.work?.resetPhysics) {
+      this.ui.showMessage('PHYSICS MACHINE UNAVAILABLE');
+      return;
+    }
+    this.work.resetPhysics();
+    this.refreshGraphWork('PHYSICS SOLVER RESET');
+  }
+
+  private dropMarbles(count: number): void {
+    if (!this.work?.dropMarbles) {
+      this.ui.showMessage('PHYSICS MACHINE UNAVAILABLE');
+      return;
+    }
+    this.work.dropMarbles(count);
+    this.refreshWorkSnapshots();
+    this.ui.showMessage(`DROPPED ${count} MARBLES`);
+  }
+
+  private exportPhysicsProgram(): void {
+    const raw = this.work?.exportPhysicsProgram?.();
+    if (!raw) {
+      this.ui.showMessage('PHYSICS MACHINE UNAVAILABLE');
+      return;
+    }
+    downloadJson('marble-programming-wheel.json', raw);
+    this.ui.showMessage('PROGRAMMING WHEEL EXPORTED');
+  }
+
+  private importPhysicsProgram(raw: string): void {
+    if (!this.work?.importPhysicsProgram) {
+      this.ui.showMessage('PHYSICS MACHINE UNAVAILABLE');
+      return;
+    }
+    try {
+      this.work.importPhysicsProgram(raw);
+      this.refreshGraphWork('PROGRAMMING WHEEL IMPORTED');
+    } catch (error) {
+      this.ui.showMessage(`PROGRAM IMPORT FAILED // ${String(error)}`);
+    }
   }
 
   private growMachine(count: number): void {
@@ -322,7 +387,7 @@ export class DirectorSystem {
       this.ui.showMessage('MACHINE GRAPH UNAVAILABLE');
       return;
     }
-    downloadJson('astrarium-machine-graph.json', raw);
+    downloadJson('machine-graph.json', raw);
     this.ui.showMessage('MACHINE GRAPH EXPORTED');
   }
 
@@ -342,9 +407,15 @@ export class DirectorSystem {
   private refreshGraphWork(message: string): void {
     if (!this.work) return;
     this.setWork(this.work);
-    this.lastGraphSnapshot = this.work.getMachineGraphSnapshot?.() ?? null;
-    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.refreshWorkSnapshots();
     this.ui.showMessage(message);
+  }
+
+  private refreshWorkSnapshots(): void {
+    this.lastGraphSnapshot = this.work?.getMachineGraphSnapshot?.() ?? null;
+    this.lastPhysicsSnapshot = this.work?.getPhysicsSnapshot?.() ?? null;
+    this.ui.setMachineGraph(this.lastGraphSnapshot);
+    this.ui.setPhysicsSnapshot(this.lastPhysicsSnapshot);
   }
 
   private applyCameraPose(pose: CameraPose): void {

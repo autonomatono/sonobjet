@@ -20,6 +20,7 @@ import { MicSensor } from './studio/sensors/MicSensor';
 import { MidiGamepadSensor } from './studio/sensors/MidiGamepadSensor';
 import { DirectorSystem } from './studio/director/DirectorSystem';
 import { StudioShell } from './studio/ui/StudioShell';
+import { MarblePendulumWork } from './works/marble-pendulum/MarblePendulumWork';
 import { OrreryCommonsWork } from './works/astrarium-modular-engine/OrreryCommonsWork';
 import { ChronoAutomatonWork } from './works/chrono-automaton/ChronoAutomatonWork';
 import { GantzWork } from './works/gantz-tecton/GantzWork';
@@ -30,7 +31,8 @@ async function bootstrap(): Promise<void> {
   if (!mount) throw new Error('Missing #app container');
 
   const registry = new WorkRegistry();
-  registry.register(OrreryCommonsWork, true);
+  registry.register(MarblePendulumWork, true);
+  registry.register(OrreryCommonsWork);
   registry.register(ChronoAutomatonWork);
   registry.register(GantzWork);
   registry.register(LatticeWork);
