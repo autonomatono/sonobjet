@@ -1,12 +1,67 @@
 # Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5 articulated automaton reference, and the current V6 machine-building kit.
+> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5/V6 reference works, and the current V7 blank-slate marble physics machine.
 
 ---
 
-## 0. Latest Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+## 0. Latest Update — V7 Blank-Slate Marble Engine Implemented & Deployed (2026-10-27)
 
-**Current default flagship:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
+**Current default flagship:** `PENDULUM // MARBLE ENGINE` (`src/works/marble-pendulum/`). V6 `ASTRARIUM // MODULAR ENGINE`, V5 `CHRONO // AUTOMATON`, V4 `HYPER // TECTON`, and the original `PHASE // LATTICE` pendulum study remain registered and selectable.
+
+### Why this turn changed direction
+
+The V6 graph framework is a good record of machine relationships, but the visual result felt abstract. The user felt the original simple pendulum demo was closer to the desired spirit. V7 therefore starts from an empty machine and returns to first principles: visible cause → visible effect → repeated physical consequence. Wintergatan's marble machines were researched as the external reference.
+
+Research findings that shaped V7:
+
+- The original machine is hand-cranked, raises steel marbles into feeder tubes, releases them via programmable gates, drops them onto vibraphone/bass/cymbal/contact-mic percussion, then collects and returns them through funnels and lifts ([Wikipedia](https://en.wikipedia.org/wiki/Wintergatan)).
+- The programming wheel is the central innovation: one pin releases one marble at an exact time and position ([NPR](https://www.npr.org/sections/allsongs/2016/03/03/469027281/be-amazed-by-this-marvelous-music-machine-powered-by-2000-marbles)).
+- The 22-track wheel behaves like an analog MIDI grid, and the one-marble-at-a-time gates were the hardest part ([Wired](https://www.wired.com/2016/03/insanely-complex-machine-makes-music-2000-marbles/), [It's Nice That](https://www.itsnicethat.com/articles/wintergatan-marble-machine-270416)).
+- Later designs simplified for reliability: remove guide surfaces below the gate and let gravity do the timing ([Hackaday](https://hackaday.com/2022/10/31/dropping-marbles-with-millisecond-accuracy/)); MM3 uses a single programming wheel, single collector, ring lift and governor ([New Atlas](https://newatlas.com/music/marble-machine-3-project-overview/)).
+
+### What changed
+
+- Added `src/kit/physics/MarblePhysics.ts`: a deterministic fixed-step custom physics engine for 216 steel marbles with sphere integration, capsule-segment contacts, sphere-sphere collisions, restitution, tangential friction, gate obstacles, impact telemetry, stuck-ball recovery and a damped pendulum governor ODE.
+- Added `src/kit/physics/MarbleBlueprint.ts`: 12 gates, 12 instruments, 12 queues, 50+ track/instrument/funnel segments, a five-point bucket-lift path, 47 physical parts, and focus targets at all five scales.
+- Added `src/kit/physics/ProgrammingWheel.ts`: editable 12-lane × 64-step pinned score memory sampled from wheel angle, with JSON import/export and wrap-around step-crossing detection.
+- Added `src/works/marble-pendulum/MarblePendulumMachine.ts`: plywood A-frame, hand-crank flywheel, 1:32 gear reduction, pinned programming wheel, pendulum governor with stretched pitman rod, feeder tubes, gate levers, vibraphone/percussion bank, collector trough, animated bucket lift, and instanced steel marbles/pins.
+- Added `src/works/marble-pendulum/MarblePendulumWork.ts`: score/audio/director integration. Physical marble impacts trigger procedural synth voices; the preserved 96-bar score remains blended underneath.
+- Added a generic `PHYSICS` tab to Director Studio: clickable pin grid, ten solver macros, live part registry, focus selector, marble drop/reset controls, program JSON I/O, and free/queued/lifting/impact/jam telemetry.
+- Kept every previous studio tool and work. The `MACHINE` tab also works on V7 as a graph projection of physical parts and causal relations.
+- Updated ignition copy, page metadata, README, architecture docs, V5/V6 notes, and added `docs/V7_MARBLE_PENDULUM.md`.
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **29 / 29 passing** (12 engine + 10 V5 + 3 V6 + 4 V7)
+- `npm run build`: **clean production bundle**
+- `git diff --check`: **clean**
+- V7 tests enforce zero unparented meshes, 100+ releases, 200+ impacts, 50+ recycles, zero jams/lost marbles, near-zero release jitter, programming-wheel JSON round-trip, live macro/pin/focus edits, reset/grow/rebuild, physics telemetry, and clean disposal.
+- Local dev preview verified on `0.0.0.0:5173`; `/`, `/src/main.ts`, V7 work/physics modules and director CSS all return `200`.
+
+### Deployment
+
+- **Implementation commit:** `090cbf2 feat(v7): blank-slate marble engine with custom physics and programming wheel`
+- **Branch:** `arena/23eed999-sonobjet`
+- **GitHub Pages CI run:** `40555766238` — completed **success**
+- **Live URL:** `https://autonomatono.github.io/sonobjet/`
+- Live page verified to serve the V7 title, `PENDULUM // MARBLE ENGINE`, the seven-tab Director Studio with `PHYSICS`, all ten physics macros, live marble-state telemetry, build SHA `090cbf2`, and branch `arena/23eed999-sonobjet`.
+- This `HANDOFF.md` update is a docs-only follow-up commit on the same branch; Pages rebuilds it through the same workflow.
+
+### Next extension vectors
+
+- Replace the kinematic bucket lift with fully simulated carrier constraints.
+- Add raycast picking for 3D pins, gates, tubes and instruments.
+- Add user-defined chutes and instrument curves.
+- Add a timeline lane that rewrites programming-wheel pins per Act.
+- Add mechanical failure modes: worn gates, skewed trough, off-balance flywheel.
+- Export the full physics blueprint as a portable machine file.
+
+---
+
+## 0.1 Prior Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+
+**V6 reference work:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
 
 ### What changed
 
@@ -71,12 +126,12 @@ Implemented:
 - **Historical Session Branch:** `arena/86769aaf-sonobjet` *(original V4 handoff; its history has been merged into the active `arena/23eed999-sonobjet` branch)*
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Current Verification Status (V6):**
+- **Current Verification Status (V7):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **25 / 25 passing** (12 engine + 10 V5 + 3 V6)
+  - `npm test` (`vitest run`): **29 / 29 passing** (12 engine + 10 V5 + 3 V6 + 4 V7)
   - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
   - `git diff --check`: **clean**
-  - Last implementation commit: `847e572`; last green Pages run: `40534323841` (`https://autonomatono.github.io/sonobjet/`)
+  - Last implementation commit: `090cbf2`; last green Pages run: `40555766238` (`https://autonomatono.github.io/sonobjet/`)
 
 ---
 
