@@ -1,10 +1,53 @@
-# Session Handoff & V5 Architectural Blueprint — `sonobjet`
+# Session Handoff & Architectural Blueprint — `sonobjet`
 
-> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, a clear diagnosis of why V4 stalled, the already-completed fix for the Section IV "mewing/humming" audio bug, and a concrete architectural blueprint for V5.
+> **Purpose:** Detailed end-of-session handoff so the next session can pick up immediately with full technical context, the preserved Section IV "mewing/humming" audio fix, the V5 articulated automaton reference, and the current V6 machine-building kit.
 
 ---
 
-## 0. Update — V5 Blueprint Implemented (2026-10-27)
+## 0. Latest Update — V6 Machine-Building Kit Implemented & Deployed (2026-10-27)
+
+**Current default flagship:** `ASTRARIUM // MODULAR ENGINE` (`src/works/astrarium-modular-engine/`). V5 `CHRONO // AUTOMATON` remains registered and is nested as the load-bearing reference core. V4 `HYPER // TECTON` and `PHASE // LATTICE` remain selectable.
+
+### What changed
+
+- Added a generic `MachineGraph` with addressable modules, typed ports/clusters/edges, nonlinear transfer modes, energy sources, selector-based score bindings, focus descriptors, simulation state, snapshots, live growth, binding edits and JSON config I/O.
+- Added a deterministic installation generator: **72 modules, 216+ conduits, 12 prime movers, 20 many-to-many bindings, 10 focus targets**, scalable from **12 to 256 modules**.
+- Built a fully parented 3D installation: macro orrery frame → ten cluster rings → module chassis → gear-train joints → organ rotors → typed ports. A `conduitFrame` joint owns instanced bent ducts and flow beads whose endpoints follow moving joints.
+- Preserved V5 as a scaled reference automaton inside the macro frame; it still receives impulses, anticipations, articulation and behavior maps.
+- Added a multi-scale camera director with `MACRO / CLUSTER / MODULE / PORT / CONDUIT` focus. Conduit shots follow live edge endpoints; auto mode cycles focus targets every six bars.
+- Added a sixth **MACHINE** tab to Director Studio: live graph canvas, macro sliders, focus selector, binding editor, growth/rebuild controls, graph JSON import/export, and energy/flow telemetry.
+- Registered V6 as default in `src/main.ts`; updated ignition copy, page metadata, README, `docs/ARCHITECTURE.md`, `docs/V5_DIRECTOR_STUDIO.md`, and added `docs/V6_MACHINE_BUILDING_KIT.md`.
+- Preserved the 96-bar F-Phrygian score, 14-voice synth, Director keyframe studio, and the Section IV anti-mewing/humming fix.
+
+### Verification
+
+- `npm run typecheck`: **0 errors**
+- `npm test`: **25 / 25 passing** (12 engine + 10 V5 + 3 V6)
+- `npm run build`: **clean production bundle**
+- `git diff --check`: **clean**
+- V6 tests assert many-to-many fan-in/fan-out, all five focus scales, all transfer/binding/energy waveform families, graph JSON round-trip, live growth/rebuild/import, and **zero unparented visible meshes** before and after rebuild.
+- Local dev preview verified on `0.0.0.0:5173`; `/`, `/src/main.ts`, the V6 work module and director CSS all return `200`.
+
+### Deployment
+
+- **Implementation commit:** `847e572 feat(v6): machine-building kit, many-to-many graph ecology, and multi-scale director`
+- **Branch:** `arena/23eed999-sonobjet`
+- **GitHub Pages CI run:** `40534323841` — completed **success** (`gh run watch 40534323841 --exit-status`)
+- **Live URL:** `https://autonomatono.github.io/sonobjet/`
+- Live page verified to serve the V6 title, `ASTRARIUM // MODULAR ENGINE`, the six-tab Director Studio with `MACHINE GRAPH`, 72 modules, the new graph macros and patch routes, build SHA `847e572`, and branch `arena/23eed999-sonobjet`.
+- This final `HANDOFF.md` update is a docs-only follow-up commit on the same branch; Pages rebuilds it through the same workflow.
+
+### Next extension vectors
+
+- Visual node editor for selector bindings and custom module templates.
+- Raycast picking of ports and conduits in the 3D view.
+- Persist machine graph configs inside the Director project JSON.
+- Audio-domain ports that modulate live synth buses from graph flow.
+- Cluster-level presets that rewire transfer modes across the 96-bar timeline.
+
+---
+
+## 0.1 Prior Update — V5 Blueprint Implemented (2026-10-27)
 
 The V5 systems described below are now implemented on the active session branch `arena/23eed999-sonobjet`. The earlier implementation from `arena/86769aaf-sonobjet` (commit `8090f12`) was merged forward because this session initially started from the empty `main`.
 
@@ -18,7 +61,7 @@ Implemented:
 - `src/main.ts` — V5 default work registration, global Director System integration and keyboard-mode isolation.
 - `docs/V5_DIRECTOR_STUDIO.md` — full V5 architecture and operating guide.
 
-**Verification:** `npm run typecheck`, `npm test` (22 passing), and `npm run build` are clean. The V5 tests enforce the golden rule that every visible mesh has a `RigJoint` ancestor.
+**Verification at the time:** `npm run typecheck`, `npm test` (22 passing), and `npm run build` were clean. The V5 tests enforce the golden rule that every visible mesh has a `RigJoint` ancestor; V6 adds the same invariant for graph-built installations.
 
 ---
 
@@ -28,10 +71,12 @@ Implemented:
 - **Historical Session Branch:** `arena/86769aaf-sonobjet` *(original V4 handoff; its history has been merged into the active `arena/23eed999-sonobjet` branch)*
 - **Live GitHub Pages URL:** `https://autonomatono.github.io/sonobjet/`
 - **CI Workflow:** `.github/workflows/deploy.yml` (runs `typecheck` → `vitest` → `vite build` → deploys GitHub Pages from any pushed branch)
-- **Verification Status:**
+- **Current Verification Status (V6):**
   - `npm run typecheck` (`tsc --noEmit`): **0 errors**
-  - `npm test` (`vitest run`): **12 / 12 passing**
+  - `npm test` (`vitest run`): **25 / 25 passing** (12 engine + 10 V5 + 3 V6)
   - `npm run build` (`vite build`): **Clean production bundle** (offline MediaPipe WASM included)
+  - `git diff --check`: **clean**
+  - Last implementation commit: `847e572`; last green Pages run: `40534323841` (`https://autonomatono.github.io/sonobjet/`)
 
 ---
 
@@ -70,7 +115,7 @@ We diagnosed and **fixed all four root causes** in `src/works/gantz-tecton/Gantz
 
 ---
 
-## 4. V5 Creative North Star: The Time-Traveled Clockwork Automaton
+## 4. V5 Creative North Star (Historical Blueprint, Implemented & Preserved): The Time-Traveled Clockwork Automaton
 
 > *"If this was an antique self-playing clockwork automaton that time-traveled into the future and came back to the present, what would it be?"*
 
@@ -170,7 +215,9 @@ Turn `sonobjet` into a true **Interactive Music-Video Director's Tool**:
 
 ---
 
-## 6. Recommended Step-by-Step Execution Order for Next Session
+## 6. Historical V5 Execution Order (Completed)
+
+> These steps were completed in V5 and retained as reference. For current work, use the V6 extension vectors in section 0 and `docs/V6_MACHINE_BUILDING_KIT.md`.
 
 1. **Step 1 — Build `src/kit/mechanism/KinematicRig.ts` & `HorologicalMeshKit.ts`**:
    - Implement `RigJoint`, gear ratios, 4-bar linkage solver, cam-follower driver, Geneva indexer, magnetic slip-rail + plasma-axle connector, and toothed-gear / skeleton-bridge / clevis-rod geometry builders. Write unit tests verifying joint parenting and linkage pin-coincidence.
